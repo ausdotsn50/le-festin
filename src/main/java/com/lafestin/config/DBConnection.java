@@ -1,11 +1,8 @@
 package com.lafestin.config;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Properties;
 
 /**
  * DBConnection — JDBC singleton for La Festin.
@@ -17,69 +14,34 @@ public class DBConnection {
 
     // DB conn instance
     private static DBConnection instance;
-
+    
     // Live JDBC conn
     private Connection connection;
 
     // config.properties
-    private String url;
-    private String user;
-    private String password;
+    private static final String URL = ConfigLoader.get("db.url");
+    private static final String USER = ConfigLoader.get("db.user");
+    private static final String PASSWORD = ConfigLoader.get("db.password");
 
+    // Introduced separation on DBConn and config loading
     private DBConnection() {
-        loadProperties();
         connect();
     }
 
-    // Loads db.url / db.user / db.password from config.propertie
-    private void loadProperties() {
-        Properties props = new Properties();
-
-        // getResourceAsStream looks inside src/main/resources/ at runtime
-        try (InputStream input = getClass()
-                .getClassLoader()
-                .getResourceAsStream("config.properties")) {
-
-            if (input == null) {
-                throw new RuntimeException(
-                    "[DBConnection] config.properties not found in resources/. " +
-                    "Did you copy config.properties.example and fill in your credentials?"
-                );
-            }
-
-            props.load(input);
-            this.url = props.getProperty("db.url");
-            this.user = props.getProperty("db.user");
-            this.password = props.getProperty("db.password");
-
-            // Catch missing keys early — better than a cryptic NullPointerException later
-            if (url == null || user == null || password == null) {
-                throw new RuntimeException(
-                    "[DBConnection] config.properties is missing one or more keys: " +
-                    "db.url, db.user, db.password"
-                );
-            }
-
-        } catch (IOException e) {
-            throw new RuntimeException("[DBConnection] Failed to read config.properties.", e);
-        }
-    }
-
-    // Open JDBC conn
     private void connect() {
         try {
-            this.connection = DriverManager.getConnection(url, user, password);
-            System.out.println("[DBConnection] Connected to MySQL successfully.");
+            this.connection = DriverManager.getConnection(URL, USER, PASSWORD);
+            System.out.println("[DBConnection] Connected to MySQL at: " + URL);
         } catch (SQLException e) {
             throw new RuntimeException(
-                "[DBConnection] Could not connect to the database. " +
-                "Check that MySQL is running and your credentials in config.properties are correct.\n" +
-                "URL attempted: " + url, e
+                "[DBConnection] Failed to connect to MySQL.\n" +
+                "  → Is MySQL running? Check XAMPP or your local MySQL service.\n" +
+                "  → URL: " + URL + "\n" +
+                "  → User: " + USER, e
             );
         }
     }
 
-    // This is the public access point — creates the instance on first call
     public static DBConnection getInstance() {
         if (instance == null) {
             instance = new DBConnection();
@@ -89,13 +51,12 @@ public class DBConnection {
 
     public Connection getConnection() {
         try {
-            // isValid(2) pings the DB with a 2-second timeout
             if (connection == null || !connection.isValid(2)) {
-                System.out.println("[DBConnection] Connection lost — reconnecting...");
+                System.out.println("[DBConnection] Connection stale — reconnecting...");
                 connect();
             }
         } catch (SQLException e) {
-            System.out.println("[DBConnection] Could not validate connection — reconnecting...");
+            System.out.println("[DBConnection] Validation failed — reconnecting...");
             connect();
         }
         return connection;
