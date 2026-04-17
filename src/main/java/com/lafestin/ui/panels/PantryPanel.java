@@ -2,6 +2,7 @@ package com.lafestin.ui.panels;
 
 import com.lafestin.dao.PantryDAO;
 import com.lafestin.model.PantryItem;
+import com.lafestin.ui.AppTheme;
 import com.lafestin.ui.MainFrame;
 import com.lafestin.ui.dialogs.AddEditIngredientDialog;
 
@@ -44,7 +45,7 @@ public class PantryPanel extends JPanel {
         this.pantryDAO = new PantryDAO();
 
         setLayout(new BorderLayout(0, 0));
-        setBackground(new Color(245, 245, 245));
+        setBackground(AppTheme.BG_PAGE);
 
         add(buildHeader(),  BorderLayout.NORTH);
         add(buildTable(),   BorderLayout.CENTER);
@@ -54,24 +55,22 @@ public class PantryPanel extends JPanel {
     //  HEADER — title + Match Recipes button
     private JPanel buildHeader() {
         JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(Color.WHITE);
+        header.setBackground(AppTheme.BG_SURFACE);
         header.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0,
-                new Color(220, 220, 220)),
+            AppTheme.BORDER_DIVIDER_TOP,
             BorderFactory.createEmptyBorder(16, 20, 16, 20)
         ));
 
         // Left: title + subtitle 
         JPanel titleGroup = new JPanel();
         titleGroup.setLayout(new BoxLayout(titleGroup, BoxLayout.Y_AXIS));
-        titleGroup.setBackground(Color.WHITE);
+        titleGroup.setBackground(AppTheme.BG_SURFACE);
 
-        JLabel title = new JLabel("My Pantry");
+        JLabel title = AppTheme.titleLabel("My Pantry");
         title.setFont(new Font("SansSerif", Font.BOLD, 18));
         title.setForeground(new Color(30, 30, 30));
 
-        JLabel subtitle = new JLabel(
-            "Ingredients you currently have at home");
+        JLabel subtitle = AppTheme.subtitleLabel("Ingredients you currently have at home");
         subtitle.setFont(new Font("SansSerif", Font.PLAIN, 12));
         subtitle.setForeground(new Color(140, 140, 140));
 
@@ -80,17 +79,8 @@ public class PantryPanel extends JPanel {
         titleGroup.add(subtitle);
 
         // Right: Match Recipes button
-        JButton matchBtn = new JButton("Match Recipes");
-        matchBtn.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        matchBtn.setBackground(new Color(34, 139, 87));
-        matchBtn.setForeground(Color.WHITE);
-        matchBtn.setFocusPainted(false);
-        matchBtn.setBorderPainted(false);
-        matchBtn.setOpaque(true);
-        matchBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        matchBtn.setBorder(BorderFactory.createEmptyBorder(9, 18, 9, 18));
-        matchBtn.setToolTipText(
-            "Find recipes you can make with your current pantry");
+        JButton matchBtn = AppTheme.primaryButton("Match Recipes");
+        matchBtn.setToolTipText("Find recipes you can make with your current pantry");
         matchBtn.addActionListener(e -> navigateToSuggestions());
 
         header.add(titleGroup, BorderLayout.WEST);
@@ -117,41 +107,17 @@ public class PantryPanel extends JPanel {
         };
 
         table = new JTable(tableModel);
-        table.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        table.setRowHeight(38);
-        table.setShowGrid(false);
-        table.setIntercellSpacing(new Dimension(0, 0));
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setBackground(Color.WHITE);
-        table.setSelectionBackground(new Color(232, 240, 254));
-        table.setSelectionForeground(new Color(30, 30, 30));
+        AppTheme.styleTable(table);
 
-        // Header styling
-        table.getTableHeader().setFont(
-            new Font("SansSerif", Font.BOLD, 12));
-        table.getTableHeader().setBackground(
-            new Color(250, 250, 250));
-        table.getTableHeader().setForeground(
-            new Color(100, 100, 100));
-        table.getTableHeader().setBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0,
-                new Color(220, 220, 220)));
+        // hide ID column — keep as-is
+        table.getColumnModel().getColumn(COL_INGREDIENT_ID).setMinWidth(0);
+        table.getColumnModel().getColumn(COL_INGREDIENT_ID).setMaxWidth(0);
+        table.getColumnModel().getColumn(COL_INGREDIENT_ID).setWidth(0);
 
-        // Hide the ID column
-        table.getColumnModel().getColumn(COL_INGREDIENT_ID)
-            .setMinWidth(0);
-        table.getColumnModel().getColumn(COL_INGREDIENT_ID)
-            .setMaxWidth(0);
-        table.getColumnModel().getColumn(COL_INGREDIENT_ID)
-            .setWidth(0);
-
-        // Column widths
-        table.getColumnModel().getColumn(COL_NAME)
-            .setPreferredWidth(300);
-        table.getColumnModel().getColumn(COL_QUANTITY)
-            .setPreferredWidth(120);
-        table.getColumnModel().getColumn(COL_UNIT)
-            .setPreferredWidth(120);
+        // column widths — keep as-is
+        table.getColumnModel().getColumn(COL_NAME)    .setPreferredWidth(300);
+        table.getColumnModel().getColumn(COL_QUANTITY).setPreferredWidth(120);
+        table.getColumnModel().getColumn(COL_UNIT)    .setPreferredWidth(120);
 
         // Capitalize first letter of ingredient name
         DefaultTableCellRenderer nameRenderer =
@@ -167,10 +133,9 @@ public class PantryPanel extends JPanel {
                 super.getTableCellRendererComponent(
                     t, value, isSelected, hasFocus, row, col);
                 setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
+                
                 if (!isSelected) {
-                    setBackground(row % 2 == 0
-                        ? Color.WHITE
-                        : new Color(250, 250, 252));
+                    setBackground(row % 2 == 0 ? AppTheme.BG_SURFACE : AppTheme.BG_SUBTLE);
                 }
                 return this;
             }
@@ -187,10 +152,9 @@ public class PantryPanel extends JPanel {
                     t, value, isSelected, hasFocus, row, col);
                 setHorizontalAlignment(SwingConstants.RIGHT);
                 setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 20));
+                
                 if (!isSelected) {
-                    setBackground(row % 2 == 0
-                        ? Color.WHITE
-                        : new Color(250, 250, 252));
+                    setBackground(row % 2 == 0 ? AppTheme.BG_SURFACE : AppTheme.BG_SUBTLE);
                 }
                 return this;
             }
@@ -206,11 +170,10 @@ public class PantryPanel extends JPanel {
                 super.getTableCellRendererComponent(
                     t, value, isSelected, hasFocus, row, col);
                 setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
+                
                 if (!isSelected) {
-                    setForeground(new Color(120, 120, 120));
-                    setBackground(row % 2 == 0
-                        ? Color.WHITE
-                        : new Color(250, 250, 252));
+                    setForeground(AppTheme.TEXT_MUTED);
+                    setBackground(row % 2 == 0 ? AppTheme.BG_SURFACE : AppTheme.BG_SUBTLE);
                 } else {
                     setForeground(new Color(30, 30, 30));
                 }
@@ -247,7 +210,7 @@ public class PantryPanel extends JPanel {
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createEmptyBorder());
-        scroll.getViewport().setBackground(Color.WHITE);
+        scroll.getViewport().setBackground(AppTheme.BG_SURFACE);
 
         return scroll;
     }
@@ -255,7 +218,7 @@ public class PantryPanel extends JPanel {
     //  TOOLBAR — Add / Edit / Remove + count
     private JPanel buildToolbar() {
         JPanel bar = new JPanel(new BorderLayout());
-        bar.setBackground(Color.WHITE);
+        bar.setBackground(AppTheme.BG_SURFACE);
         bar.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(1, 0, 0, 0,
                 new Color(220, 220, 220)),
@@ -264,14 +227,11 @@ public class PantryPanel extends JPanel {
 
         JPanel btnGroup = new JPanel(new FlowLayout(
             FlowLayout.LEFT, 8, 0));
-        btnGroup.setBackground(Color.WHITE);
+        btnGroup.setBackground(AppTheme.BG_SURFACE);
 
-        addBtn    = makeButton("+ Add",
-            new Color(34, 139, 87), Color.WHITE);
-        editBtn   = makeButton("Edit",
-            new Color(245, 245, 245), new Color(60, 60, 60));
-        removeBtn = makeButton("Remove",
-            new Color(245, 245, 245), new Color(60, 60, 60));
+        addBtn    = AppTheme.primaryButton("+ Add");
+        editBtn   = AppTheme.secondaryButton("Edit");
+        removeBtn = AppTheme.dangerButton("Remove");
 
         editBtn.setEnabled(false);
         removeBtn.setEnabled(false);
@@ -285,26 +245,13 @@ public class PantryPanel extends JPanel {
         btnGroup.add(removeBtn);
 
         countLabel = new JLabel();
-        countLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        countLabel.setForeground(new Color(140, 140, 140));
+        countLabel.setFont(AppTheme.FONT_SMALL);
+        countLabel.setForeground(AppTheme.TEXT_MUTED);
 
         bar.add(btnGroup,   BorderLayout.WEST);
         bar.add(countLabel, BorderLayout.EAST);
 
         return bar;
-    }
-
-    private JButton makeButton(String text, Color bg, Color fg) {
-        JButton btn = new JButton(text);
-        btn.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        btn.setBackground(bg);
-        btn.setForeground(fg);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setOpaque(true);
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.setBorder(BorderFactory.createEmptyBorder(7, 16, 7, 16));
-        return btn;
     }
 
     //  DATA

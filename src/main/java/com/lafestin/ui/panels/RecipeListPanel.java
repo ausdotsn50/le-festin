@@ -2,6 +2,7 @@ package com.lafestin.ui.panels;
 
 import com.lafestin.dao.RecipeDAO;
 import com.lafestin.model.Recipe;
+import com.lafestin.ui.AppTheme;
 import com.lafestin.ui.MainFrame;
 import com.lafestin.ui.dialogs.AddEditRecipeDialog;
 
@@ -51,7 +52,7 @@ public class RecipeListPanel extends JPanel {
         this.recipeDAO = new RecipeDAO();
 
         setLayout(new BorderLayout(0, 0));
-        setBackground(new Color(245, 245, 245));
+        setBackground(AppTheme.BG_PAGE);
 
         add(buildTopBar(), BorderLayout.NORTH);
         add(buildTable(),  BorderLayout.CENTER);
@@ -61,17 +62,17 @@ public class RecipeListPanel extends JPanel {
     //  TOP BAR — search + category filter
     private JPanel buildTopBar() {
         JPanel bar = new JPanel(new BorderLayout(10, 0));
-        bar.setBackground(Color.WHITE);
+        bar.setBackground(AppTheme.BG_SURFACE);
         bar.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 220, 220)),
+            AppTheme.BORDER_DIVIDER_TOP,
             BorderFactory.createEmptyBorder(12, 16, 12, 16)
         ));
 
         // Search field
         searchField = new JTextField();
-        searchField.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        searchField.setFont(AppTheme.FONT_BODY);
         searchField.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200), 1, true),
+            BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true),
             BorderFactory.createEmptyBorder(6, 10, 6, 10)
         ));
         searchField.putClientProperty("JTextField.placeholderText",
@@ -93,7 +94,7 @@ public class RecipeListPanel extends JPanel {
             Recipe.CATEGORY_LUNCH,
             Recipe.CATEGORY_DINNER,
         });
-        categoryFilter.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        categoryFilter.setFont(AppTheme.FONT_BODY);
         categoryFilter.setPreferredSize(new Dimension(140, 36));
         categoryFilter.addActionListener(e -> applyFilters());
 
@@ -120,29 +121,21 @@ public class RecipeListPanel extends JPanel {
         };
 
         table = new JTable(tableModel);
-        table.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        table.setRowHeight(36);
-        table.setShowGrid(false);
-        table.setIntercellSpacing(new Dimension(0, 0));
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setBackground(Color.WHITE);
-        table.setSelectionBackground(new Color(232, 240, 254));
-        table.setSelectionForeground(new Color(30, 30, 30));
-        table.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 12));
-        table.getTableHeader().setBackground(new Color(250, 250, 250));
-        table.getTableHeader().setBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 220, 220))
-        );
+        AppTheme.styleTable(table);
 
-        // Hide the ID column — present in model, invisible in UI
+        // hide ID column — keep as-is
         table.getColumnModel().getColumn(COL_ID).setMinWidth(0);
         table.getColumnModel().getColumn(COL_ID).setMaxWidth(0);
         table.getColumnModel().getColumn(COL_ID).setWidth(0);
 
-        // Column widths
+        // column widths — keep as-is
         table.getColumnModel().getColumn(COL_TITLE)   .setPreferredWidth(340);
         table.getColumnModel().getColumn(COL_CATEGORY).setPreferredWidth(120);
         table.getColumnModel().getColumn(COL_PREP)    .setPreferredWidth(100);
+
+        // sorter — keep as-is
+        sorter = new TableRowSorter<>(tableModel);
+        table.setRowSorter(sorter);
 
         // Sorter — enables column header click-to-sort
         sorter = new TableRowSorter<>(tableModel);
@@ -170,27 +163,11 @@ public class RecipeListPanel extends JPanel {
 
         // Alternating row colors via custom renderer
         table.setDefaultRenderer(Object.class,
-            new javax.swing.table.DefaultTableCellRenderer() {
-                @Override
-                public Component getTableCellRendererComponent(
-                        JTable t, Object value, boolean isSelected,
-                        boolean hasFocus, int row, int col) {
-                    super.getTableCellRendererComponent(
-                        t, value, isSelected, hasFocus, row, col);
-                    setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
-                    if (!isSelected) {
-                        setBackground(row % 2 == 0
-                            ? Color.WHITE
-                            : new Color(250, 250, 252));
-                    }
-                    return this;
-                }
-            }
-        );
-
+            AppTheme.alternatingRowRenderer());
+        
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createEmptyBorder());
-        scroll.getViewport().setBackground(Color.WHITE);
+        scroll.getViewport().setBackground(AppTheme.BG_SURFACE);
 
         return scroll;
     }
@@ -198,19 +175,19 @@ public class RecipeListPanel extends JPanel {
     //  TOOLBAR — Add / Edit / Delete + count label
     private JPanel buildToolbar() {
         JPanel bar = new JPanel(new BorderLayout());
-        bar.setBackground(Color.WHITE);
+        bar.setBackground(AppTheme.BG_SURFACE);
         bar.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(220, 220, 220)),
+            AppTheme.BORDER_DIVIDER_TOP,
             BorderFactory.createEmptyBorder(10, 16, 10, 16)
         ));
 
         // Left: action buttons
         JPanel btnGroup = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        btnGroup.setBackground(Color.WHITE);
+        btnGroup.setBackground(AppTheme.BG_SURFACE);
 
-        addBtn    = makeToolbarButton("+ Add",  new Color(34, 139, 87),  Color.WHITE);
-        editBtn   = makeToolbarButton("Edit",   new Color(245, 245, 245),new Color(60, 60, 60));
-        deleteBtn = makeToolbarButton("Delete", new Color(245, 245, 245),new Color(60, 60, 60));
+        addBtn    = AppTheme.primaryButton("+ Add");
+        editBtn   = AppTheme.secondaryButton("Edit");
+        deleteBtn = AppTheme.dangerButton("Delete");
 
         // Edit + Delete start disabled — enabled when a row is selected
         editBtn.setEnabled(false);
@@ -226,29 +203,14 @@ public class RecipeListPanel extends JPanel {
 
         // Right: row count
         countLabel = new JLabel();
-        countLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        countLabel.setForeground(new Color(140, 140, 140));
+        countLabel.setFont(AppTheme.FONT_SMALL);
+        countLabel.setForeground(AppTheme.TEXT_MUTED);
 
         bar.add(btnGroup,   BorderLayout.WEST);
         bar.add(countLabel, BorderLayout.EAST);
 
         return bar;
     }
-
-    // Styled toolbar button factory
-    private JButton makeToolbarButton(String text, Color bg, Color fg) {
-        JButton btn = new JButton(text);
-        btn.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        btn.setBackground(bg);
-        btn.setForeground(fg);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setOpaque(true);
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.setBorder(BorderFactory.createEmptyBorder(7, 16, 7, 16));
-        return btn;
-    }
-
     
     //  DATA — load, filter, refresh
     /**

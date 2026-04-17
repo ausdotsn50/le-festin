@@ -2,6 +2,7 @@ package com.lafestin.ui.panels;
 
 import com.lafestin.dao.MealEntryDAO;
 import com.lafestin.model.MealEntry;
+import com.lafestin.ui.AppTheme;
 import com.lafestin.ui.MainFrame;
 import com.lafestin.ui.dialogs.AssignRecipeDialog;
 
@@ -47,15 +48,13 @@ public class WeeklyPlannerPanel extends JPanel {
         DateTimeFormatter.ofPattern("MMM d");     // for header range
 
     // Constant colors
-    private static final Color COL_HEADER_BG   = new Color(34, 40, 49);
-    private static final Color COL_HEADER_FG   = Color.WHITE;
-    private static final Color COL_DAY_BG      = new Color(248, 248, 250);
-    private static final Color COL_DAY_TODAY   = new Color(232, 244, 255);
-    private static final Color COL_SLOT_EMPTY  = Color.WHITE;
-    private static final Color COL_SLOT_FILLED = new Color(232, 248, 240);
-    private static final Color COL_SLOT_BORDER = new Color(220, 220, 220);
-    private static final Color COL_MEAL_LABEL  = new Color(110, 110, 110);
-    private static final Color COL_RECIPE_TEXT = new Color(30, 110, 70);
+    private static final Color COL_DAY_BG = AppTheme.BG_SUBTLE;
+    private static final Color COL_DAY_TODAY = AppTheme.AMBER_TINT;
+    private static final Color COL_SLOT_EMPTY  = AppTheme.BG_SURFACE;
+    private static final Color COL_SLOT_FILLED = AppTheme.GREEN_TINT;
+    private static final Color COL_SLOT_BORDER = AppTheme.BG_BORDER;
+    // private static final Color COL_MEAL_LABEL  = AppTheme.TEXT_MUTED;
+    private static final Color COL_RECIPE_TEXT = AppTheme.GREEN_TINT_TEXT;
 
     public WeeklyPlannerPanel(MainFrame frame) {
         this.frame        = frame;
@@ -63,7 +62,7 @@ public class WeeklyPlannerPanel extends JPanel {
         this.weekStart    = getMonday(LocalDate.now());
 
         setLayout(new BorderLayout(0, 0));
-        setBackground(new Color(245, 245, 245));
+        setBackground(AppTheme.BG_PAGE);
 
         add(buildNavBar(), BorderLayout.NORTH);
         add(buildGrid(),   BorderLayout.CENTER);
@@ -72,23 +71,22 @@ public class WeeklyPlannerPanel extends JPanel {
     //  NAV BAR — week range + prev/next + auto-generate + clear
     private JPanel buildNavBar() {
         JPanel nav = new JPanel(new BorderLayout());
-        nav.setBackground(Color.WHITE);
+        nav.setBackground(AppTheme.BG_SURFACE);
         nav.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0,
-                new Color(220, 220, 220)),
+            AppTheme.BORDER_DIVIDER,
             BorderFactory.createEmptyBorder(12, 20, 12, 20)
         ));
 
         // Top row: Prev | week range label | Next
         JPanel topRow = new JPanel(new BorderLayout(12, 0));
-        topRow.setBackground(Color.WHITE);
+        topRow.setBackground(AppTheme.BG_SURFACE);
 
-        JButton prevBtn = makeNavArrow("◀  Prev week");
-        JButton nextBtn = makeNavArrow("Next week  ▶");
+        JButton prevBtn  = AppTheme.ghostButton("◀  Prev week");
+        JButton nextBtn  = AppTheme.ghostButton("Next week  ▶");
 
         weekRangeLabel = new JLabel("", SwingConstants.CENTER);
-        weekRangeLabel.setFont(new Font("SansSerif", Font.BOLD, 15));
-        weekRangeLabel.setForeground(new Color(30, 30, 30));
+        weekRangeLabel.setFont(AppTheme.FONT_HEADING);
+        weekRangeLabel.setForeground(AppTheme.TEXT_PRIMARY);
         updateWeekRangeLabel();
 
         prevBtn.addActionListener(e -> shiftWeek(-1));
@@ -100,16 +98,12 @@ public class WeeklyPlannerPanel extends JPanel {
 
         // Bottom row: Auto-generate | spacer | Clear week
         JPanel bottomRow = new JPanel(new BorderLayout());
-        bottomRow.setBackground(Color.WHITE);
+        bottomRow.setBackground(AppTheme.BG_SURFACE);
         bottomRow.setBorder(
             BorderFactory.createEmptyBorder(8, 0, 0, 0));
 
-        JButton autoBtn  = makeActionButton(
-            "Auto-Generate Week",
-            new Color(34, 139, 87), Color.WHITE);
-        JButton clearBtn = makeActionButton(
-            "Clear Week",
-            new Color(245, 245, 245), new Color(60, 60, 60));
+        JButton autoBtn  = AppTheme.primaryButton("Auto-Generate Week");
+        JButton clearBtn = AppTheme.dangerButton("Clear Week");
 
         autoBtn.addActionListener( e -> autoGenerateWeek());
         clearBtn.addActionListener(e -> clearWeek());
@@ -139,7 +133,7 @@ public class WeeklyPlannerPanel extends JPanel {
             JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
         JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.setBackground(new Color(245, 245, 245));
+        wrapper.setBackground(AppTheme.BG_PAGE);
         wrapper.setBorder(
             BorderFactory.createEmptyBorder(16, 16, 16, 16));
         wrapper.add(scroll, BorderLayout.CENTER);
@@ -186,22 +180,22 @@ public class WeeklyPlannerPanel extends JPanel {
             day.format(DAY_NAME_FMT).toUpperCase());
         dayName.setFont(new Font("SansSerif", Font.BOLD, 11));
         dayName.setForeground(isToday
-            ? new Color(0, 90, 190)
-            : new Color(100, 100, 100));
-        dayName.setAlignmentX(Component.CENTER_ALIGNMENT);
+            ? AppTheme.AMBER_PRIMARY
+            : AppTheme.TEXT_MUTED);
+        dayName.setFont(AppTheme.FONT_TINY);
 
         JLabel dayDate = new JLabel(day.format(DAY_DATE_FMT));
         dayDate.setFont(new Font("SansSerif", Font.PLAIN, 13));
         dayDate.setForeground(isToday
-            ? new Color(0, 90, 190)
-            : new Color(40, 40, 40));
-        dayDate.setAlignmentX(Component.CENTER_ALIGNMENT);
+            ? AppTheme.AMBER_PRIMARY
+            : AppTheme.TEXT_PRIMARY);
+        dayDate.setFont(AppTheme.FONT_BODY);
 
         // "Today" badge
         if (isToday) {
             JLabel badge = new JLabel("Today");
-            badge.setFont(new Font("SansSerif", Font.BOLD, 10));
-            badge.setForeground(new Color(0, 90, 190));
+            badge.setFont(AppTheme.FONT_TINY);
+            badge.setForeground(AppTheme.AMBER_PRIMARY);
             badge.setAlignmentX(Component.CENTER_ALIGNMENT);
             cell.add(dayName);
             cell.add(Box.createVerticalStrut(2));
@@ -231,15 +225,15 @@ public class WeeklyPlannerPanel extends JPanel {
         btn.setPreferredSize(new Dimension(120, 80));
 
         // Meal type label (top)
-        JLabel mealLabel = new JLabel(mealType, SwingConstants.LEFT);
-        mealLabel.setFont(new Font("SansSerif", Font.PLAIN, 10));
-        mealLabel.setForeground(COL_MEAL_LABEL);
+        JLabel mealLabel = new JLabel(mealType, SwingConstants.LEFT);        
+        mealLabel.setFont(AppTheme.FONT_TINY);
+        mealLabel.setForeground(AppTheme.TEXT_MUTED);
         mealLabel.setBorder(BorderFactory.createEmptyBorder(5, 8, 0, 8));
 
         // Recipe name label (center)
         JLabel recipeLabel = new JLabel("", SwingConstants.CENTER);
-        recipeLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        recipeLabel.setForeground(new Color(160, 160, 160));
+        recipeLabel.setFont(AppTheme.FONT_SMALL);
+        recipeLabel.setForeground(AppTheme.TEXT_MUTED);
         recipeLabel.setBorder(BorderFactory.createEmptyBorder(0, 6, 6, 6));
 
         btn.add(mealLabel,   BorderLayout.NORTH);
@@ -253,11 +247,8 @@ public class WeeklyPlannerPanel extends JPanel {
             }
             @Override
             public void mouseExited(MouseEvent e) {
-                MealEntry entry = weekEntries.get(
-                    slotKey(day, mealType));
-                btn.setBackground(entry != null
-                    ? COL_SLOT_FILLED
-                    : COL_SLOT_EMPTY);
+                weekEntries.get(slotKey(day, mealType));
+                btn.setBackground(AppTheme.SELECTION_BG);
             }
         });
 
@@ -324,8 +315,7 @@ public class WeeklyPlannerPanel extends JPanel {
                     // Empty slot
                     btn.setBackground(COL_SLOT_EMPTY);
                     recipeLabel.setText("+ assign");
-                    recipeLabel.setForeground(
-                        new Color(190, 190, 190));
+                    recipeLabel.setForeground(AppTheme.TEXT_MUTED);
                 }
             }
         }
@@ -499,37 +489,6 @@ public class WeeklyPlannerPanel extends JPanel {
         if (cut == -1) cut = maxLen;
         return text.substring(0, cut) + "<br>"
              + text.substring(cut).trim();
-    }
-
-    private JButton makeNavArrow(String text) {
-        JButton btn = new JButton(text);
-        btn.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setBackground(new Color(245, 245, 245));
-        btn.setForeground(new Color(60, 60, 60));
-        btn.setOpaque(true);
-        btn.setCursor(Cursor.getPredefinedCursor(
-            Cursor.HAND_CURSOR));
-        btn.setBorder(BorderFactory.createEmptyBorder(
-            7, 14, 7, 14));
-        return btn;
-    }
-
-    private JButton makeActionButton(String text,
-                                     Color bg, Color fg) {
-        JButton btn = new JButton(text);
-        btn.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        btn.setBackground(bg);
-        btn.setForeground(fg);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setOpaque(true);
-        btn.setCursor(Cursor.getPredefinedCursor(
-            Cursor.HAND_CURSOR));
-        btn.setBorder(BorderFactory.createEmptyBorder(
-            7, 16, 7, 16));
-        return btn;
     }
 
     // Reload when panel becomes visible
