@@ -58,7 +58,7 @@ public class ConnectionTest {
             System.err.println("  [ ] MySQL is running (check XAMPP Control Panel)");
             System.err.println("  [ ] Database 'la_festin' exists (run your schema script first)");
             System.err.println("  [ ] db.user and db.password are correct in config.properties");
-            System.err.println("  [ ] db.url is jdbc:mysql://localhost:5050/la_festin");
+            System.err.println("  [ ] db.url is jdbc:mysql://localhost:3306/la_festin");
         }
     }
 }
