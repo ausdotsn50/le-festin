@@ -25,16 +25,16 @@ public class Helper {
         dialog.setResizable(false);
     }
 
-    public static void loadAllIngredients(JDialog dialog, List<Ingredient> allIngredients, IngredientDAO ingredientDAO) {
+    public static List<Ingredient> loadAllIngredients(JDialog dialog, IngredientDAO ingredientDAO) {
         try {
-            allIngredients = ingredientDAO.getAllIngredients();
+            return ingredientDAO.getAllIngredients();
         } catch (SQLException e) {
-            allIngredients = new ArrayList<>();
             JOptionPane.showMessageDialog(dialog,
                 "Could not load ingredients from database.\n"
                 + e.getMessage(),
                 "Warning",
                 JOptionPane.WARNING_MESSAGE);
+            return new ArrayList<>();
         }
     }
 

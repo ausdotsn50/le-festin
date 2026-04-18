@@ -52,7 +52,7 @@ public class AddEditIngredientDialog extends JDialog {
         this.ingredientDAO= new IngredientDAO();
 
         if (item == null) {
-            Helper.loadAllIngredients(this, allIngredients, ingredientDAO); // only needed in add mode
+            allIngredients = Helper.loadAllIngredients(this, ingredientDAO); // only needed in add mode
         }
 
         initComponents();
