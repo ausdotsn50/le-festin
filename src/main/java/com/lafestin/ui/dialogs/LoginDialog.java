@@ -1,5 +1,6 @@
 package com.lafestin.ui.dialogs;
 
+import com.lafestin.helper.Helper;
 import com.lafestin.model.User;
 import com.lafestin.service.AuthService;
 import com.lafestin.service.AuthService.AuthResult;
@@ -58,7 +59,7 @@ public class LoginDialog extends JDialog {
         });
 
         initComponents();
-        packAndCenter();
+        Helper.packAndCenter(frame, this, new Dimension(380, 460));
     }
 
     private void initComponents() {
@@ -455,12 +456,5 @@ public class LoginDialog extends JDialog {
         regUsernameField.setText("");
         regPasswordField.setText("");
         regConfirmField.setText("");
-    }
-
-    private void packAndCenter() {
-        setPreferredSize(new Dimension(380, 460));
-        pack();
-        setLocationRelativeTo(null); // center on screen, not on frame
-        setResizable(false);
     }
 }

@@ -17,10 +17,10 @@ import java.util.List;
 
 /**
  * RecipeListPanel — the main recipe browser.
+ * Now extends BaseListPanel to share header structure.
  */
-public class RecipeListPanel extends JPanel {
+public class RecipeListPanel extends BaseListPanel {
     // Dependencies
-    private final MainFrame frame;
     private final RecipeDAO recipeDAO;
 
     // For the table layout view
@@ -28,8 +28,7 @@ public class RecipeListPanel extends JPanel {
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
 
-    // Top bar components
-    private JTextField searchField;
+    // Search filter components
     private JComboBox<String> categoryFilter;
 
     // Toolbar components
@@ -46,46 +45,33 @@ public class RecipeListPanel extends JPanel {
 
     // Constructor
     public RecipeListPanel(MainFrame frame) {
-        this.frame     = frame;
+        super(frame);
         this.recipeDAO = new RecipeDAO();
-
-        setLayout(new BorderLayout(0, 0));
-        setBackground(AppTheme.BG_PAGE);
-
-        add(buildTopBar(), BorderLayout.NORTH);
-        add(buildTable(),  BorderLayout.CENTER);
-        add(buildToolbar(),BorderLayout.SOUTH);
     }
 
-    //  TOP BAR — search + category filter
-    private JPanel buildTopBar() {
-        JPanel bar = new JPanel(new BorderLayout(10, 0));
-        bar.setBackground(AppTheme.BG_SURFACE);
-        bar.setBorder(BorderFactory.createCompoundBorder(
-            AppTheme.BORDER_DIVIDER_TOP,
-            BorderFactory.createEmptyBorder(12, 16, 12, 16)
-        ));
+    @Override
+    protected String getHeaderTitle() {
+        return "Recipes";
+    }
 
-        // Search field
-        searchField = new JTextField();
-        searchField.setFont(AppTheme.FONT_BODY);
-        searchField.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true),
-            BorderFactory.createEmptyBorder(6, 10, 6, 10)
-        ));
-        searchField.putClientProperty("JTextField.placeholderText",
-            "Search recipes...");
+    @Override
+    protected String getHeaderDescription() {
+        return "Browse and manage your recipe collection";
+    }
 
-        // Live filter, searching on keystrokes
-        searchField.getDocument().addDocumentListener(
-            new javax.swing.event.DocumentListener() {
-                public void insertUpdate (javax.swing.event.DocumentEvent e) { applyFilters(); }
-                public void removeUpdate (javax.swing.event.DocumentEvent e) { applyFilters(); }
-                public void changedUpdate(javax.swing.event.DocumentEvent e) { applyFilters(); }
-            }
-        );
+    @Override
+    protected String getSearchPlaceholder() {
+        return "Search recipes...";
+    }
 
-        // Category dropdown
+    @Override
+    protected JComponent buildHeaderRightControl() {
+        return Box.createHorizontalBox(); // empty — no header button
+    }
+
+    @Override
+    protected JComponent buildSearchRightControl() {
+        // Category dropdown next to search field
         categoryFilter = new JComboBox<>(new String[]{
             "All",
             Recipe.CATEGORY_BREAKFAST,
@@ -96,14 +82,30 @@ public class RecipeListPanel extends JPanel {
         categoryFilter.setPreferredSize(new Dimension(140, 36));
         categoryFilter.addActionListener(e -> applyFilters());
 
-        bar.add(searchField,    BorderLayout.CENTER);
-        bar.add(categoryFilter, BorderLayout.EAST);
+        return categoryFilter;
+    }
 
-        return bar;
+    @Override
+    protected JComponent buildTableContent() {
+        return buildTable();
+    }
+
+    @Override
+    protected JPanel buildToolbar() {
+        return buildToolbarPanel();
     }
 
     //  TABLE
     private JScrollPane buildTable() {
+        // Set up search listener on inherited searchField
+        searchField.getDocument().addDocumentListener(
+            new javax.swing.event.DocumentListener() {
+                public void insertUpdate (javax.swing.event.DocumentEvent e) { applyFilters(); }
+                public void removeUpdate (javax.swing.event.DocumentEvent e) { applyFilters(); }
+                public void changedUpdate(javax.swing.event.DocumentEvent e) { applyFilters(); }
+            }
+        );
+
         // Column names — ID hidden but kept for selection lookups
         String[] columns = { "ID", "Title", "Category", "Prep Time" };
 
@@ -171,7 +173,7 @@ public class RecipeListPanel extends JPanel {
     }
 
     //  TOOLBAR — Add / Edit / Delete + count label
-    private JPanel buildToolbar() {
+    private JPanel buildToolbarPanel() {
         JPanel bar = new JPanel(new BorderLayout());
         bar.setBackground(AppTheme.BG_SURFACE);
         bar.setBorder(BorderFactory.createCompoundBorder(
