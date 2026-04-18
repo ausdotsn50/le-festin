@@ -45,13 +45,6 @@ public class AddEditRecipeDialog extends JDialog {
     // Available ingredients for dropdown
     private List<Ingredient> allIngredients = new ArrayList<>();
 
-    // Unit options 
-    private static final String[] UNITS = {
-        "piece", "whole", "cup", "tablespoon", "teaspoon",
-        "gram", "kilogram", "milliliter", "liter", "clove",
-        "slice", "pinch"
-    };
-
     // Column indexes in ingredient table
     private static final int COL_INGREDIENT = 0;
     private static final int COL_QUANTITY = 1;
@@ -71,7 +64,7 @@ public class AddEditRecipeDialog extends JDialog {
         allIngredients = Helper.loadAllIngredients(this, ingredientDAO);
         initComponents();
         prefillIfEditing();
-        Helper.packAndCenter(frame, this);
+        Helper.packAndCenter(frame, this, new Dimension(580, 680));
     }
 
     // Initialize dialog components
@@ -215,7 +208,7 @@ public class AddEditRecipeDialog extends JDialog {
 
         JButton addRowBtn = AppTheme.secondaryButton("+ Add Row");
         addRowBtn.addActionListener(e -> addIngredientRow(
-            null, 1.0, UNITS[0]));
+            null, 1.0, Helper.UNITS[0]));
 
         header.add(label,     BorderLayout.WEST);
         header.add(addRowBtn, BorderLayout.EAST);
@@ -229,12 +222,18 @@ public class AddEditRecipeDialog extends JDialog {
             }
         };
 
+        // Ingredient table styles (needs fixing)
         ingredientTable = new JTable(ingredientModel);
         ingredientTable.setFont(AppTheme.FONT_BODY);
         ingredientTable.setRowHeight(34);
         ingredientTable.setBackground(AppTheme.BG_SURFACE);
         ingredientTable.setGridColor(AppTheme.BG_BORDER);
         ingredientTable.setShowGrid(true);
+        
+        // Selection config
+        // Fix: to bad table row contrast colors
+        ingredientTable.setSelectionBackground(AppTheme.SELECTION_BG);
+        ingredientTable.setSelectionForeground(AppTheme.SELECTION_FG);
         ingredientTable.getTableHeader()
             .setFont(AppTheme.FONT_LABEL);
         ingredientTable.getTableHeader()
@@ -293,6 +292,15 @@ public class AddEditRecipeDialog extends JDialog {
                     boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(
                     list, value, index, isSelected, cellHasFocus);
+                
+                if (isSelected) {
+                    setBackground(AppTheme.SELECTION_BG);
+                    setForeground(AppTheme.SELECTION_FG);
+                } else {
+                    setBackground(AppTheme.BG_SURFACE);
+                    setForeground(AppTheme.TEXT_PRIMARY);
+                }
+                
                 if (value instanceof Ingredient) {
                     setText(Helper.capitalize(
                         ((Ingredient) value).getName()));
@@ -302,6 +310,8 @@ public class AddEditRecipeDialog extends JDialog {
         });
 
         combo.setFont(AppTheme.FONT_BODY);
+        combo.setBackground(AppTheme.BG_SURFACE);
+        combo.setForeground(AppTheme.TEXT_PRIMARY);
         ingredientTable.getColumnModel()
             .getColumn(COL_INGREDIENT)
             .setCellEditor(new DefaultCellEditor(combo));
@@ -309,8 +319,32 @@ public class AddEditRecipeDialog extends JDialog {
 
     // Install unit JComboBox as cell editor
     private void installUnitCombo() {
-        JComboBox<String> combo = new JComboBox<>(UNITS);
+        JComboBox<String> combo = new JComboBox<>(Helper.UNITS);
         combo.setFont(AppTheme.FONT_BODY);
+        combo.setBackground(AppTheme.BG_SURFACE);
+        combo.setForeground(AppTheme.TEXT_PRIMARY);
+        
+        // Renderer for consistent white background with dark text
+        combo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list, Object value, int index,
+                    boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(
+                    list, value, index, isSelected, cellHasFocus);
+                
+                if (isSelected) {
+                    setBackground(AppTheme.SELECTION_BG);
+                    setForeground(AppTheme.SELECTION_FG);
+                } else {
+                    setBackground(AppTheme.BG_SURFACE);
+                    setForeground(AppTheme.TEXT_PRIMARY);
+                }
+                
+                return this;
+            }
+        });
+        
         ingredientTable.getColumnModel()
             .getColumn(COL_UNIT)
             .setCellEditor(new DefaultCellEditor(combo));
@@ -558,7 +592,7 @@ public class AddEditRecipeDialog extends JDialog {
             }
 
             String unit = unitObj != null
-                ? unitObj.toString() : UNITS[0];
+                ? unitObj.toString() : Helper.UNITS[0];
 
             list.add(new RecipeIngredient(
                 recipeId, ingredientId, qty, unit, ingredientName));

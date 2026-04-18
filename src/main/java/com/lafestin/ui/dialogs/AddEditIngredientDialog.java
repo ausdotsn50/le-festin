@@ -35,12 +35,6 @@ public class AddEditIngredientDialog extends JDialog {
 
     private List<Ingredient> allIngredients = new ArrayList<>();
 
-    private static final String[] UNITS = {
-        "piece", "whole", "cup", "tablespoon",
-        "teaspoon", "gram", "kilogram", "clove",
-        "milliliter", "liter", "slice", "pinch"
-    };
-
     public AddEditIngredientDialog(MainFrame frame, PantryItem item) {
         super(frame,
             item == null ? "Add Ingredient to Pantry" : "Edit Pantry Item",
@@ -57,7 +51,7 @@ public class AddEditIngredientDialog extends JDialog {
 
         initComponents();
         prefillIfEditing();
-        Helper.packAndCenter(frame, this);
+        Helper.packAndCenter(frame, this, new Dimension(580, 680));
     }
 
     private void initComponents() {
@@ -205,7 +199,7 @@ public class AddEditIngredientDialog extends JDialog {
 
     // Unit combo
     private JComboBox<String> buildUnitCombo() {
-        unitCombo = new JComboBox<>(UNITS);
+        unitCombo = new JComboBox<>(Helper.UNITS);
         unitCombo.setFont(AppTheme.FONT_BODY);
         unitCombo.setBackground(AppTheme.BG_SURFACE);
         return unitCombo;
