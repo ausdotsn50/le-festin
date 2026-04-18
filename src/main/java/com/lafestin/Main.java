@@ -1,8 +1,13 @@
 package com.lafestin;
 
+import java.sql.SQLException;
+import java.util.List;
+
 import javax.swing.SwingUtilities;
 
 import com.lafestin.config.DBConnection;
+import com.lafestin.dao.RecipeDAO;
+import com.lafestin.model.Recipe;
 import com.lafestin.model.User;
 import com.lafestin.ui.MainFrame;
 
@@ -26,5 +31,6 @@ public class Main {
 
             frame.setVisible(true);
         });
+
     }
 }
