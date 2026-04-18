@@ -136,26 +136,26 @@ public class LoginDialog extends JDialog {
         panel.setBackground(AppTheme.BG_PAGE);
         panel.setBorder(BorderFactory.createEmptyBorder(28, 36, 20, 36));
 
-        // ── Username ──────────────────────────────────────────────────────
+        // Username
         panel.add(buildInputLabel("Username"));
         panel.add(Box.createVerticalStrut(4));
         usernameField = buildTextField("Enter username");
         panel.add(usernameField);
         panel.add(Box.createVerticalStrut(14));
 
-        // ── Password ──────────────────────────────────────────────────────
+        // Password
         panel.add(buildInputLabel("Password"));
         panel.add(Box.createVerticalStrut(4));
         passwordField = buildPasswordField("Enter password");
         panel.add(passwordField);
         panel.add(Box.createVerticalStrut(6));
 
-        // ── Error label — hidden until login fails ─────────────────────────
+        // Error label — hidden until login fails
         errorLabel = buildErrorLabel();
         panel.add(errorLabel);
         panel.add(Box.createVerticalStrut(16));
 
-        // ── Login button ──────────────────────────────────────────────────
+        // Login button
         loginBtn = AppTheme.primaryButton("Sign In");
         loginBtn.setPreferredSize(new Dimension(308, 40));
         loginBtn.addActionListener(e -> attemptLogin());
