@@ -6,6 +6,7 @@ import com.lafestin.model.MealEntry;
 import com.lafestin.model.Recipe;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import com.lafestin.helper.Helper;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -163,7 +164,7 @@ public class CsvExportService {
 
                 for (com.lafestin.model.RecipeIngredient item : items) {
                     printer.printRecord(
-                        capitalize(item.getIngredientName()),
+                        Helper.capitalize(item.getIngredientName()),
                         formatQty(item.getQuantity()),
                         item.getUnit()
                     );
@@ -271,12 +272,6 @@ public class CsvExportService {
         return (qty == Math.floor(qty))
             ? String.valueOf((int) qty)
             : String.valueOf(qty);
-    }
-
-    /** Capitalizes the first letter of a string. */
-    private String capitalize(String s) {
-        if (s == null || s.isEmpty()) return s;
-        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
 
     // ══════════════════════════════════════════════════════════════════════

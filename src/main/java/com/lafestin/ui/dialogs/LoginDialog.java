@@ -1,5 +1,6 @@
 package com.lafestin.ui.dialogs;
 
+import com.lafestin.helper.Helper;
 import com.lafestin.model.User;
 import com.lafestin.service.AuthService;
 import com.lafestin.service.AuthService.AuthResult;
@@ -19,34 +20,34 @@ import java.awt.event.*;
  * On window close   → System.exit(0) — app cannot run without a user
  */
 public class LoginDialog extends JDialog {
-
-    private final MainFrame   frame;
+    private final MainFrame frame;
     private final AuthService authService;
 
     // Login form fields 
-    private JTextField     usernameField;
+    private JTextField usernameField;
     private JPasswordField passwordField;
-    private JButton        loginBtn;
-    private JLabel         errorLabel;
+    private JButton loginBtn;
+    private JLabel errorLabel;
 
     // Register form fields
-    private JTextField     regUsernameField;
+    private JTextField regUsernameField;
     private JPasswordField regPasswordField;
     private JPasswordField regConfirmField;
-    private JLabel         regErrorLabel;
+    private JLabel regErrorLabel;
 
-    // Card panel that switches between login and register views 
-    private JPanel     cardPanel;
+    // Card panel that switches between login and register views
+    private JScrollPane cardPanel;  // JScrollPane wrapper
+    private JPanel cardContentPanel;  // Inner panel with CardLayout
     private CardLayout cardLayout;
 
-    private static final String CARD_LOGIN    = "login";
+    private static final String CARD_LOGIN = "login";
     private static final String CARD_REGISTER = "register";
 
     public LoginDialog(MainFrame frame) {
         super(frame, "La Festin", true);
 
-        this.frame       = frame;
-        this.authService = new AuthService();
+        this.frame = frame;
+        this.authService = new AuthService(); // Opens an auth service
 
         // Closing the dialog exits the app — no user = app can't run
         setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
@@ -58,27 +59,51 @@ public class LoginDialog extends JDialog {
         });
 
         initComponents();
-        packAndCenter();
+        Helper.packAndCenter(frame, this, new Dimension(380, 460));
     }
 
     private void initComponents() {
         setLayout(new BorderLayout());
         getContentPane().setBackground(AppTheme.BG_PAGE);
 
-        // CardLayout switches between login and register panels
+        // Create inner content panel with CardLayout
         cardLayout = new CardLayout();
-        cardPanel  = new JPanel(cardLayout);
-        cardPanel.setBackground(AppTheme.BG_PAGE);
+        cardContentPanel = new JPanel(cardLayout) {
+            @Override
+            public Dimension getPreferredSize() {
+                // Get the preferred size of the current card
+                Dimension d = super.getPreferredSize();
+                // Ensure it fills the scroll pane width
+                d.width = 380; // Match dialog width minus padding
+                return d;
+            }
+            
+            @Override
+            public Dimension getMaximumSize() {
+                return getPreferredSize();
+            }
+        };
+        cardContentPanel.setBackground(AppTheme.BG_PAGE);
 
-        cardPanel.add(buildLoginPanel(),    CARD_LOGIN);
-        cardPanel.add(buildRegisterPanel(), CARD_REGISTER);
+        cardContentPanel.add(buildLoginPanel(), CARD_LOGIN);
+        cardContentPanel.add(buildRegisterPanel(), CARD_REGISTER);
+
+        // Wrap in JScrollPane (vertical scrolling only)
+        cardPanel = new JScrollPane(cardContentPanel,
+            JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+            JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        cardPanel.setBackground(AppTheme.BG_PAGE);
+        cardPanel.getViewport().setBackground(AppTheme.BG_PAGE);
+        cardPanel.setBorder(BorderFactory.createEmptyBorder());
 
         add(buildBrandingHeader(), BorderLayout.NORTH);
-        add(cardPanel,             BorderLayout.CENTER);
+        add(cardPanel, BorderLayout.CENTER);
 
-        cardLayout.show(cardPanel, CARD_LOGIN);
+        cardLayout.show(cardContentPanel, CARD_LOGIN);
     }
-
+    
+    // La Festin
+    // Your recipe companion - header component
     private JPanel buildBrandingHeader() {
         JPanel header = new JPanel();
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
@@ -103,37 +128,42 @@ public class LoginDialog extends JDialog {
         return header;
     }
 
+    // To do: bug fix on buildLogin panel
+    // Allows ctrl+ options (for JTextField)
+    // Use ctrl+ instead of cmd+ on MacOS for JTextfield
     private JPanel buildLoginPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(AppTheme.BG_PAGE);
         panel.setBorder(BorderFactory.createEmptyBorder(28, 36, 20, 36));
 
-        // ── Username ──────────────────────────────────────────────────────
+        // Username
         panel.add(buildInputLabel("Username"));
         panel.add(Box.createVerticalStrut(4));
         usernameField = buildTextField("Enter username");
         panel.add(usernameField);
         panel.add(Box.createVerticalStrut(14));
 
-        // ── Password ──────────────────────────────────────────────────────
+        // Password
         panel.add(buildInputLabel("Password"));
         panel.add(Box.createVerticalStrut(4));
         passwordField = buildPasswordField("Enter password");
         panel.add(passwordField);
         panel.add(Box.createVerticalStrut(6));
 
-        // ── Error label — hidden until login fails ─────────────────────────
+        // Error label — hidden until login fails
         errorLabel = buildErrorLabel();
         panel.add(errorLabel);
         panel.add(Box.createVerticalStrut(16));
 
-        // ── Login button ──────────────────────────────────────────────────
+        // Login button
         loginBtn = AppTheme.primaryButton("Sign In");
-        loginBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        loginBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        loginBtn.setPreferredSize(new Dimension(308, 40));
         loginBtn.addActionListener(e -> attemptLogin());
-        panel.add(loginBtn);
+        JPanel loginBtnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        loginBtnPanel.setBackground(AppTheme.BG_PAGE);
+        loginBtnPanel.add(loginBtn);
+        panel.add(loginBtnPanel);
         panel.add(Box.createVerticalStrut(18));
 
         // Register link
@@ -180,10 +210,12 @@ public class LoginDialog extends JDialog {
 
         // Reg button
         JButton registerBtn = AppTheme.primaryButton("Create Account");
-        registerBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        registerBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        registerBtn.setPreferredSize(new Dimension(308, 40));
         registerBtn.addActionListener(e -> attemptRegister());
-        panel.add(registerBtn);
+        JPanel registerBtnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        registerBtnPanel.setBackground(AppTheme.BG_PAGE);
+        registerBtnPanel.add(registerBtn);
+        panel.add(registerBtnPanel);
         panel.add(Box.createVerticalStrut(14));
 
         // Back to login
@@ -322,7 +354,7 @@ public class LoginDialog extends JDialog {
     private void showRegisterPanel() {
         showError(errorLabel, null);
         clearRegisterFields();
-        cardLayout.show(cardPanel, CARD_REGISTER);
+        cardLayout.show(cardContentPanel, CARD_REGISTER);
         pack();
         setLocationRelativeTo(null);
         regUsernameField.requestFocus();
@@ -330,7 +362,7 @@ public class LoginDialog extends JDialog {
 
     private void showLoginPanel() {
         showError(regErrorLabel, null);
-        cardLayout.show(cardPanel, CARD_LOGIN);
+        cardLayout.show(cardContentPanel, CARD_LOGIN);
         pack();
         setLocationRelativeTo(null);
         usernameField.requestFocus();
@@ -375,6 +407,7 @@ public class LoginDialog extends JDialog {
         label.setFont(AppTheme.FONT_SMALL);
         label.setForeground(AppTheme.TERRA_PRIMARY);
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        label.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         label.setVisible(false);
         return label;
     }
@@ -406,14 +439,15 @@ public class LoginDialog extends JDialog {
         return btn;
     }
 
-    // Helper funds LoginDialog.java
+    // Helper funcs LoginDialog.java
     /** Shows an error message inline, or hides the label if msg is null. */
     private void showError(JLabel label, String msg) {
         if (msg == null || msg.isBlank()) {
             label.setText(" ");
             label.setVisible(false);
         } else {
-            label.setText(msg);
+            // Wrap in HTML to enable text wrapping within max width
+            label.setText("<html>" + msg + "</html>");
             label.setVisible(true);
         }
     }
@@ -422,12 +456,5 @@ public class LoginDialog extends JDialog {
         regUsernameField.setText("");
         regPasswordField.setText("");
         regConfirmField.setText("");
-    }
-
-    private void packAndCenter() {
-        setPreferredSize(new Dimension(380, 460));
-        pack();
-        setLocationRelativeTo(null); // center on screen, not on frame
-        setResizable(false);
     }
 }

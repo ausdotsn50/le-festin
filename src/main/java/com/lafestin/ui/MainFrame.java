@@ -1,6 +1,7 @@
 package com.lafestin.ui;
 
 import com.lafestin.model.User;
+import com.lafestin.ui.dialogs.LoginDialog;
 import com.lafestin.ui.panels.*;
 
 import javax.swing.*;
@@ -35,7 +36,7 @@ public class MainFrame extends JFrame {
     // Layout comps
     private CardLayout cardLayout;
     private JPanel contentArea;
-    private JLabel usernameLabel;
+    private JButton userMenuButton;
 
     // Nav buttons
     private JButton[] navButtons;
@@ -77,13 +78,48 @@ public class MainFrame extends JFrame {
         appName.setForeground(AppTheme.HEADER_FG);
         appName.setFont(AppTheme.FONT_APP_NAME);
 
-        usernameLabel = new JLabel("Not logged in");
-        usernameLabel.setForeground(AppTheme.HEADER_FG_MUTED);
-        usernameLabel.setFont(AppTheme.FONT_SMALL);
+        userMenuButton = buildUserMenuButton();
 
-        header.add(appName,       BorderLayout.WEST);
-        header.add(usernameLabel, BorderLayout.EAST);
+        header.add(appName, BorderLayout.WEST);
+        header.add(userMenuButton, BorderLayout.EAST);
         return header;
+    }
+
+    private JButton buildUserMenuButton() {
+        JButton btn = new JButton("Not logged in");
+        btn.setForeground(AppTheme.HEADER_FG_MUTED);
+        btn.setFont(AppTheme.FONT_SMALL);
+        btn.setBackground(AppTheme.HEADER_BG);
+        btn.setBorderPainted(false);
+        btn.setContentAreaFilled(false);
+        btn.setFocusPainted(false);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        btn.addActionListener(e -> showUserMenu(btn));
+
+        return btn;
+    }
+
+    private void showUserMenu(JButton button) {
+        JPopupMenu menu = new JPopupMenu();
+
+        JMenuItem logoutItem = new JMenuItem("Logout");
+        logoutItem.addActionListener(e -> performLogout());
+        menu.add(logoutItem);
+
+        menu.show(button, 0, button.getHeight());
+    }
+
+    // Note on how logout is performed (for possible)
+    // Can add sleep later on Views transition for a smoother switch
+    private void performLogout() {
+        // Close the current frame before showing login dialog
+        dispose();
+
+        // Create a new MainFrame and LoginDialog to restart the login flow
+        MainFrame newFrame = new MainFrame();
+        LoginDialog loginDialog = new LoginDialog(newFrame);
+        loginDialog.setVisible(true);
     }
 
     private JPanel buildSidebar() {
@@ -189,7 +225,7 @@ public class MainFrame extends JFrame {
     // Session management
     public void setCurrentUser(User user) {
         this.currentUser = user;
-        usernameLabel.setText(user != null ? user.getUsername() : "Not logged in");
+        userMenuButton.setText(user != null ? user.getUsername() : "Not logged in");
     }
 
     public User getCurrentUser() { return currentUser; }

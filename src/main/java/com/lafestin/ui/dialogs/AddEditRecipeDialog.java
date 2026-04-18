@@ -8,9 +8,11 @@ import com.lafestin.model.Recipe;
 import com.lafestin.model.RecipeIngredient;
 import com.lafestin.ui.AppTheme;
 import com.lafestin.ui.MainFrame;
+import com.lafestin.helper.Helper;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.SQLException;
@@ -21,56 +23,48 @@ import java.util.List;
  * AddEditRecipeDialog — modal form for creating and editing recipes.
  */
 public class AddEditRecipeDialog extends JDialog {
-
-    private final MainFrame           frame;
-    private final Recipe              existingRecipe; // null = add mode
-    private final RecipeDAO           recipeDAO;
+    private final MainFrame frame;
+    private final Recipe existingRecipe; // null = add mode
+    private final RecipeDAO recipeDAO;
     private final RecipeIngredientDAO riDAO;
-    private final IngredientDAO       ingredientDAO;
+    private final IngredientDAO ingredientDAO;
 
     // Result flag
     private boolean saved = false;
 
     // Form fields
-    private JTextField        titleField;
+    private JTextField titleField;
     private JComboBox<String> categoryCombo;
-    private JSpinner          prepTimeSpinner;
-    private JTextArea         procedureArea;
+    private JSpinner prepTimeSpinner;
+    private JTextArea procedureArea;
 
     // Ingredient table
-    private JTable            ingredientTable;
+    private JTable ingredientTable;
     private DefaultTableModel ingredientModel;
 
     // Available ingredients for dropdown
     private List<Ingredient> allIngredients = new ArrayList<>();
 
-    // Unit options 
-    private static final String[] UNITS = {
-        "piece", "whole", "cup", "tablespoon", "teaspoon",
-        "gram", "kilogram", "milliliter", "liter", "clove",
-        "slice", "pinch"
-    };
-
     // Column indexes in ingredient table
     private static final int COL_INGREDIENT = 0;
-    private static final int COL_QUANTITY   = 1;
-    private static final int COL_UNIT       = 2;
+    private static final int COL_QUANTITY = 1;
+    private static final int COL_UNIT = 2;
 
     public AddEditRecipeDialog(MainFrame frame, Recipe recipe) {
         super(frame,
             recipe == null ? "Add New Recipe" : "Edit Recipe",
             true); // modal
 
-        this.frame          = frame;
+        this.frame = frame;
         this.existingRecipe = recipe;
-        this.recipeDAO      = new RecipeDAO();
-        this.riDAO          = new RecipeIngredientDAO();
-        this.ingredientDAO  = new IngredientDAO();
-
-        loadAllIngredients();
+        this.recipeDAO = new RecipeDAO();
+        this.riDAO = new RecipeIngredientDAO();
+        this.ingredientDAO = new IngredientDAO();
+    
+        allIngredients = Helper.loadAllIngredients(this, ingredientDAO);
         initComponents();
         prefillIfEditing();
-        packAndCenter();
+        Helper.packAndCenter(frame, this, new Dimension(580, 680));
     }
 
     // Initialize dialog components
@@ -78,8 +72,8 @@ public class AddEditRecipeDialog extends JDialog {
         setLayout(new BorderLayout(0, 0));
         getContentPane().setBackground(AppTheme.BG_PAGE);
 
-        add(buildFormPanel(),   BorderLayout.CENTER);
-        add(buildButtonBar(),   BorderLayout.SOUTH);
+        add(buildFormPanel(), BorderLayout.CENTER);
+        add(buildButtonBar(), BorderLayout.SOUTH);
 
         // Escape key cancels
         getRootPane().registerKeyboardAction(
@@ -95,9 +89,9 @@ public class AddEditRecipeDialog extends JDialog {
         form.setBackground(AppTheme.BG_PAGE);
         form.setBorder(BorderFactory.createEmptyBorder(20, 24, 12, 24));
 
-        form.add(buildFieldRow("Title",     buildTitleField()));
+        form.add(buildFieldRow("Title", buildTitleField()));
         form.add(Box.createVerticalStrut(12));
-        form.add(buildFieldRow("Category",  buildCategoryCombo()));
+        form.add(buildFieldRow("Category", buildCategoryCombo()));
         form.add(Box.createVerticalStrut(12));
         form.add(buildFieldRow("Prep time", buildPrepTimeRow()));
         form.add(Box.createVerticalStrut(12));
@@ -125,7 +119,7 @@ public class AddEditRecipeDialog extends JDialog {
         return row;
     }
 
-    // ── Title ─────────────────────────────────────────────────────────────
+    // Title
     private JTextField buildTitleField() {
         titleField = new JTextField();
         titleField.setFont(AppTheme.FONT_BODY);
@@ -198,6 +192,7 @@ public class AddEditRecipeDialog extends JDialog {
     }
 
     // Ingredients section
+    // To do: debug this section
     private JPanel buildIngredientSection() {
         JPanel section = new JPanel(new BorderLayout(0, 8));
         section.setBackground(AppTheme.BG_PAGE);
@@ -213,7 +208,7 @@ public class AddEditRecipeDialog extends JDialog {
 
         JButton addRowBtn = AppTheme.secondaryButton("+ Add Row");
         addRowBtn.addActionListener(e -> addIngredientRow(
-            null, 1.0, UNITS[0]));
+            null, 1.0, Helper.UNITS[0]));
 
         header.add(label,     BorderLayout.WEST);
         header.add(addRowBtn, BorderLayout.EAST);
@@ -227,12 +222,18 @@ public class AddEditRecipeDialog extends JDialog {
             }
         };
 
+        // Ingredient table styles (needs fixing)
         ingredientTable = new JTable(ingredientModel);
         ingredientTable.setFont(AppTheme.FONT_BODY);
         ingredientTable.setRowHeight(34);
         ingredientTable.setBackground(AppTheme.BG_SURFACE);
         ingredientTable.setGridColor(AppTheme.BG_BORDER);
         ingredientTable.setShowGrid(true);
+        
+        // Selection config
+        // Fix: to bad table row contrast colors
+        ingredientTable.setSelectionBackground(AppTheme.SELECTION_BG);
+        ingredientTable.setSelectionForeground(AppTheme.SELECTION_FG);
         ingredientTable.getTableHeader()
             .setFont(AppTheme.FONT_LABEL);
         ingredientTable.getTableHeader()
@@ -240,6 +241,9 @@ public class AddEditRecipeDialog extends JDialog {
 
         // Ingredient column — JComboBox of all ingredients
         installIngredientCombo();
+
+        // Install renderer for ingredient column to display names
+        installIngredientRenderer();
 
         // Unit column — JComboBox of unit options
         installUnitCombo();
@@ -265,9 +269,9 @@ public class AddEditRecipeDialog extends JDialog {
         footer.setBackground(AppTheme.BG_PAGE);
         footer.add(removeRowBtn);
 
-        section.add(header,    BorderLayout.NORTH);
-        section.add(scroll,    BorderLayout.CENTER);
-        section.add(footer,    BorderLayout.SOUTH);
+        section.add(header, BorderLayout.NORTH);
+        section.add(scroll, BorderLayout.CENTER);
+        section.add(footer, BorderLayout.SOUTH);
 
         return section;
     }
@@ -288,8 +292,17 @@ public class AddEditRecipeDialog extends JDialog {
                     boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(
                     list, value, index, isSelected, cellHasFocus);
+                
+                if (isSelected) {
+                    setBackground(AppTheme.SELECTION_BG);
+                    setForeground(AppTheme.SELECTION_FG);
+                } else {
+                    setBackground(AppTheme.BG_SURFACE);
+                    setForeground(AppTheme.TEXT_PRIMARY);
+                }
+                
                 if (value instanceof Ingredient) {
-                    setText(capitalize(
+                    setText(Helper.capitalize(
                         ((Ingredient) value).getName()));
                 }
                 return this;
@@ -297,6 +310,8 @@ public class AddEditRecipeDialog extends JDialog {
         });
 
         combo.setFont(AppTheme.FONT_BODY);
+        combo.setBackground(AppTheme.BG_SURFACE);
+        combo.setForeground(AppTheme.TEXT_PRIMARY);
         ingredientTable.getColumnModel()
             .getColumn(COL_INGREDIENT)
             .setCellEditor(new DefaultCellEditor(combo));
@@ -304,11 +319,59 @@ public class AddEditRecipeDialog extends JDialog {
 
     // Install unit JComboBox as cell editor
     private void installUnitCombo() {
-        JComboBox<String> combo = new JComboBox<>(UNITS);
+        JComboBox<String> combo = new JComboBox<>(Helper.UNITS);
         combo.setFont(AppTheme.FONT_BODY);
+        combo.setBackground(AppTheme.BG_SURFACE);
+        combo.setForeground(AppTheme.TEXT_PRIMARY);
+        
+        // Renderer for consistent white background with dark text
+        combo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list, Object value, int index,
+                    boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(
+                    list, value, index, isSelected, cellHasFocus);
+                
+                if (isSelected) {
+                    setBackground(AppTheme.SELECTION_BG);
+                    setForeground(AppTheme.SELECTION_FG);
+                } else {
+                    setBackground(AppTheme.BG_SURFACE);
+                    setForeground(AppTheme.TEXT_PRIMARY);
+                }
+                
+                return this;
+            }
+        });
+        
         ingredientTable.getColumnModel()
             .getColumn(COL_UNIT)
             .setCellEditor(new DefaultCellEditor(combo));
+    }
+
+    // Install renderer for ingredient column to display names
+    private void installIngredientRenderer() {
+        ingredientTable.getColumnModel()
+            .getColumn(COL_INGREDIENT)
+            .setCellRenderer(new DefaultTableCellRenderer() {
+                @Override
+                public Component getTableCellRendererComponent(
+                        JTable table, Object value, boolean isSelected,
+                        boolean hasFocus, int row, int column) {
+                    super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, column);
+                    
+                    if (value instanceof Ingredient) {
+                        setText(Helper.capitalize(
+                            ((Ingredient) value).getName()));
+                    } else if (value != null) {
+                        setText(value.toString());
+                    }
+                    
+                    return this;
+                }
+            });
     }
 
     // Add one row to the ingredient table
@@ -529,26 +592,13 @@ public class AddEditRecipeDialog extends JDialog {
             }
 
             String unit = unitObj != null
-                ? unitObj.toString() : UNITS[0];
+                ? unitObj.toString() : Helper.UNITS[0];
 
             list.add(new RecipeIngredient(
                 recipeId, ingredientId, qty, unit, ingredientName));
         }
 
         return list;
-    }
-
-    private void loadAllIngredients() {
-        try {
-            allIngredients = ingredientDAO.getAllIngredients();
-        } catch (SQLException e) {
-            allIngredients = new ArrayList<>();
-            JOptionPane.showMessageDialog(this,
-                "Could not load ingredients from database.\n"
-                + e.getMessage(),
-                "Warning",
-                JOptionPane.WARNING_MESSAGE);
-        }
     }
 
     private Ingredient findIngredientById(int id) {
@@ -564,19 +614,7 @@ public class AddEditRecipeDialog extends JDialog {
         }
         return null;
     }
-
-    private String capitalize(String s) {
-        if (s == null || s.isEmpty()) return s;
-        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
-    }
-
-    private void packAndCenter() {
-        setPreferredSize(new Dimension(580, 680));
-        pack();
-        setLocationRelativeTo(frame);
-        setResizable(true);
-    }
-
+    
     /** Returns true if the user saved — RecipeListPanel uses this to refresh. */
     public boolean isSaved() { return saved; }
 }
