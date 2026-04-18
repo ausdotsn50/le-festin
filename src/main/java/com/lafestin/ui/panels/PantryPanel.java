@@ -16,12 +16,11 @@ import java.util.List;
 
 /**
  * PantryPanel — the virtual pantry browser.
- *
+ * Now extends BaseListPanel to share header structure.
  */
-public class PantryPanel extends JPanel {
+public class PantryPanel extends BaseListPanel {
 
     // Deps
-    private final MainFrame frame;
     private final PantryDAO pantryDAO;
 
     // Table look
@@ -41,52 +40,46 @@ public class PantryPanel extends JPanel {
     private static final int COL_UNIT = 3;
 
     public PantryPanel(MainFrame frame) {
-        this.frame     = frame;
+        super(frame);
         this.pantryDAO = new PantryDAO();
-
-        setLayout(new BorderLayout(0, 0));
-        setBackground(AppTheme.BG_PAGE);
-
-        add(buildHeader(),  BorderLayout.NORTH);
-        add(buildTable(),   BorderLayout.CENTER);
-        add(buildToolbar(), BorderLayout.SOUTH);
     }
 
-    //  HEADER — title + Match Recipes button
-    private JPanel buildHeader() {
-        JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(AppTheme.BG_SURFACE);
-        header.setBorder(BorderFactory.createCompoundBorder(
-            AppTheme.BORDER_DIVIDER_TOP,
-            BorderFactory.createEmptyBorder(16, 20, 16, 20)
-        ));
+    @Override
+    protected String getHeaderTitle() {
+        return "My Pantry";
+    }
 
-        // Left: title + subtitle 
-        JPanel titleGroup = new JPanel();
-        titleGroup.setLayout(new BoxLayout(titleGroup, BoxLayout.Y_AXIS));
-        titleGroup.setBackground(AppTheme.BG_SURFACE);
+    @Override
+    protected String getHeaderDescription() {
+        return "Ingredients you currently have at home";
+    }
 
-        JLabel title = AppTheme.titleLabel("My Pantry");
-        title.setFont(new Font("SansSerif", Font.BOLD, 18));
-        title.setForeground(new Color(30, 30, 30));
+    @Override
+    protected String getSearchPlaceholder() {
+        return "Search ingredients...";
+    }
 
-        JLabel subtitle = AppTheme.subtitleLabel("Ingredients you currently have at home");
-        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        subtitle.setForeground(new Color(140, 140, 140));
-
-        titleGroup.add(title);
-        titleGroup.add(Box.createVerticalStrut(2));
-        titleGroup.add(subtitle);
-
-        // Right: Match Recipes button
+    @Override
+    protected JComponent buildHeaderRightControl() {
         JButton matchBtn = AppTheme.primaryButton("Match Recipes");
         matchBtn.setToolTipText("Find recipes you can make with your current pantry");
         matchBtn.addActionListener(e -> navigateToSuggestions());
+        return matchBtn;
+    }
 
-        header.add(titleGroup, BorderLayout.WEST);
-        header.add(matchBtn,   BorderLayout.EAST);
+    @Override
+    protected JComponent buildSearchRightControl() {
+        return Box.createHorizontalBox(); // empty — no filter needed for pantry
+    }
 
-        return header;
+    @Override
+    protected JComponent buildTableContent() {
+        return buildTable();
+    }
+
+    @Override
+    protected JPanel buildToolbar() {
+        return buildToolbarPanel();
     }
 
     //  TABLE
@@ -216,7 +209,7 @@ public class PantryPanel extends JPanel {
     }
 
     //  TOOLBAR — Add / Edit / Remove + count
-    private JPanel buildToolbar() {
+    private JPanel buildToolbarPanel() {
         JPanel bar = new JPanel(new BorderLayout());
         bar.setBackground(AppTheme.BG_SURFACE);
         bar.setBorder(BorderFactory.createCompoundBorder(
