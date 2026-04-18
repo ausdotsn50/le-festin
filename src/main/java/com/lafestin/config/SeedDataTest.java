@@ -6,8 +6,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+import com.lafestin.dao.IngredientDAO;
 import com.lafestin.dao.RecipeDAO;
 import com.lafestin.dao.RecipeIngredientDAO;
+import com.lafestin.model.Ingredient;
 import com.lafestin.model.Recipe;
 import com.lafestin.model.RecipeIngredient;
 
@@ -26,6 +28,7 @@ public class SeedDataTest {
         Connection conn = DBConnection.getInstance().getConnection();
         RecipeDAO dao = new RecipeDAO();
         RecipeIngredientDAO riDAO = new RecipeIngredientDAO();
+        IngredientDAO ingredientDAO = new IngredientDAO();
 
         printSeparator("La Festin — Seed Data Verification");
 
@@ -40,12 +43,48 @@ public class SeedDataTest {
 
         // DAO tester
         // testRecipeDAO(dao);
-        testRecipeIngredientDAO(riDAO);
+        // testRecipeIngredientDAO(riDAO);
+        testIngredientDAO(ingredientDAO);
 
         printSeparator("ALL QUERIES COMPLETED");
         DBConnection.getInstance().close();
     }
 
+    private static void testIngredientDAO(IngredientDAO ingredientDAO) {
+        try {
+            // Test 1 — getAllIngredients, expect 12 ordered by name
+            List<Ingredient> all = ingredientDAO.getAllIngredients();
+            System.out.println("getAllIngredients: " + all.size()); // 12
+            System.out.println("First:  " + all.get(0).getName()); // all-purpose flour
+            System.out.println("Last:   " + all.get(all.size()-1).getName()); // vinegar
+
+            // Test 2 — getIngredientById for garlic (id=7)
+            Ingredient garlic = ingredientDAO.getIngredientById(7);
+            System.out.println("getById: " + garlic.getName()); // garlic
+
+            // Test 3 — searchByName partial match
+            List<Ingredient> results = ingredientDAO.searchByName("gar");
+            System.out.println("searchByName 'gar': " + results.size()); // 1 (garlic)
+
+            // Test 4 — existsByName
+            System.out.println("existsByName 'garlic': " + ingredientDAO.existsByName("garlic")); // true
+            System.out.println("existsByName 'truffle': " + ingredientDAO.existsByName("truffle")); // false
+
+            // Test 5 — findOrCreate: existing
+            Ingredient found = ingredientDAO.findOrCreate("garlic");
+            System.out.println("findOrCreate existing id: " + found.getIngredientId()); // 7
+
+            // Test 6 — findOrCreate: new
+            Ingredient created = ingredientDAO.findOrCreate("truffle");
+            System.out.println("findOrCreate new id: " + created.getIngredientId()); // 13+
+
+            // Cleanup test ingredient
+            ingredientDAO.deleteIngredient(created.getIngredientId());
+            System.out.println("After delete: " + ingredientDAO.getAllIngredients().size()); // 12
+        } catch(SQLException e) {
+
+        }
+    }
     private static void testRecipeIngredientDAO(RecipeIngredientDAO riDAO) {
         try {
             // Test 1 — get ingredients for Pork Adobo (recipeId=3), expect 5 rows
