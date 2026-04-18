@@ -12,6 +12,8 @@ import com.lafestin.dao.RecipeIngredientDAO;
 import com.lafestin.model.Ingredient;
 import com.lafestin.model.Recipe;
 import com.lafestin.model.RecipeIngredient;
+import com.lafestin.service.AuthService;
+import com.lafestin.service.AuthService.AuthResult;
 
 /**
  * SeedDataTest — verifies JDBC is working AND seed data landed correctly.
@@ -29,6 +31,7 @@ public class SeedDataTest {
         RecipeDAO dao = new RecipeDAO();
         RecipeIngredientDAO riDAO = new RecipeIngredientDAO();
         IngredientDAO ingredientDAO = new IngredientDAO();
+        AuthService auth = new AuthService();
 
         printSeparator("La Festin — Seed Data Verification");
 
@@ -44,10 +47,59 @@ public class SeedDataTest {
         // DAO tester
         // testRecipeDAO(dao);
         // testRecipeIngredientDAO(riDAO);
-        testIngredientDAO(ingredientDAO);
+        // testIngredientDAO(ingredientDAO);
+
+        // Service tester
+        testAuth(conn, auth);
 
         printSeparator("ALL QUERIES COMPLETED");
         DBConnection.getInstance().close();
+    }
+
+    private static void testAuth(Connection conn, AuthService auth) {
+        // Test 1 — register a new user
+        AuthResult reg = auth.register("testchef", "kitchen99");
+        System.out.println("register success: " + reg.isSuccess()); // true
+        System.out.println("register message: " + reg.getMessage()); // Welcome...
+        System.out.println("register userId:  " + reg.getUser().getUserId()); // 4+
+
+        // Test 2 — duplicate username blocked
+        AuthResult dup = auth.register("testchef", "other123");
+        System.out.println("duplicate: " + dup.isSuccess());  // false
+        System.out.println("dup msg:   " + dup.getMessage()); // already taken
+
+        // Test 3 — login with correct password
+        AuthResult login = auth.login("testchef", "kitchen99");
+        System.out.println("login success: " + login.isSuccess()); // true
+        System.out.println("login user:    " + login.getUser().getUsername()); // testchef
+
+        // Test 4 — wrong password returns null user, same generic message
+        AuthResult wrong = auth.login("testchef", "wrongpass");
+        System.out.println("wrong pw success: " + wrong.isSuccess()); // false
+        System.out.println("wrong pw msg:     " + wrong.getMessage()); // Invalid username or password
+
+        // Test 5 — unknown username same generic message
+        AuthResult unknown = auth.login("nobody", "password");
+        System.out.println("unknown success: " + unknown.isSuccess()); // false
+        System.out.println("unknown msg:     " + unknown.getMessage()); // Invalid username or password
+
+        // Test 6 — validation catches short password
+        AuthResult shortPw = auth.register("validuser", "abc");
+        System.out.println("short pw: " + shortPw.getMessage()); // at least 6 characters
+
+        // Test 7 — validation catches username with spaces
+        AuthResult space = auth.register("bad user", "password123");
+        System.out.println("space msg: " + space.getMessage()); // cannot contain spaces
+
+        // Cleanup
+        try {
+            PreparedStatement del = conn.prepareStatement(
+            "DELETE FROM user WHERE username = 'testchef'");
+            del.executeUpdate();
+            del.close();  
+        } catch (SQLException e) {
+            // TODO: handle exception
+        }
     }
 
     private static void testIngredientDAO(IngredientDAO ingredientDAO) {
