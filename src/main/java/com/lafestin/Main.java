@@ -1,16 +1,10 @@
 package com.lafestin;
 
-import java.sql.SQLException;
-import java.util.List;
-
 import javax.swing.SwingUtilities;
 
 import com.lafestin.config.DBConnection;
-import com.lafestin.dao.RecipeDAO;
-import com.lafestin.model.Recipe;
-import com.lafestin.model.User;
 import com.lafestin.ui.MainFrame;
-
+import com.lafestin.ui.dialogs.LoginDialog;
 import com.lafestin.ui.AppTheme;;
 
 public class Main {
@@ -25,10 +19,16 @@ public class Main {
 
         SwingUtilities.invokeLater(() -> {
             MainFrame frame = new MainFrame();
+            
+            // Show login before making the main window visible
+            LoginDialog login = new LoginDialog(frame);
+            login.setVisible(true);
 
-            // Temporary: hardcode angela until LoginDialog is built
-            frame.setCurrentUser(new User(1, "angela", ""));
+            // LoginDialog is modal — execution resumes here after
+            // dispose() is called, which only happens on success.
+            // If the user closed the dialog, System.exit(0) already ran.
 
+            // Guarantees that ----- frame.getCurrentUser() is non-null!!!
             frame.setVisible(true);
         });
 
