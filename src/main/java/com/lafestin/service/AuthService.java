@@ -1,12 +1,9 @@
 package com.lafestin.service;
 
-import com.lafestin.config.DBConnection;
 import com.lafestin.dao.UserDAO;
 import com.lafestin.model.User;
 import org.mindrot.jbcrypt.BCrypt;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
@@ -120,7 +117,6 @@ public class AuthService {
             return AuthResult.fail(
                 "Registration failed due to a database error.\n"
                 + "Please try again.\n"
-                + "Detail: " + e.getMessage()
             );
         }
     }
@@ -171,10 +167,10 @@ public class AuthService {
                 "Welcome back, " + user.getUsername() + "!");
 
         } catch (SQLException e) {
+            // Removed long detail, will disrupt the UI
             return AuthResult.fail(
                 "Login failed due to a database error.\n"
                 + "Please try again.\n"
-                + "Detail: " + e.getMessage()
             );
         }
     }
