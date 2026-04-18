@@ -6,6 +6,7 @@ import com.lafestin.model.Ingredient;
 import com.lafestin.model.PantryItem;
 import com.lafestin.ui.AppTheme;
 import com.lafestin.ui.MainFrame;
+import com.lafestin.helper.Helper;
 
 import javax.swing.*;
 import java.awt.*;
@@ -51,12 +52,12 @@ public class AddEditIngredientDialog extends JDialog {
         this.ingredientDAO= new IngredientDAO();
 
         if (item == null) {
-            loadAllIngredients(); // only needed in add mode
+            Helper.loadAllIngredients(this, allIngredients, ingredientDAO); // only needed in add mode
         }
 
         initComponents();
         prefillIfEditing();
-        packAndCenter();
+        Helper.packAndCenter(frame, this);
     }
 
     private void initComponents() {
@@ -134,7 +135,7 @@ public class AddEditIngredientDialog extends JDialog {
                     super.getListCellRendererComponent(
                         list, value, index, isSelected, cellHasFocus);
                     if (value instanceof Ingredient) {
-                        setText(capitalize(
+                        setText(Helper.capitalize(
                             ((Ingredient) value).getName()));
                     }
                     return this;
@@ -154,7 +155,7 @@ public class AddEditIngredientDialog extends JDialog {
             lockedPanel.setBackground(AppTheme.BG_PAGE);
 
             JLabel nameLabel = new JLabel(
-                capitalize(existingItem.getIngredientName()));
+                Helper.capitalize(existingItem.getIngredientName()));
             nameLabel.setFont(AppTheme.FONT_BODY);
             nameLabel.setForeground(AppTheme.TEXT_PRIMARY);
 
@@ -366,34 +367,6 @@ public class AddEditIngredientDialog extends JDialog {
                 + "Add ingredients to the database first.";
         }
         return null;
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    //  HELPERS
-    // ══════════════════════════════════════════════════════════════════════
-
-    private void loadAllIngredients() {
-        try {
-            allIngredients = ingredientDAO.getAllIngredients();
-        } catch (SQLException e) {
-            allIngredients = new ArrayList<>();
-            JOptionPane.showMessageDialog(null,
-                "Could not load ingredients: " + e.getMessage(),
-                "Warning",
-                JOptionPane.WARNING_MESSAGE);
-        }
-    }
-
-    private String capitalize(String s) {
-        if (s == null || s.isEmpty()) return s;
-        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
-    }
-
-    private void packAndCenter() {
-        setPreferredSize(new Dimension(400, 260));
-        pack();
-        setLocationRelativeTo(frame);
-        setResizable(false);
     }
 
     // ── Public API ────────────────────────────────────────────────────────

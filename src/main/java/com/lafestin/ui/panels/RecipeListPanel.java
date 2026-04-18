@@ -17,10 +17,8 @@ import java.util.List;
 
 /**
  * RecipeListPanel — the main recipe browser.
- *
  */
 public class RecipeListPanel extends JPanel {
-
     // Dependencies
     private final MainFrame frame;
     private final RecipeDAO recipeDAO;
