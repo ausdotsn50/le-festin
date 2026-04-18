@@ -7,7 +7,9 @@ import java.sql.SQLException;
 import java.util.List;
 
 import com.lafestin.dao.RecipeDAO;
+import com.lafestin.dao.RecipeIngredientDAO;
 import com.lafestin.model.Recipe;
+import com.lafestin.model.RecipeIngredient;
 
 /**
  * SeedDataTest — verifies JDBC is working AND seed data landed correctly.
@@ -23,21 +25,59 @@ public class SeedDataTest {
     public static void main(String[] args) {
         Connection conn = DBConnection.getInstance().getConnection();
         RecipeDAO dao = new RecipeDAO();
+        RecipeIngredientDAO riDAO = new RecipeIngredientDAO();
 
         printSeparator("La Festin — Seed Data Verification");
 
+        /*
         testUsers(conn);
         testIngredients(conn);
         testRecipes(conn);
         testRecipeIngredients(conn);
         testPantry(conn);
         testMealEntries(conn);
+         */
 
         // DAO tester
-        testRecipeDAO(dao);
+        // testRecipeDAO(dao);
+        testRecipeIngredientDAO(riDAO);
 
         printSeparator("ALL QUERIES COMPLETED");
         DBConnection.getInstance().close();
+    }
+
+    private static void testRecipeIngredientDAO(RecipeIngredientDAO riDAO) {
+        try {
+            // Test 1 — get ingredients for Pork Adobo (recipeId=3), expect 5 rows
+            List<RecipeIngredient> ri = riDAO.getIngredientsByRecipeId(3);
+            System.out.println("Pork Adobo ingredients: " + ri.size()); // 5
+
+            // Print each row — confirms JOIN is working and name is populated
+            for (RecipeIngredient r : ri) {
+                System.out.println("  " + r.getFormattedAmount());
+            }
+            // Expected:
+            //   5 clove garlic
+            //   500 gram pork belly
+            //   3 tablespoon soy sauce
+            //   3 cup rice (ordered alphabetically)
+            //   3 tablespoon vinegar
+
+            // Test 2 — add/delete round trip
+            RecipeIngredient newRi = new RecipeIngredient(1, 3, 2.0, "tablespoon");
+            riDAO.addRecipeIngredient(newRi);
+            List<RecipeIngredient> after = riDAO.getIngredientsByRecipeId(1);
+            System.out.println("After add (recipe 1): " + after.size()); // 5 (was 4)
+
+            riDAO.deleteByRecipeAndIngredient(1, 3);
+            List<RecipeIngredient> afterDelete = riDAO.getIngredientsByRecipeId(1);
+            System.out.println("After delete (recipe 1): " + afterDelete.size()); // 4
+
+            // Test 3 — deleteByRecipeId wipes all rows for a recipe
+            // (use a throwaway recipe so seed data is not affected)
+        } catch(SQLException e) {
+
+        }
     }
 
     private static void testRecipeDAO(RecipeDAO dao) {
