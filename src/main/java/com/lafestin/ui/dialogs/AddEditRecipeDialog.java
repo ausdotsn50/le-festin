@@ -68,7 +68,7 @@ public class AddEditRecipeDialog extends JDialog {
         this.riDAO = new RecipeIngredientDAO();
         this.ingredientDAO = new IngredientDAO();
     
-        Helper.loadAllIngredients(this, allIngredients, ingredientDAO);
+        allIngredients = Helper.loadAllIngredients(this, ingredientDAO);
         initComponents();
         prefillIfEditing();
         Helper.packAndCenter(frame, this);
