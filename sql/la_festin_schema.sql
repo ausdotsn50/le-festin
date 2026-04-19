@@ -1,5 +1,5 @@
 -- ============================================================
---  La Festin — Full Schema Setup
+--  Le Festin — Full Schema Setup
 --  Safe to re-run: drops and recreates all tables cleanly.
 --  Run with:
 --  mysql -u root -p < sql/la_festin_schema.sql
