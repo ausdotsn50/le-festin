@@ -61,15 +61,16 @@ public class PantryPanel extends BaseListPanel {
 
     @Override
     protected JComponent buildHeaderRightControl() {
+        return Box.createHorizontalBox(); // empty — no filter needed for pantry
+    }
+    
+
+    @Override
+    protected JComponent buildSearchRightControl() {
         JButton matchBtn = AppTheme.primaryButton("Match Recipes");
         matchBtn.setToolTipText("Find recipes you can make with your current pantry");
         matchBtn.addActionListener(e -> navigateToSuggestions());
         return matchBtn;
-    }
-
-    @Override
-    protected JComponent buildSearchRightControl() {
-        return Box.createHorizontalBox(); // empty — no filter needed for pantry
     }
 
     @Override

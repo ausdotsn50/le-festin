@@ -226,6 +226,18 @@ public class MainFrame extends JFrame {
     public void setCurrentUser(User user) {
         this.currentUser = user;
         userMenuButton.setText(user != null ? user.getUsername() : "Not logged in");
+        
+        // Reload visible panels after authentication
+        if (user != null) {
+            refreshVisiblePanel();
+        }
+    }
+    
+    // Refresh the currently visible panel's data
+    // Recipe panel bugfix (loading recipes on auth entry)
+    private void refreshVisiblePanel() {
+        if (recipeListPanel != null) recipeListPanel.loadRecipes();
+        if (pantryPanel != null) pantryPanel.loadPantry();
     }
 
     public User getCurrentUser() { return currentUser; }

@@ -79,7 +79,31 @@ public class RecipeListPanel extends BaseListPanel {
             Recipe.CATEGORY_DINNER,
         });
         categoryFilter.setFont(AppTheme.FONT_BODY);
+        categoryFilter.setBackground(AppTheme.BG_SURFACE);
+        categoryFilter.setForeground(AppTheme.TEXT_PRIMARY);
         categoryFilter.setPreferredSize(new Dimension(140, 36));
+        
+        // Renderer for consistent styling with theme colors
+        categoryFilter.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list, Object value, int index,
+                    boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(
+                    list, value, index, isSelected, cellHasFocus);
+                
+                if (isSelected) {
+                    setBackground(AppTheme.SELECTION_BG);
+                    setForeground(AppTheme.SELECTION_FG);
+                } else {
+                    setBackground(AppTheme.BG_SURFACE);
+                    setForeground(AppTheme.TEXT_PRIMARY);
+                }
+                
+                return this;
+            }
+        });
+        
         categoryFilter.addActionListener(e -> applyFilters());
 
         return categoryFilter;
@@ -343,10 +367,10 @@ public class RecipeListPanel extends BaseListPanel {
         }
     }
 
-    // Called by MainFrame when this panel becomes visible
+    // Reload when panel becomes visible
     @Override
     public void setVisible(boolean visible) {
         super.setVisible(visible);
-        if (visible) System.out.print("Visible recipe list panel");// loadRecipes();
+        if (visible) loadRecipes();
     }
 }
