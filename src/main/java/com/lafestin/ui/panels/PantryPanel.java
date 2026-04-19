@@ -27,12 +27,6 @@ public class PantryPanel extends BaseListPanel {
     private JTable            table;
     private DefaultTableModel tableModel;
 
-    // Toolbar buttons
-    private JButton addBtn;
-    private JButton editBtn;
-    private JButton removeBtn;
-    private JLabel  countLabel;
-
     // Col indxs
     private static final int COL_INGREDIENT_ID = 0; // hidden
     private static final int COL_NAME = 1;
@@ -80,7 +74,27 @@ public class PantryPanel extends BaseListPanel {
 
     @Override
     protected JPanel buildToolbar() {
-        return buildToolbarPanel();
+        return buildStandardToolbar();
+    }
+    
+    @Override
+    protected JButton createActionButton() {
+        return AppTheme.dangerButton("Remove");
+    }
+    
+    @Override
+    protected void onAddClicked() {
+        openAddDialog();
+    }
+    
+    @Override
+    protected void onEditClicked() {
+        openEditDialog();
+    }
+    
+    @Override
+    protected void onActionClicked() {
+        removeSelectedItem();
     }
 
     //  TABLE
@@ -187,7 +201,7 @@ public class PantryPanel extends BaseListPanel {
             if (!e.getValueIsAdjusting()) {
                 boolean selected = table.getSelectedRow() != -1;
                 editBtn.setEnabled(selected);
-                removeBtn.setEnabled(selected);
+                actionBtn.setEnabled(selected);
             }
         });
 
@@ -207,45 +221,6 @@ public class PantryPanel extends BaseListPanel {
         scroll.getViewport().setBackground(AppTheme.BG_SURFACE);
 
         return scroll;
-    }
-
-    //  TOOLBAR — Add / Edit / Remove + count
-    private JPanel buildToolbarPanel() {
-        JPanel bar = new JPanel(new BorderLayout());
-        bar.setBackground(AppTheme.BG_SURFACE);
-        bar.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(1, 0, 0, 0,
-                new Color(220, 220, 220)),
-            BorderFactory.createEmptyBorder(10, 16, 10, 16)
-        ));
-
-        JPanel btnGroup = new JPanel(new FlowLayout(
-            FlowLayout.LEFT, 8, 0));
-        btnGroup.setBackground(AppTheme.BG_SURFACE);
-
-        addBtn    = AppTheme.primaryButton("+ Add");
-        editBtn   = AppTheme.secondaryButton("Edit");
-        removeBtn = AppTheme.dangerButton("Remove");
-
-        editBtn.setEnabled(false);
-        removeBtn.setEnabled(false);
-
-        addBtn.addActionListener(   e -> openAddDialog());
-        editBtn.addActionListener(  e -> openEditDialog());
-        removeBtn.addActionListener(e -> removeSelectedItem());
-
-        btnGroup.add(addBtn);
-        btnGroup.add(editBtn);
-        btnGroup.add(removeBtn);
-
-        countLabel = new JLabel();
-        countLabel.setFont(AppTheme.FONT_SMALL);
-        countLabel.setForeground(AppTheme.TEXT_MUTED);
-
-        bar.add(btnGroup,   BorderLayout.WEST);
-        bar.add(countLabel, BorderLayout.EAST);
-
-        return bar;
     }
 
     //  DATA
@@ -270,13 +245,13 @@ public class PantryPanel extends BaseListPanel {
                 JOptionPane.ERROR_MESSAGE);
         }
 
-        updateCountLabel();
+        updateCountLabelDisplay();
     }
 
-    private void updateCountLabel() {
+    private void updateCountLabelDisplay() {
         int count = tableModel.getRowCount();
-        countLabel.setText(count + " ingredient"
-            + (count == 1 ? "" : "s"));
+        String text = count + " ingredient" + (count == 1 ? "" : "s");
+        updateCountLabel(text);
     }
 
     //  ACTIONS

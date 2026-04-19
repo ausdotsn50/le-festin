@@ -191,6 +191,17 @@ public class AppTheme {
             BorderFactory.createLineBorder(BG_BORDER, 1),
             BorderFactory.createEmptyBorder(7, 16, 7, 16)));
         btn.setBorderPainted(true);
+        btn.addMouseListener(hoverEffect(
+            btn, BG_SUBTLE, new Color(245, 242, 238)));
+        btn.addChangeListener(e -> {
+            if (!btn.isEnabled()) {
+                btn.setBackground(new Color(240, 238, 235));
+                btn.setForeground(TEXT_MUTED);
+            } else {
+                btn.setBackground(BG_SUBTLE);
+                btn.setForeground(TEXT_PRIMARY);
+            }
+        });
         return btn;
     }
 
@@ -204,6 +215,15 @@ public class AppTheme {
         btn.setForeground(TEXT_INVERTED);
         btn.addMouseListener(hoverEffect(
             btn, TERRA_PRIMARY, TERRA_HOVER));
+        btn.addChangeListener(e -> {
+            if (!btn.isEnabled()) {
+                btn.setBackground(new Color(180, 120, 100));
+                btn.setForeground(new Color(200, 180, 170));
+            } else {
+                btn.setBackground(TERRA_PRIMARY);
+                btn.setForeground(TEXT_INVERTED);
+            }
+        });
         return btn;
     }
 
@@ -361,7 +381,7 @@ public class AppTheme {
     // Private helpers 
 
     private static JButton baseButton(String text) {
-        JButton btn = new JButton(text);
+        JButton btn = new StyledButton(text);
         btn.setFont(FONT_BODY);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
@@ -387,5 +407,35 @@ public class AppTheme {
                     btn.setBackground(normal);
             }
         };
+    }
+}
+
+/**
+ * Custom button that takes complete control of its appearance.
+ * Prevents Nimbus L&F from painting unwanted borders/effects.
+ */
+class StyledButton extends JButton {
+    public StyledButton(String text) {
+        super(text);
+        setUI(new CustomBasicButtonUI());
+    }
+}
+
+/**
+ * Custom BasicButtonUI that doesn't gray out text when disabled.
+ * Paints text directly without shadow or disabled effects.
+ */
+class CustomBasicButtonUI extends javax.swing.plaf.basic.BasicButtonUI {
+    @Override
+    protected void paintText(java.awt.Graphics g, 
+                           javax.swing.AbstractButton b, 
+                           java.awt.Rectangle textRect, 
+                           String text) {
+        // Paint text directly with button's foreground color, no shadow/disabled effects
+        g.setColor(b.getForeground());
+        g.setFont(b.getFont());
+        javax.swing.plaf.basic.BasicGraphicsUtils.drawString(
+            g, text, b.getDisplayedMnemonicIndex(),
+            textRect.x, textRect.y + g.getFontMetrics().getAscent());
     }
 }

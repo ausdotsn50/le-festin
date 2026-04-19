@@ -54,4 +54,24 @@ public class GroceryListPanel extends BaseListPanel {
         empty.setBackground(new Color(245, 245, 245));
         return empty;
     }
+    
+    @Override
+    protected JButton createActionButton() {
+        return new JButton("Action");
+    }
+    
+    @Override
+    protected void onAddClicked() {
+        // Placeholder — grocery list not yet implemented
+    }
+    
+    @Override
+    protected void onEditClicked() {
+        // Placeholder — grocery list not yet implemented
+    }
+    
+    @Override
+    protected void onActionClicked() {
+        // Placeholder — grocery list not yet implemented
+    }
 }

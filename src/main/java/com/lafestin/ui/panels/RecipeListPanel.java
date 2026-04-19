@@ -31,12 +31,6 @@ public class RecipeListPanel extends BaseListPanel {
     // Search filter components
     private JComboBox<String> categoryFilter;
 
-    // Toolbar components
-    private JButton addBtn;
-    private JButton editBtn;
-    private JButton deleteBtn;
-    private JLabel  countLabel;
-
     // Col indexes
     private static final int COL_ID = 0;
     private static final int COL_TITLE = 1;
@@ -116,7 +110,27 @@ public class RecipeListPanel extends BaseListPanel {
 
     @Override
     protected JPanel buildToolbar() {
-        return buildToolbarPanel();
+        return buildStandardToolbar();
+    }
+    
+    @Override
+    protected JButton createActionButton() {
+        return AppTheme.dangerButton("Delete");
+    }
+    
+    @Override
+    protected void onAddClicked() {
+        openAddDialog();
+    }
+    
+    @Override
+    protected void onEditClicked() {
+        openEditDialog();
+    }
+    
+    @Override
+    protected void onActionClicked() {
+        deleteSelectedRecipe();
     }
 
     //  TABLE
@@ -170,8 +184,8 @@ public class RecipeListPanel extends BaseListPanel {
             if (!e.getValueIsAdjusting()) {
                 boolean selected = table.getSelectedRow() != -1;
                 editBtn.setEnabled(selected);
-                deleteBtn.setEnabled(selected);
-                updateCountLabel();
+                actionBtn.setEnabled(selected);
+                updateCountLabelDisplay();
             }
         });
 
@@ -196,46 +210,6 @@ public class RecipeListPanel extends BaseListPanel {
         return scroll;
     }
 
-    //  TOOLBAR — Add / Edit / Delete + count label
-    private JPanel buildToolbarPanel() {
-        JPanel bar = new JPanel(new BorderLayout());
-        bar.setBackground(AppTheme.BG_SURFACE);
-        bar.setBorder(BorderFactory.createCompoundBorder(
-            AppTheme.BORDER_DIVIDER_TOP,
-            BorderFactory.createEmptyBorder(10, 16, 10, 16)
-        ));
-
-        // Left: action buttons
-        JPanel btnGroup = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        btnGroup.setBackground(AppTheme.BG_SURFACE);
-
-        addBtn    = AppTheme.primaryButton("+ Add");
-        editBtn   = AppTheme.secondaryButton("Edit");
-        deleteBtn = AppTheme.dangerButton("Delete");
-
-        // Edit + Delete start disabled — enabled when a row is selected
-        editBtn.setEnabled(false);
-        deleteBtn.setEnabled(false);
-
-        addBtn.addActionListener(   e -> openAddDialog());
-        editBtn.addActionListener(  e -> openEditDialog());
-        deleteBtn.addActionListener(e -> deleteSelectedRecipe());
-
-        btnGroup.add(addBtn);
-        btnGroup.add(editBtn);
-        btnGroup.add(deleteBtn);
-
-        // Right: row count
-        countLabel = new JLabel();
-        countLabel.setFont(AppTheme.FONT_SMALL);
-        countLabel.setForeground(AppTheme.TEXT_MUTED);
-
-        bar.add(btnGroup,   BorderLayout.WEST);
-        bar.add(countLabel, BorderLayout.EAST);
-
-        return bar;
-    }
-    
     //  DATA — load, filter, refresh
     /**
      * Loads all recipes for the current user from the DB
@@ -265,7 +239,7 @@ public class RecipeListPanel extends BaseListPanel {
                 JOptionPane.ERROR_MESSAGE);
         }
 
-        updateCountLabel();
+        updateCountLabelDisplay();
     }
 
     /**
@@ -298,21 +272,21 @@ public class RecipeListPanel extends BaseListPanel {
             )));
         }
 
-        updateCountLabel();
+        updateCountLabelDisplay();
     }
 
     // Updates the count label to reflect visible filtered rows
-    private void updateCountLabel() {
+    private void updateCountLabelDisplay() {
         int visible = table.getRowCount();
         int total   = tableModel.getRowCount();
-        countLabel.setText(visible == total
+        String text = visible == total
             ? total + " recipe" + (total == 1 ? "" : "s")
-            : visible + " of " + total + " recipes");
+            : visible + " of " + total + " recipes";
+        updateCountLabel(text);
     }
 
 
     //  ACTIONS
-
     private void openAddDialog() {
         AddEditRecipeDialog dialog =
             new AddEditRecipeDialog(frame, null);

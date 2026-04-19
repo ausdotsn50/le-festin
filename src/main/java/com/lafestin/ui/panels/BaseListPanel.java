@@ -16,6 +16,12 @@ public abstract class BaseListPanel extends JPanel {
     
     protected final MainFrame frame;
     protected JTextField searchField;
+    
+    // Toolbar components shared across panels
+    protected JButton addBtn;
+    protected JButton editBtn;
+    protected JButton actionBtn;  // Delete/Remove/etc — customizable per panel
+    protected JLabel countLabel;
 
     public BaseListPanel(MainFrame frame) {
         this.frame = frame;
@@ -110,4 +116,82 @@ public abstract class BaseListPanel extends JPanel {
     
     /** Build the toolbar with buttons */
     protected abstract JPanel buildToolbar();
+    
+    /**
+     * Common toolbar builder — used by subclasses.
+     * Builds a standard toolbar with Add, Edit, and a third action button.
+     * Subclasses must implement the abstract methods below for customization.
+     */
+    protected JPanel buildStandardToolbar() {
+        JPanel bar = new JPanel(new BorderLayout());
+        bar.setBackground(AppTheme.BG_SURFACE);
+        bar.setBorder(BorderFactory.createCompoundBorder(
+            AppTheme.BORDER_DIVIDER_TOP,
+            BorderFactory.createEmptyBorder(10, 16, 10, 16)
+        ));
+
+        // Left: action buttons
+        JPanel btnGroup = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        btnGroup.setBackground(AppTheme.BG_SURFACE);
+
+        addBtn = AppTheme.primaryButton("+ Add");
+        editBtn = AppTheme.secondaryButton("Edit");
+        actionBtn = createActionButton();
+
+        // Edit + Action button start disabled — enabled when a row is selected
+        editBtn.setEnabled(false);
+        actionBtn.setEnabled(false);
+
+        addBtn.addActionListener(   e -> onAddClicked());
+        editBtn.addActionListener(  e -> onEditClicked());
+        actionBtn.addActionListener(e -> onActionClicked());
+
+        btnGroup.add(addBtn);
+        btnGroup.add(editBtn);
+        btnGroup.add(actionBtn);
+
+        // Right: row count
+        countLabel = new JLabel();
+        countLabel.setFont(AppTheme.FONT_SMALL);
+        countLabel.setForeground(AppTheme.TEXT_MUTED);
+
+        bar.add(btnGroup,   BorderLayout.WEST);
+        bar.add(countLabel, BorderLayout.EAST);
+
+        return bar;
+    }
+    
+    /**
+     * Create the action button (Delete, Remove, etc).
+     * Subclasses override to customize button style and label.
+     */
+    protected abstract JButton createActionButton();
+    
+    /**
+     * Called when Add button is clicked.
+     * Subclasses override to implement add logic.
+     */
+    protected abstract void onAddClicked();
+    
+    /**
+     * Called when Edit button is clicked.
+     * Subclasses override to implement edit logic.
+     */
+    protected abstract void onEditClicked();
+    
+    /**
+     * Called when action button (Delete/Remove) is clicked.
+     * Subclasses override to implement action logic.
+     */
+    protected abstract void onActionClicked();
+    
+    /**
+     * Update the count label text.
+     * Called by subclasses to refresh the row count display.
+     */
+    protected void updateCountLabel(String text) {
+        if (countLabel != null) {
+            countLabel.setText(text);
+        }
+    }
 }

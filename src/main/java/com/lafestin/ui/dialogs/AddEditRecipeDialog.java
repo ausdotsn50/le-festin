@@ -137,6 +137,29 @@ public class AddEditRecipeDialog extends JDialog {
         });
         categoryCombo.setFont(AppTheme.FONT_BODY);
         categoryCombo.setBackground(AppTheme.BG_SURFACE);
+        categoryCombo.setForeground(AppTheme.TEXT_PRIMARY);
+        
+        // Renderer for consistent styling with theme colors
+        categoryCombo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list, Object value, int index,
+                    boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(
+                    list, value, index, isSelected, cellHasFocus);
+                
+                if (isSelected) {
+                    setBackground(AppTheme.SELECTION_BG);
+                    setForeground(AppTheme.SELECTION_FG);
+                } else {
+                    setBackground(AppTheme.BG_SURFACE);
+                    setForeground(AppTheme.TEXT_PRIMARY);
+                }
+                
+                return this;
+            }
+        });
+        
         return categoryCombo;
     }
 
