@@ -1,5 +1,5 @@
 -- ============================================================
---  La Festin — Seed Data
+--  Le Festin — Seed Data
 --  Run AFTER la_festin_schema.sql
 --  Passwords are BCrypt hashes of: password123
 -- ============================================================
