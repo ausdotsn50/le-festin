@@ -12,7 +12,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>La Festin</name>
+    <name>Le Festin</name>
     <description>Recipe Database and Meal Planning System — CMSC 127</description>
 
     <properties>
