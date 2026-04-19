@@ -9,6 +9,7 @@ import com.lafestin.ui.dialogs.AddEditIngredientDialog;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.SQLException;
@@ -26,6 +27,7 @@ public class PantryPanel extends BaseListPanel {
     // Table look
     private JTable            table;
     private DefaultTableModel tableModel;
+    private TableRowSorter<DefaultTableModel> sorter;
 
     // Col indxs
     private static final int COL_INGREDIENT_ID = 0; // hidden
@@ -99,6 +101,15 @@ public class PantryPanel extends BaseListPanel {
 
     //  TABLE
     private JScrollPane buildTable() {
+        // Set up search listener on inherited searchField
+        searchField.getDocument().addDocumentListener(
+            new javax.swing.event.DocumentListener() {
+                public void insertUpdate (javax.swing.event.DocumentEvent e) { applyFilters(); }
+                public void removeUpdate (javax.swing.event.DocumentEvent e) { applyFilters(); }
+                public void changedUpdate(javax.swing.event.DocumentEvent e) { applyFilters(); }
+            }
+        );
+
         String[] columns = { "ID", "Name", "Quantity", "Unit" };
 
         tableModel = new DefaultTableModel(columns, 0) {
@@ -116,6 +127,10 @@ public class PantryPanel extends BaseListPanel {
 
         table = new JTable(tableModel);
         AppTheme.styleTable(table);
+
+        // sorter — enables search filtering and column sorting
+        sorter = new TableRowSorter<>(tableModel);
+        table.setRowSorter(sorter);
 
         // hide ID column — keep as-is
         table.getColumnModel().getColumn(COL_INGREDIENT_ID).setMinWidth(0);
@@ -249,9 +264,31 @@ public class PantryPanel extends BaseListPanel {
     }
 
     private void updateCountLabelDisplay() {
-        int count = tableModel.getRowCount();
-        String text = count + " ingredient" + (count == 1 ? "" : "s");
+        int visible = table.getRowCount();
+        int total   = tableModel.getRowCount();
+        String text = visible == total
+            ? total + " ingredient" + (total == 1 ? "" : "s")
+            : visible + " of " + total + " ingredients";
         updateCountLabel(text);
+    }
+
+    /**
+     * Applies search text filter using TableRowSorter.
+     * Filters ingredient names case-insensitively.
+     */
+    private void applyFilters() {
+        String text = searchField.getText().trim();
+        
+        if (text.isEmpty()) {
+            sorter.setRowFilter(null);
+        } else {
+            // Filter by ingredient name (column 1), case-insensitive
+            sorter.setRowFilter(
+                RowFilter.regexFilter("(?i)" + text, COL_NAME)
+            );
+        }
+        
+        updateCountLabelDisplay();
     }
 
     //  ACTIONS
