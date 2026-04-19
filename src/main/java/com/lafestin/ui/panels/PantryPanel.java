@@ -9,6 +9,7 @@ import com.lafestin.ui.dialogs.AddEditIngredientDialog;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.SQLException;
@@ -26,12 +27,7 @@ public class PantryPanel extends BaseListPanel {
     // Table look
     private JTable            table;
     private DefaultTableModel tableModel;
-
-    // Toolbar buttons
-    private JButton addBtn;
-    private JButton editBtn;
-    private JButton removeBtn;
-    private JLabel  countLabel;
+    private TableRowSorter<DefaultTableModel> sorter;
 
     // Col indxs
     private static final int COL_INGREDIENT_ID = 0; // hidden
@@ -61,15 +57,16 @@ public class PantryPanel extends BaseListPanel {
 
     @Override
     protected JComponent buildHeaderRightControl() {
+        return Box.createHorizontalBox(); // empty — no filter needed for pantry
+    }
+    
+
+    @Override
+    protected JComponent buildSearchRightControl() {
         JButton matchBtn = AppTheme.primaryButton("Match Recipes");
         matchBtn.setToolTipText("Find recipes you can make with your current pantry");
         matchBtn.addActionListener(e -> navigateToSuggestions());
         return matchBtn;
-    }
-
-    @Override
-    protected JComponent buildSearchRightControl() {
-        return Box.createHorizontalBox(); // empty — no filter needed for pantry
     }
 
     @Override
@@ -79,11 +76,40 @@ public class PantryPanel extends BaseListPanel {
 
     @Override
     protected JPanel buildToolbar() {
-        return buildToolbarPanel();
+        return buildStandardToolbar();
+    }
+    
+    @Override
+    protected JButton createActionButton() {
+        return AppTheme.dangerButton("Remove");
+    }
+    
+    @Override
+    protected void onAddClicked() {
+        openAddDialog();
+    }
+    
+    @Override
+    protected void onEditClicked() {
+        openEditDialog();
+    }
+    
+    @Override
+    protected void onActionClicked() {
+        removeSelectedItem();
     }
 
     //  TABLE
     private JScrollPane buildTable() {
+        // Set up search listener on inherited searchField
+        searchField.getDocument().addDocumentListener(
+            new javax.swing.event.DocumentListener() {
+                public void insertUpdate (javax.swing.event.DocumentEvent e) { applyFilters(); }
+                public void removeUpdate (javax.swing.event.DocumentEvent e) { applyFilters(); }
+                public void changedUpdate(javax.swing.event.DocumentEvent e) { applyFilters(); }
+            }
+        );
+
         String[] columns = { "ID", "Name", "Quantity", "Unit" };
 
         tableModel = new DefaultTableModel(columns, 0) {
@@ -101,6 +127,10 @@ public class PantryPanel extends BaseListPanel {
 
         table = new JTable(tableModel);
         AppTheme.styleTable(table);
+
+        // sorter — enables search filtering and column sorting
+        sorter = new TableRowSorter<>(tableModel);
+        table.setRowSorter(sorter);
 
         // hide ID column — keep as-is
         table.getColumnModel().getColumn(COL_INGREDIENT_ID).setMinWidth(0);
@@ -186,7 +216,7 @@ public class PantryPanel extends BaseListPanel {
             if (!e.getValueIsAdjusting()) {
                 boolean selected = table.getSelectedRow() != -1;
                 editBtn.setEnabled(selected);
-                removeBtn.setEnabled(selected);
+                actionBtn.setEnabled(selected);
             }
         });
 
@@ -206,45 +236,6 @@ public class PantryPanel extends BaseListPanel {
         scroll.getViewport().setBackground(AppTheme.BG_SURFACE);
 
         return scroll;
-    }
-
-    //  TOOLBAR — Add / Edit / Remove + count
-    private JPanel buildToolbarPanel() {
-        JPanel bar = new JPanel(new BorderLayout());
-        bar.setBackground(AppTheme.BG_SURFACE);
-        bar.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(1, 0, 0, 0,
-                new Color(220, 220, 220)),
-            BorderFactory.createEmptyBorder(10, 16, 10, 16)
-        ));
-
-        JPanel btnGroup = new JPanel(new FlowLayout(
-            FlowLayout.LEFT, 8, 0));
-        btnGroup.setBackground(AppTheme.BG_SURFACE);
-
-        addBtn    = AppTheme.primaryButton("+ Add");
-        editBtn   = AppTheme.secondaryButton("Edit");
-        removeBtn = AppTheme.dangerButton("Remove");
-
-        editBtn.setEnabled(false);
-        removeBtn.setEnabled(false);
-
-        addBtn.addActionListener(   e -> openAddDialog());
-        editBtn.addActionListener(  e -> openEditDialog());
-        removeBtn.addActionListener(e -> removeSelectedItem());
-
-        btnGroup.add(addBtn);
-        btnGroup.add(editBtn);
-        btnGroup.add(removeBtn);
-
-        countLabel = new JLabel();
-        countLabel.setFont(AppTheme.FONT_SMALL);
-        countLabel.setForeground(AppTheme.TEXT_MUTED);
-
-        bar.add(btnGroup,   BorderLayout.WEST);
-        bar.add(countLabel, BorderLayout.EAST);
-
-        return bar;
     }
 
     //  DATA
@@ -269,13 +260,35 @@ public class PantryPanel extends BaseListPanel {
                 JOptionPane.ERROR_MESSAGE);
         }
 
-        updateCountLabel();
+        updateCountLabelDisplay();
     }
 
-    private void updateCountLabel() {
-        int count = tableModel.getRowCount();
-        countLabel.setText(count + " ingredient"
-            + (count == 1 ? "" : "s"));
+    private void updateCountLabelDisplay() {
+        int visible = table.getRowCount();
+        int total   = tableModel.getRowCount();
+        String text = visible == total
+            ? total + " ingredient" + (total == 1 ? "" : "s")
+            : visible + " of " + total + " ingredients";
+        updateCountLabel(text);
+    }
+
+    /**
+     * Applies search text filter using TableRowSorter.
+     * Filters ingredient names case-insensitively.
+     */
+    private void applyFilters() {
+        String text = searchField.getText().trim();
+        
+        if (text.isEmpty()) {
+            sorter.setRowFilter(null);
+        } else {
+            // Filter by ingredient name (column 1), case-insensitive
+            sorter.setRowFilter(
+                RowFilter.regexFilter("(?i)" + text, COL_NAME)
+            );
+        }
+        
+        updateCountLabelDisplay();
     }
 
     //  ACTIONS
