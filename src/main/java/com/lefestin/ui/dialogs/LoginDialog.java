@@ -133,99 +133,152 @@ public class LoginDialog extends JDialog {
     // Allows ctrl+ options (for JTextField)
     // Use ctrl+ instead of cmd+ on MacOS for JTextfield
     private JPanel buildLoginPanel() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(AppTheme.BG_PAGE);
-        panel.setBorder(BorderFactory.createEmptyBorder(28, 36, 20, 36));
+        // Outer wrapper panel with BorderLayout to center content
+        JPanel outerPanel = new JPanel(new BorderLayout());
+        outerPanel.setBackground(AppTheme.BG_PAGE);
 
-        // Username
-        panel.add(buildInputLabel("Username"));
-        panel.add(Box.createVerticalStrut(4));
+        // Inner form panel with GridBagLayout
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(new GridBagLayout());
+        formPanel.setBackground(AppTheme.BG_PAGE);
+        formPanel.setBorder(BorderFactory.createEmptyBorder(28, 36, 20, 36));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(0, 0, 4, 0);
+        gbc.weightx = 1.0;
+
+        // Username label
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 4, 0);
+        formPanel.add(buildInputLabel("Username"), gbc);
+
+        // Username field
+        gbc.gridy = 1;
         usernameField = buildTextField("Enter username");
-        panel.add(usernameField);
-        panel.add(Box.createVerticalStrut(14));
+        formPanel.add(usernameField, gbc);
 
-        // Password
-        panel.add(buildInputLabel("Password"));
-        panel.add(Box.createVerticalStrut(4));
+        // Password label
+        gbc.gridy = 2;
+        gbc.insets = new Insets(14, 0, 4, 0);
+        formPanel.add(buildInputLabel("Password"), gbc);
+
+        // Password field
+        gbc.gridy = 3;
+        gbc.insets = new Insets(0, 0, 6, 0);
         passwordField = buildPasswordField("Enter password");
-        panel.add(passwordField);
-        panel.add(Box.createVerticalStrut(6));
+        formPanel.add(passwordField, gbc);
 
-        // Error label — hidden until login fails
+        // Error label
+        gbc.gridy = 4;
+        gbc.insets = new Insets(0, 0, 16, 0);
         errorLabel = buildErrorLabel();
-        panel.add(errorLabel);
-        panel.add(Box.createVerticalStrut(16));
+        formPanel.add(errorLabel, gbc);
 
         // Login button
+        gbc.gridy = 5;
+        gbc.insets = new Insets(14, 0, 18, 0);
         loginBtn = AppTheme.primaryButton("Sign In");
         loginBtn.setPreferredSize(new Dimension(308, 40));
         loginBtn.addActionListener(e -> attemptLogin());
-        JPanel loginBtnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        loginBtnPanel.setBackground(AppTheme.BG_PAGE);
-        loginBtnPanel.add(loginBtn);
-        panel.add(loginBtnPanel);
-        panel.add(Box.createVerticalStrut(18));
+        formPanel.add(loginBtn, gbc);
 
         // Register link
-        panel.add(buildRegisterLink());
+        gbc.gridy = 6;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.weightx = 0.0;
+        formPanel.add(buildRegisterLink(), gbc);
+
+        // Add form panel to center of outer panel (centers both horizontally and vertically)
+        outerPanel.add(formPanel, BorderLayout.CENTER);
 
         // Enter key triggers login from any field
         usernameField.addActionListener(e -> attemptLogin());
         passwordField.addActionListener(e -> attemptLogin());
 
-        return panel;
+        return outerPanel;
     }
 
     private JPanel buildRegisterPanel() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(AppTheme.BG_PAGE);
-        panel.setBorder(BorderFactory.createEmptyBorder(24, 36, 20, 36));
+        // Outer wrapper panel with BorderLayout to center content
+        JPanel outerPanel = new JPanel(new BorderLayout());
+        outerPanel.setBackground(AppTheme.BG_PAGE);
 
-        // Username 
-        panel.add(buildInputLabel("Choose a username"));
-        panel.add(Box.createVerticalStrut(4));
+        // Inner form panel with GridBagLayout
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(new GridBagLayout());
+        formPanel.setBackground(AppTheme.BG_PAGE);
+        formPanel.setBorder(BorderFactory.createEmptyBorder(24, 36, 20, 36));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+
+        // Username label
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 4, 0);
+        formPanel.add(buildInputLabel("Choose a username"), gbc);
+
+        // Username field
+        gbc.gridy = 1;
         regUsernameField = buildTextField("At least 3 characters");
-        panel.add(regUsernameField);
-        panel.add(Box.createVerticalStrut(12));
+        formPanel.add(regUsernameField, gbc);
 
-        // Password
-        panel.add(buildInputLabel("Password"));
-        panel.add(Box.createVerticalStrut(4));
+        // Password label
+        gbc.gridy = 2;
+        gbc.insets = new Insets(12, 0, 4, 0);
+        formPanel.add(buildInputLabel("Password"), gbc);
+
+        // Password field
+        gbc.gridy = 3;
+        gbc.insets = new Insets(0, 0, 12, 0);
         regPasswordField = buildPasswordField("At least 6 characters");
-        panel.add(regPasswordField);
-        panel.add(Box.createVerticalStrut(12));
+        formPanel.add(regPasswordField, gbc);
 
-        // Confirm pass
-        panel.add(buildInputLabel("Confirm password"));
-        panel.add(Box.createVerticalStrut(4));
+        // Confirm label
+        gbc.gridy = 4;
+        gbc.insets = new Insets(0, 0, 4, 0);
+        formPanel.add(buildInputLabel("Confirm password"), gbc);
+
+        // Confirm field
+        gbc.gridy = 5;
+        gbc.insets = new Insets(0, 0, 6, 0);
         regConfirmField = buildPasswordField("Re-enter password");
-        panel.add(regConfirmField);
-        panel.add(Box.createVerticalStrut(6));
+        formPanel.add(regConfirmField, gbc);
 
         // Error label
+        gbc.gridy = 6;
+        gbc.insets = new Insets(0, 0, 14, 0);
         regErrorLabel = buildErrorLabel();
-        panel.add(regErrorLabel);
-        panel.add(Box.createVerticalStrut(14));
+        formPanel.add(regErrorLabel, gbc);
 
-        // Reg button
+        // Register button
+        gbc.gridy = 7;
+        gbc.insets = new Insets(0, 0, 14, 0);
         JButton registerBtn = AppTheme.primaryButton("Create Account");
         registerBtn.setPreferredSize(new Dimension(308, 40));
         registerBtn.addActionListener(e -> attemptRegister());
-        JPanel registerBtnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        registerBtnPanel.setBackground(AppTheme.BG_PAGE);
-        registerBtnPanel.add(registerBtn);
-        panel.add(registerBtnPanel);
-        panel.add(Box.createVerticalStrut(14));
+        formPanel.add(registerBtn, gbc);
 
-        // Back to login
-        panel.add(buildBackToLoginLink());
+        // Back to login link
+        gbc.gridy = 8;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.weightx = 0.0;
+        formPanel.add(buildBackToLoginLink(), gbc);
+
+        // Add form panel to center of outer panel (centers both horizontally and vertically)
+        outerPanel.add(formPanel, BorderLayout.CENTER);
 
         // Enter key triggers register
         regConfirmField.addActionListener(e -> attemptRegister());
 
-        return panel;
+        return outerPanel;
     }
 
     // "Don't have an account? Register" footer
