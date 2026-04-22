@@ -94,7 +94,6 @@ public class AuthService {
             if (userDAO.existsByUsername(normalizedUsername)) {
                 return AuthResult.fail(
                     "Username \"" + normalizedUsername + "\" is already taken.\n"
-                    + "Please choose a different username."
                 );
             }
 
