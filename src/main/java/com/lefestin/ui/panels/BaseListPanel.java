@@ -22,6 +22,8 @@ public abstract class BaseListPanel extends JPanel {
     protected JButton addBtn;
     protected JButton editBtn;
     protected JButton actionBtn;  // Delete/Remove/etc — customizable per panel
+    protected JButton viewBtn;
+
     protected JLabel countLabel;
 
     public BaseListPanel(MainFrame frame) {
@@ -135,19 +137,22 @@ public abstract class BaseListPanel extends JPanel {
         JPanel btnGroup = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         btnGroup.setBackground(AppTheme.BG_SURFACE);
 
-        addBtn = AppTheme.primaryButton("+ Add");
-        editBtn = AppTheme.secondaryButton("Edit");
+        addBtn    = AppTheme.primaryButton("+ Add");
+        viewBtn   = AppTheme.secondaryButton("View");
+        editBtn   = AppTheme.secondaryButton("Edit");
         actionBtn = createActionButton();
 
-        // Edit + Action button start disabled — enabled when a row is selected
         editBtn.setEnabled(false);
+        viewBtn.setEnabled(false);
         actionBtn.setEnabled(false);
 
         addBtn.addActionListener(   e -> onAddClicked());
+        viewBtn.addActionListener(  e -> onViewClicked());
         editBtn.addActionListener(  e -> onEditClicked());
         actionBtn.addActionListener(e -> onActionClicked());
 
         btnGroup.add(addBtn);
+        btnGroup.add(viewBtn);
         btnGroup.add(editBtn);
         btnGroup.add(actionBtn);
 
@@ -160,6 +165,15 @@ public abstract class BaseListPanel extends JPanel {
         bar.add(countLabel, BorderLayout.EAST);
 
         return bar;
+    }
+
+    /**
+     * Called when View button is clicked.
+     * Subclasses override to navigate to detail view.
+     * Default is no-op so PantryPanel doesn't need to implement it.
+     */
+    protected void onViewClicked() {
+        // default no-op — only panels with a detail view override this
     }
     
     /**
