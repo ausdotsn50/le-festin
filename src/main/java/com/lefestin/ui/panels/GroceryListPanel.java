@@ -23,55 +23,35 @@ import java.util.List;
 
 /**
  * GroceryListPanel — shows missing ingredients for a planned date range.
- *
- * Layout:
- *   ┌──────────────────────────────────────────────────────┐
- *   │  Grocery List                                        │  ← header
- *   │  Ingredients needed for your meal plan               │
- *   ├──────────────────────────────────────────────────────┤
- *   │  From [Apr 14    ▲▼]   To [Apr 20    ▲▼]            │  ← date range
- *   │  [Generate List]              [Export CSV] [Print]   │
- *   ├──────────────────────────────────────────────────────┤
- *   │  7 items needed for Apr 14 – Apr 20                  │  ← summary
- *   ├──────────────────────────────────────────────────────┤
- *   │  Ingredient        Quantity    Unit                  │
- *   │  ─────────────────────────────────────────────────── │
- *   │  Chicken breast    2           piece                 │  ← table
- *   │  Paprika           1           teaspoon              │
- *   │  ...                                                 │
- *   └──────────────────────────────────────────────────────┘
  */
 public class GroceryListPanel extends JPanel {
 
-    // ── Dependencies ──────────────────────────────────────────────────────
-    private final MainFrame          frame;
+    private final MainFrame frame;
     private final GroceryListService groceryService;
     private final CsvExportService   csvService;
 
-    // ── Date range spinners ───────────────────────────────────────────────
+    // Date range spinners
     private JSpinner fromSpinner;
     private JSpinner toSpinner;
 
-    // ── Table ─────────────────────────────────────────────────────────────
-    private JTable            table;
+    private JTable table;
     private DefaultTableModel tableModel;
 
-    // ── Labels updated on load ────────────────────────────────────────────
+    // Labels updated on load
     private JLabel summaryLabel;
 
-    // ── Action buttons — disabled until list is generated ─────────────────
+    // Action buttons — disabled until list is generated
     private JButton exportBtn;
     private JButton printBtn;
 
-    // ── Column indexes ────────────────────────────────────────────────────
-    private static final int COL_NAME     = 0;
+    // Column indexes
+    private static final int COL_NAME = 0;
     private static final int COL_QUANTITY = 1;
-    private static final int COL_UNIT     = 2;
+    private static final int COL_UNIT = 2;
 
-    // ── Date formatter for spinners ───────────────────────────────────────
+    // Date formatter for spinners
     private static final String DATE_FORMAT = "MMM d, yyyy";
 
-    // ── Constructor ───────────────────────────────────────────────────────
     public GroceryListPanel(MainFrame frame) {
         this.frame          = frame;
         this.groceryService = new GroceryListService();
@@ -83,10 +63,6 @@ public class GroceryListPanel extends JPanel {
         add(buildHeader(),  BorderLayout.NORTH);
         add(buildTable(),   BorderLayout.CENTER);
     }
-
-    // ══════════════════════════════════════════════════════════════════════
-    //  HEADER — title + date range controls + action buttons
-    // ══════════════════════════════════════════════════════════════════════
 
     private JPanel buildHeader() {
         JPanel header = new JPanel(new BorderLayout(0, 0));
@@ -101,7 +77,6 @@ public class GroceryListPanel extends JPanel {
         return header;
     }
 
-    // ── Title + subtitle ──────────────────────────────────────────────────
     private JPanel buildTitleRow() {
         JPanel row = new JPanel(new BorderLayout());
         row.setBackground(AppTheme.BG_SURFACE);
@@ -126,7 +101,6 @@ public class GroceryListPanel extends JPanel {
         return row;
     }
 
-    // ── Date range pickers + Generate + Export + Print ────────────────────
     private JPanel buildControlRow() {
         JPanel row = new JPanel(new BorderLayout(12, 0));
         row.setBackground(AppTheme.BG_SURFACE);
@@ -264,7 +238,6 @@ public class GroceryListPanel extends JPanel {
         }
 
         // Reset UI state while loading
-        summaryLabel.setText("Calculating grocery list...");
         tableModel.setRowCount(0);
         exportBtn.setEnabled(false);
         printBtn.setEnabled(false);
@@ -314,7 +287,7 @@ public class GroceryListPanel extends JPanel {
         }.execute();
     }
 
-    // ── Updates summary label after generation ────────────────────────────
+    // Updates summary label after generation ────────────────────────────
     private void updateSummary(int userId,
                                 LocalDate from,
                                 LocalDate to,
