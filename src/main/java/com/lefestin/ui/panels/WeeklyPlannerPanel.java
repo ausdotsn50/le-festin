@@ -16,13 +16,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.lefestin.helper.Helper;
 
 /**
  * WeeklyPlannerPanel — 7-day meal planner grid.
  */
 public class WeeklyPlannerPanel extends JPanel {
-
-    // Deps
     private final MainFrame    frame;
     private final MealEntryDAO mealEntryDAO;
 
@@ -58,9 +57,9 @@ public class WeeklyPlannerPanel extends JPanel {
     private static final Color COL_RECIPE_TEXT = AppTheme.GREEN_TINT_TEXT;
 
     public WeeklyPlannerPanel(MainFrame frame) {
-        this.frame        = frame;
+        this.frame = frame;
         this.mealEntryDAO = new MealEntryDAO();
-        this.weekStart    = getMonday(LocalDate.now());
+        this.weekStart = Helper.getMonday(LocalDate.now());
 
         setLayout(new BorderLayout(0, 0));
         setBackground(AppTheme.BG_PAGE);
@@ -161,7 +160,7 @@ public class WeeklyPlannerPanel extends JPanel {
             for (int d = 0; d < 7; d++) {
                 LocalDate day = weekStart.plusDays(d);
                 JButton   slot = buildSlotButton(day, mealType);
-                slotButtons.put(slotKey(day, mealType), slot);
+                slotButtons.put(Helper.slotKey(day, mealType), slot);
                 gridPanel.add(slot);
             }
         }
@@ -248,7 +247,7 @@ public class WeeklyPlannerPanel extends JPanel {
             }
             @Override
             public void mouseExited(MouseEvent e) {
-                weekEntries.get(slotKey(day, mealType));
+                weekEntries.get(Helper.slotKey(day, mealType));
                 btn.setBackground(AppTheme.SELECTION_BG);
             }
         });
@@ -270,7 +269,7 @@ public class WeeklyPlannerPanel extends JPanel {
 
             for (MealEntry entry : entries) {
                 weekEntries.put(
-                    slotKey(entry.getScheduledDate(),
+                    Helper.slotKey(entry.getScheduledDate(),
                             entry.getMealType()),
                     entry);
             }
@@ -293,7 +292,7 @@ public class WeeklyPlannerPanel extends JPanel {
         for (String mealType : MealEntry.MEAL_TYPES) {
             for (int d = 0; d < 7; d++) {
                 LocalDate day   = weekStart.plusDays(d);
-                String    key   = slotKey(day, mealType);
+                String    key   = Helper.slotKey(day, mealType);
                 JButton   btn   = slotButtons.get(key);
                 MealEntry entry = weekEntries.get(key);
 
@@ -325,7 +324,7 @@ public class WeeklyPlannerPanel extends JPanel {
     //  SLOT DIALOG — assign or clear a single slot
     private void openSlotDialog(LocalDate day,
                                 String mealType, JButton btn) {
-        String    key         = slotKey(day, mealType);
+        String    key         = Helper.slotKey(day, mealType);
         MealEntry existing    = weekEntries.get(key);
         boolean   isOccupied  = existing != null;
 
@@ -366,7 +365,7 @@ public class WeeklyPlannerPanel extends JPanel {
         if (dialog.getSelectedRecipeId() != -1) {
             try {
                 // Remove existing entry for this slot if any
-                String key = slotKey(day, mealType);
+                String key = Helper.slotKey(day, mealType);
                 if (weekEntries.containsKey(key)) {
                     mealEntryDAO.deleteEntry(
                         frame.getCurrentUserId(), day, mealType);
@@ -402,7 +401,7 @@ public class WeeklyPlannerPanel extends JPanel {
             try {
                 mealEntryDAO.deleteEntry(
                     frame.getCurrentUserId(), day, mealType);
-                weekEntries.remove(slotKey(day, mealType));
+                weekEntries.remove(Helper.slotKey(day, mealType));
                 renderSlots();
             } catch (SQLException e) {
                 JOptionPane.showMessageDialog(this,
@@ -462,17 +461,6 @@ public class WeeklyPlannerPanel extends JPanel {
 
     //  HELPER FUNCS
     // Consistent map key: "2026-04-17|Breakfast"
-    private String slotKey(LocalDate date, String mealType) {
-        return date + "|" + mealType;
-    }
-
-    // Returns the Monday of the week containing the given date
-    private LocalDate getMonday(LocalDate date) {
-        return date.with(
-            java.time.temporal.TemporalAdjusters.previousOrSame(
-                DayOfWeek.MONDAY));
-    }
-
     private void updateWeekRangeLabel() {
         LocalDate end = weekStart.plusDays(6);
         weekRangeLabel.setText(
