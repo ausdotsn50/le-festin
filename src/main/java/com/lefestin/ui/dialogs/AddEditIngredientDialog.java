@@ -52,7 +52,7 @@ public class AddEditIngredientDialog extends JDialog {
 
         initComponents();
         prefillIfEditing();
-        Helper.packAndCenter(frame, this, new Dimension(580, 680));
+        Helper.packAndCenter(frame, this, new Dimension(350, 400));
     }
 
     private void initComponents() {
@@ -122,6 +122,9 @@ public class AddEditIngredientDialog extends JDialog {
             for (Ingredient i : allIngredients) {
                 ingredientCombo.addItem(i);
             }
+            ingredientCombo.setFont(AppTheme.FONT_BODY);
+            ingredientCombo.setBackground(AppTheme.BG_SURFACE);
+            ingredientCombo.setForeground(AppTheme.TEXT_PRIMARY);
             ingredientCombo.setRenderer(new DefaultListCellRenderer() {
                 @Override
                 public Component getListCellRendererComponent(
@@ -133,11 +136,16 @@ public class AddEditIngredientDialog extends JDialog {
                         setText(Helper.capitalize(
                             ((Ingredient) value).getName()));
                     }
+                    if (isSelected) {
+                        setBackground(AppTheme.SELECTION_BG);
+                        setForeground(AppTheme.SELECTION_FG);
+                    } else {
+                        setBackground(AppTheme.BG_SURFACE);
+                        setForeground(AppTheme.TEXT_PRIMARY);
+                    }
                     return this;
                 }
             });
-            ingredientCombo.setFont(AppTheme.FONT_BODY);
-            ingredientCombo.setBackground(AppTheme.BG_SURFACE);
 
             // When ingredient changes, auto-set a sensible default unit
             ingredientCombo.addActionListener(e -> suggestUnit());
@@ -203,6 +211,24 @@ public class AddEditIngredientDialog extends JDialog {
         unitCombo = new JComboBox<>(Helper.UNITS);
         unitCombo.setFont(AppTheme.FONT_BODY);
         unitCombo.setBackground(AppTheme.BG_SURFACE);
+        unitCombo.setForeground(AppTheme.TEXT_PRIMARY);
+        unitCombo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list, Object value, int index,
+                    boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(
+                    list, value, index, isSelected, cellHasFocus);
+                if (isSelected) {
+                    setBackground(AppTheme.SELECTION_BG);
+                    setForeground(AppTheme.SELECTION_FG);
+                } else {
+                    setBackground(AppTheme.BG_SURFACE);
+                    setForeground(AppTheme.TEXT_PRIMARY);
+                }
+                return this;
+            }
+        });
         return unitCombo;
     }
 
@@ -310,12 +336,20 @@ public class AddEditIngredientDialog extends JDialog {
                     return;
                 }
 
-                // Check if already in pantry — use addOrUpdate
-                // to avoid duplicate PK exception
+                // Check if already in pantry — add to existing quantity
+                PantryItem existing = pantryDAO.getPantryItem(
+                    selected.getIngredientId(),
+                    frame.getCurrentUserId());
+
+                double finalQty = qty;
+                if (existing != null) {
+                    finalQty += existing.getQuantity();
+                }
+
                 PantryItem newItem = new PantryItem(
                     selected.getIngredientId(),
                     frame.getCurrentUserId(),
-                    qty, unit,
+                    finalQty, unit,
                     selected.getName());
 
                 pantryDAO.addOrUpdate(newItem);

@@ -196,7 +196,7 @@ public class RecipeListPanel extends BaseListPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2 && table.getSelectedRow() != -1) {
-                    navigateToDetail(); // was: openEditDialog()
+                    onViewClicked();
                 }
             }
         });
@@ -213,10 +213,6 @@ public class RecipeListPanel extends BaseListPanel {
     
     @Override
     protected void onViewClicked() {
-        navigateToDetail();
-    }
-
-    private void navigateToDetail() {
         int viewRow = table.getSelectedRow();
         if (viewRow == -1) return;
         int modelRow = table.convertRowIndexToModel(viewRow);
@@ -299,7 +295,6 @@ public class RecipeListPanel extends BaseListPanel {
         updateCountLabel(text);
     }
 
-
     //  ACTIONS
     private void openAddDialog() {
         AddEditRecipeDialog dialog =
@@ -328,7 +323,6 @@ public class RecipeListPanel extends BaseListPanel {
         }
     }
     
-
     private void deleteSelectedRecipe() {
         int viewRow  = table.getSelectedRow();
         if (viewRow == -1) return;
