@@ -180,9 +180,11 @@ public class RecipeListPanel extends BaseListPanel {
         table.setRowSorter(sorter);
 
         // Enable/disable Edit + Delete based on selection
+        // in buildTable(), replace the selection listener:
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 boolean selected = table.getSelectedRow() != -1;
+                viewBtn.setEnabled(selected);
                 editBtn.setEnabled(selected);
                 actionBtn.setEnabled(selected);
                 updateCountLabelDisplay();
@@ -194,11 +196,10 @@ public class RecipeListPanel extends BaseListPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2 && table.getSelectedRow() != -1) {
-                    openEditDialog();
+                    navigateToDetail(); // was: openEditDialog()
                 }
             }
         });
-
         // Alternating row colors via custom renderer
         table.setDefaultRenderer(Object.class,
             AppTheme.alternatingRowRenderer());
@@ -208,6 +209,19 @@ public class RecipeListPanel extends BaseListPanel {
         scroll.getViewport().setBackground(AppTheme.BG_SURFACE);
 
         return scroll;
+    }
+    
+    @Override
+    protected void onViewClicked() {
+        navigateToDetail();
+    }
+
+    private void navigateToDetail() {
+        int viewRow = table.getSelectedRow();
+        if (viewRow == -1) return;
+        int modelRow = table.convertRowIndexToModel(viewRow);
+        int recipeId = (int) tableModel.getValueAt(modelRow, COL_ID);
+        frame.showRecipeDetail(recipeId);
     }
 
     //  DATA — load, filter, refresh

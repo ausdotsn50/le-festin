@@ -22,6 +22,7 @@ public class MainFrame extends JFrame {
     public static final String CARD_PLANNER = "Meal Planner";
     public static final String CARD_SUGGESTIONS = "Suggestions";
     public static final String CARD_GROCERY = "Grocery List";
+    public static final String CARD_DETAIL = "Recipe Detail";
 
     private static final String[] NAV_ITEMS = {
         CARD_RECIPES,
@@ -48,6 +49,8 @@ public class MainFrame extends JFrame {
     private WeeklyPlannerPanel plannerPanel;
     private RecipeSuggestionsPanel suggestionsPanel;
     private GroceryListPanel  groceryListPanel;
+    private RecipeDetailPanel recipeDetailPanel;
+    
 
     public MainFrame() {
         setTitle("Le Festin");
@@ -145,6 +148,11 @@ public class MainFrame extends JFrame {
         return sidebar;
     }
 
+    public void showRecipeDetail(int recipeId) {
+        recipeDetailPanel.loadRecipe(recipeId);
+        navigateTo(CARD_DETAIL);
+    }
+
     private JButton buildNavButton(String label) {
         JButton btn = new JButton(label);
         btn.setMaximumSize(new Dimension(200, 44));
@@ -190,6 +198,7 @@ public class MainFrame extends JFrame {
         plannerPanel       = new WeeklyPlannerPanel(this);
         suggestionsPanel   = new RecipeSuggestionsPanel(this);
         groceryListPanel   = new GroceryListPanel(this);
+        recipeDetailPanel = new RecipeDetailPanel(this);
 
         // Register each panel under its card name
         contentArea.add(recipeListPanel,    CARD_RECIPES);
@@ -197,6 +206,7 @@ public class MainFrame extends JFrame {
         contentArea.add(plannerPanel,       CARD_PLANNER);
         contentArea.add(suggestionsPanel,   CARD_SUGGESTIONS);
         contentArea.add(groceryListPanel,   CARD_GROCERY);
+        contentArea.add(recipeDetailPanel, CARD_DETAIL);
 
         // Show recipes by default
         navigateTo(CARD_RECIPES);
