@@ -141,7 +141,7 @@ public class LoginDialog extends JDialog {
         JPanel formPanel = new JPanel();
         formPanel.setLayout(new GridBagLayout());
         formPanel.setBackground(AppTheme.BG_PAGE);
-        formPanel.setBorder(BorderFactory.createEmptyBorder(28, 36, 20, 36));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 36, 20, 36));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -211,7 +211,7 @@ public class LoginDialog extends JDialog {
         JPanel formPanel = new JPanel();
         formPanel.setLayout(new GridBagLayout());
         formPanel.setBackground(AppTheme.BG_PAGE);
-        formPanel.setBorder(BorderFactory.createEmptyBorder(24, 36, 20, 36));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 36, 20, 36));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -258,7 +258,7 @@ public class LoginDialog extends JDialog {
 
         // Register button
         gbc.gridy = 7;
-        gbc.insets = new Insets(0, 0, 14, 0);
+        gbc.insets = new Insets(6, 0, 14, 0);
         JButton registerBtn = AppTheme.primaryButton("Create Account");
         registerBtn.setPreferredSize(new Dimension(308, 40));
         registerBtn.addActionListener(e -> attemptRegister());
@@ -281,40 +281,31 @@ public class LoginDialog extends JDialog {
         return outerPanel;
     }
 
-    // "Don't have an account? Register" footer
-    private JPanel buildRegisterLink() {
+    private JPanel buildAuthLink(String promptText, String buttonText, Runnable action) {
         JPanel row = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
         row.setBackground(AppTheme.BG_PAGE);
         row.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel prompt = new JLabel("Don't have an account?");
+        JLabel prompt = new JLabel(promptText);
         prompt.setFont(AppTheme.FONT_SMALL);
         prompt.setForeground(AppTheme.TEXT_MUTED);
 
-        JButton link = buildLinkButton("Register");
-        link.addActionListener(e -> showRegisterPanel());
+        JButton link = buildLinkButton(buttonText);
+        link.addActionListener(e -> action.run());
 
         row.add(prompt);
         row.add(link);
         return row;
     }
 
+    // "Don't have an account? Register" footer
+    private JPanel buildRegisterLink() {
+        return buildAuthLink("Don't have an account?", "Register", this::showRegisterPanel);
+    }
+
     // "Already have an account? Sign in" footer
     private JPanel buildBackToLoginLink() {
-        JPanel row = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
-        row.setBackground(AppTheme.BG_PAGE);
-        row.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JLabel prompt = new JLabel("Already have an account?");
-        prompt.setFont(AppTheme.FONT_SMALL);
-        prompt.setForeground(AppTheme.TEXT_MUTED);
-
-        JButton link = buildLinkButton("Sign in");
-        link.addActionListener(e -> showLoginPanel());
-
-        row.add(prompt);
-        row.add(link);
-        return row;
+        return buildAuthLink("Already have an account?", "Sign in", this::showLoginPanel);
     }
 
     private void attemptLogin() {
@@ -478,15 +469,17 @@ public class LoginDialog extends JDialog {
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
-        // Underline on hover
+        // Underline on hover — store original text to avoid rendering issues
         btn.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
                 btn.setText("<html><u>" + text + "</u></html>");
+                btn.repaint();
             }
             @Override
             public void mouseExited(MouseEvent e) {
                 btn.setText(text);
+                btn.repaint();
             }
         });
 
