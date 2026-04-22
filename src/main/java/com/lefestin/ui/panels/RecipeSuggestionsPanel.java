@@ -16,6 +16,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.lefestin.helper.Helper;
+
 /**
  * RecipeSuggestionsPanel — ranked recipe cards based on pantry match %.
  */
@@ -147,7 +149,7 @@ public class RecipeSuggestionsPanel extends JPanel {
         btn.setBorder(BorderFactory.createEmptyBorder(7, 15, 7, 15));
     }
 
-    // ── Returns results filtered by active filter ─────────────────────────
+    // Returns results filtered by active filter
     private List<RecipeMatchResult> getFilteredResults() {
         return switch (activeFilter) {
             case FILTER_READY   -> allResults.stream()
@@ -324,8 +326,8 @@ public class RecipeSuggestionsPanel extends JPanel {
 
             for (RecipeIngredient ri : result.getMissingIngredients()) {
                 JLabel ing = new JLabel(
-                    "  ·  " + capitalize(ri.getIngredientName())
-                    + "  (" + formatQty(ri.getQuantity())
+                    "  ·  " + Helper.capitalize(ri.getIngredientName())
+                    + "  (" + Helper.formatQty(ri.getQuantity())
                     + " " + ri.getUnit() + ")");
                 ing.setFont(AppTheme.FONT_SMALL);
                 ing.setForeground(AppTheme.TERRA_PRIMARY);
@@ -333,7 +335,7 @@ public class RecipeSuggestionsPanel extends JPanel {
             }
         }
 
-        // ── Assign to Plan button ─────────────────────────────────────────
+        // Assign to Plan button
         JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         btnRow.setBackground(AppTheme.BG_SURFACE);
         btnRow.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -342,7 +344,7 @@ public class RecipeSuggestionsPanel extends JPanel {
         assignBtn.addActionListener(e -> openAssignDialog(recipe));
         btnRow.add(assignBtn);
 
-        // ── Assemble card ─────────────────────────────────────────────────
+        // Assemble card
         JPanel body = new JPanel();
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
         body.setBackground(AppTheme.BG_SURFACE);
@@ -360,7 +362,7 @@ public class RecipeSuggestionsPanel extends JPanel {
         return card;
     }
 
-    // ── Match badge — colored pill ────────────────────────────────────────
+    // Match badge — colored pill
     private JLabel buildMatchBadge(int pct, String label) {
         JLabel badge = new JLabel(label);
         badge.setFont(AppTheme.FONT_LABEL);
@@ -381,16 +383,11 @@ public class RecipeSuggestionsPanel extends JPanel {
         return badge;
     }
 
-    // ── Progress bar fill color ───────────────────────────────────────────
     private Color barColor(int pct) {
         if (pct == 100) return AppTheme.GREEN_PRIMARY;
         if (pct >= 50)  return AppTheme.AMBER_PRIMARY;
         return AppTheme.TERRA_PRIMARY;
     }
-
-    // ══════════════════════════════════════════════════════════════════════
-    //  ASSIGN TO PLAN — directly add to meal planner (no recipe picker)
-    // ══════════════════════════════════════════════════════════════════════
 
     private void openAssignDialog(Recipe recipe) {
         // Show date + meal type picker
@@ -456,28 +453,9 @@ public class RecipeSuggestionsPanel extends JPanel {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  AUTO-REFRESH ON SHOW
-    // ══════════════════════════════════════════════════════════════════════
-
     @Override
     public void setVisible(boolean visible) {
         super.setVisible(visible);
         if (visible) loadSuggestions();
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    //  HELPERS
-    // ══════════════════════════════════════════════════════════════════════
-
-    private String capitalize(String s) {
-        if (s == null || s.isEmpty()) return s;
-        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
-    }
-
-    private String formatQty(double qty) {
-        return (qty == Math.floor(qty))
-            ? String.valueOf((int) qty)
-            : String.valueOf(qty);
     }
 }

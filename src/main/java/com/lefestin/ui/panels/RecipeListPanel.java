@@ -295,7 +295,6 @@ public class RecipeListPanel extends BaseListPanel {
         updateCountLabel(text);
     }
 
-
     //  ACTIONS
     private void openAddDialog() {
         AddEditRecipeDialog dialog =
@@ -324,7 +323,6 @@ public class RecipeListPanel extends BaseListPanel {
         }
     }
     
-
     private void deleteSelectedRecipe() {
         int viewRow  = table.getSelectedRow();
         if (viewRow == -1) return;

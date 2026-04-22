@@ -14,53 +14,27 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
+import com.lefestin.helper.Helper;
 
-/**
+/*
  * RecipeDetailPanel — full view of a single recipe.
- *
- * Layout:
- *   ┌──────────────────────────────────────────────────┐
- *   │  [← Back]                          [Edit Recipe] │  ← top bar
- *   ├──────────────────────────────────────────────────┤
- *   │  Pork Adobo                    [80% match badge] │  ← title row
- *   │  Dinner  ·  60 min                               │  ← subtitle
- *   ├──────────────────────────────────────────────────┤
- *   │  Ingredients                                     │  ← section
- *   │  Name           Quantity    Unit                 │
- *   │  Garlic         5           clove                │
- *   │  Pork belly     500         gram                 │
- *   │  ...                                             │
- *   ├──────────────────────────────────────────────────┤
- *   │  Procedure                                       │  ← section
- *   │  1. Cut pork belly into 2-inch cubes.            │
- *   │  2. Combine soy sauce, vinegar...                │
- *   └──────────────────────────────────────────────────┘
- */
+*/
 public class RecipeDetailPanel extends JPanel {
-
-    // ── Dependencies ──────────────────────────────────────────────────────
     private final MainFrame            frame;
     private final RecipeDAO            recipeDAO;
     private final RecipeIngredientDAO  riDAO;
     private final RecipeMatchingService matchingService;
 
-    // ── Current recipe ────────────────────────────────────────────────────
     private Recipe currentRecipe;
 
-    // ── UI components updated on loadRecipe() ─────────────────────────────
-    private JLabel            titleLabel;
-    private JLabel            subtitleLabel;
-    private JLabel            matchBadge;
+    // UI components updated on loadRecipe()
+    private JLabel titleLabel;
+    private JLabel subtitleLabel;
+    private JLabel matchBadge;
     private DefaultTableModel ingredientModel;
-    private JTextArea         procedureArea;
-    private JButton           editBtn;
+    private JTextArea procedureArea;
+    private JButton editBtn;
 
-    // ── Column indexes ────────────────────────────────────────────────────
-    private static final int COL_NAME     = 0;
-    private static final int COL_QUANTITY = 1;
-    private static final int COL_UNIT     = 2;
-
-    // ── Constructor ───────────────────────────────────────────────────────
     public RecipeDetailPanel(MainFrame frame) {
         this.frame           = frame;
         this.recipeDAO       = new RecipeDAO();
@@ -73,10 +47,6 @@ public class RecipeDetailPanel extends JPanel {
         add(buildTopBar(),   BorderLayout.NORTH);
         add(buildBody(),     BorderLayout.CENTER);
     }
-
-    // ══════════════════════════════════════════════════════════════════════
-    //  TOP BAR — Back + Edit buttons
-    // ══════════════════════════════════════════════════════════════════════
 
     private JPanel buildTopBar() {
         JPanel bar = new JPanel(new BorderLayout());
@@ -193,11 +163,11 @@ public class RecipeDetailPanel extends JPanel {
         AppTheme.styleTable(table);
 
         // Column widths
-        table.getColumnModel().getColumn(COL_NAME)
+        table.getColumnModel().getColumn(Helper.COL_NAME)
             .setPreferredWidth(280);
-        table.getColumnModel().getColumn(COL_QUANTITY)
+        table.getColumnModel().getColumn(Helper.COL_QUANTITY)
             .setPreferredWidth(100);
-        table.getColumnModel().getColumn(COL_UNIT)
+        table.getColumnModel().getColumn(Helper.COL_UNIT)
             .setPreferredWidth(100);
 
         // Alternating rows
@@ -324,8 +294,8 @@ public class RecipeDetailPanel extends JPanel {
         ingredientModel.setRowCount(0);
         for (RecipeIngredient ri : result.ingredients) {
             ingredientModel.addRow(new Object[]{
-                capitalize(ri.getIngredientName()),
-                formatQty(ri.getQuantity()),
+                Helper.capitalize(ri.getIngredientName()),
+                Helper.formatQty(ri.getQuantity()),
                 ri.getUnit()
             });
         }
@@ -383,23 +353,7 @@ public class RecipeDetailPanel extends JPanel {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  PRIVATE HELPERS
-    // ══════════════════════════════════════════════════════════════════════
-
-    /** Formats double quantity — strips trailing .0 for whole numbers. */
-    private String formatQty(double qty) {
-        return (qty == Math.floor(qty))
-            ? String.valueOf((int) qty)
-            : String.valueOf(qty);
-    }
-
-    private String capitalize(String s) {
-        if (s == null || s.isEmpty()) return s;
-        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
-    }
-
-    // ── Internal data transfer object for SwingWorker ─────────────────────
+    // Internal data transfer object for SwingWorker
     private static class RecipeLoadResult {
         final Recipe                 recipe;
         final List<RecipeIngredient> ingredients;
