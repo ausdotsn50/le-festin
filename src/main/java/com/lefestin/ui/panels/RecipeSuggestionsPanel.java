@@ -1,12 +1,13 @@
 package com.lefestin.ui.panels;
 
+import com.lefestin.dao.MealEntryDAO;
+import com.lefestin.model.MealEntry;
 import com.lefestin.model.Recipe;
 import com.lefestin.model.RecipeIngredient;
 import com.lefestin.model.RecipeMatchResult;
 import com.lefestin.service.RecipeMatchingService;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
-import com.lefestin.ui.dialogs.AssignRecipeDialog;
 
 import javax.swing.*;
 import java.awt.*;
@@ -42,6 +43,7 @@ public class RecipeSuggestionsPanel extends JPanel {
     // ── Dependencies ──────────────────────────────────────────────────────
     private final MainFrame             frame;
     private final RecipeMatchingService matchingService;
+    private final MealEntryDAO          mealEntryDAO;
 
     // ── Filter state ──────────────────────────────────────────────────────
     private static final String FILTER_ALL     = "All";
@@ -63,6 +65,7 @@ public class RecipeSuggestionsPanel extends JPanel {
     public RecipeSuggestionsPanel(MainFrame frame) {
         this.frame           = frame;
         this.matchingService = new RecipeMatchingService();
+        this.mealEntryDAO    = new MealEntryDAO();
 
         setLayout(new BorderLayout(0, 0));
         setBackground(AppTheme.BG_PAGE);
@@ -420,12 +423,11 @@ public class RecipeSuggestionsPanel extends JPanel {
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    //  ASSIGN TO PLAN — opens AssignRecipeDialog with a date picker
+    //  ASSIGN TO PLAN — directly add to meal planner (no recipe picker)
     // ══════════════════════════════════════════════════════════════════════
 
     private void openAssignDialog(Recipe recipe) {
-        // AssignRecipeDialog needs (frame, LocalDate, mealType)
-        // Show a quick date + meal type picker first
+        // Show date + meal type picker
         JPanel picker = new JPanel(new GridLayout(2, 2, 10, 8));
         picker.setBorder(BorderFactory.createEmptyBorder(4, 0, 4, 0));
 
@@ -464,19 +466,27 @@ public class RecipeSuggestionsPanel extends JPanel {
             .toLocalDate();
         String mealType = (String) mealCombo.getSelectedItem();
 
-        // Open the full AssignRecipeDialog pre-filtered to this slot
-        AssignRecipeDialog dialog =
-            new AssignRecipeDialog(frame, date, mealType);
-        dialog.setVisible(true);
+        // Directly add the meal entry to the database
+        try {
+            MealEntry newEntry = new MealEntry(
+                recipe.getRecipeId(),
+                frame.getCurrentUserId(),
+                mealType, date,
+                recipe.getTitle(), null);
 
-        if (dialog.getSelectedRecipeId() != -1) {
+            mealEntryDAO.addEntry(newEntry);
+
             JOptionPane.showMessageDialog(this,
-                "\"" + dialog.getSelectedRecipeTitle()
+                "\"" + recipe.getTitle()
                 + "\" assigned to " + mealType
-                + " on " + date + ".\n"
-                + "Open Meal Planner to view your plan.",
+                + " on " + date + ".",
                 "Assigned",
                 JOptionPane.INFORMATION_MESSAGE);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this,
+                "Failed to assign recipe: " + e.getMessage(),
+                "Database Error",
+                JOptionPane.ERROR_MESSAGE);
         }
     }
 
