@@ -130,9 +130,7 @@ public class RecipeSuggestionsPanel extends JPanel {
 
     // ── Toggle-style filter button ────────────────────────────────────────
     private JButton buildFilterButton(String text, boolean active) {
-        JButton btn = active
-            ? AppTheme.primaryButton(text)
-            : AppTheme.ghostButton(text);
+        JButton btn = AppTheme.ghostButton(text);
         btn.setFont(AppTheme.FONT_SMALL);
         return btn;
     }

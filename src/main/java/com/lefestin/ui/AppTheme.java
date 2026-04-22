@@ -100,6 +100,7 @@ public class AppTheme {
     /** Table row selection foreground */
     public static final Color SELECTION_FG      = new Color(20, 40, 80);
 
+
     //  TYPOGRAPHY
     //
     //  Swing is limited to system fonts — no web font loading.
@@ -367,7 +368,9 @@ public class AppTheme {
         UIManager.put("nimbusGreen",        GREEN_PRIMARY);
         UIManager.put("nimbusOrange",       AMBER_PRIMARY);
         UIManager.put("nimbusRed",          TERRA_PRIMARY);
-        UIManager.put("nimbusSelectedText", TEXT_INVERTED);
+        
+        UIManager.put("nimbusSelectedText", TEXT_MUTED);
+
         UIManager.put("nimbusSelectionBackground", SELECTION_BG);
         UIManager.put("text",               TEXT_PRIMARY);
         UIManager.put("Table.background",   BG_SURFACE);

@@ -184,7 +184,7 @@ public class PantryPanel extends BaseListPanel {
             }
         };
 
-        // Unit renderer — muted color
+        // Unit renderer — same color as other columns
         DefaultTableCellRenderer unitRenderer =
             new DefaultTableCellRenderer() {
             @Override
@@ -196,10 +196,7 @@ public class PantryPanel extends BaseListPanel {
                 setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
                 
                 if (!isSelected) {
-                    setForeground(AppTheme.TEXT_MUTED);
                     setBackground(row % 2 == 0 ? AppTheme.BG_SURFACE : AppTheme.BG_SUBTLE);
-                } else {
-                    setForeground(new Color(30, 30, 30));
                 }
                 return this;
             }

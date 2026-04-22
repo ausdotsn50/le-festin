@@ -85,7 +85,7 @@ public class RecipeDetailPanel extends JPanel {
             AppTheme.BORDER_DIVIDER,
             BorderFactory.createEmptyBorder(10, 16, 10, 16)));
 
-        JButton backBtn = AppTheme.ghostButton("← Back to Recipes");
+        JButton backBtn = AppTheme.ghostButton("Back to Recipes");
         backBtn.addActionListener(
             e -> frame.navigateTo(MainFrame.CARD_RECIPES));
 
