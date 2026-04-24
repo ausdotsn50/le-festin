@@ -2,6 +2,7 @@ package com.lefestin.ui;
 
 import javax.swing.*;
 
+import com.lefestin.model.Recipe;
 import com.lefestin.model.User;
 import com.lefestin.ui.dialogs.LoginDialog;
 import com.lefestin.ui.panels.*;
@@ -23,6 +24,7 @@ public class MainFrame extends JFrame {
     public static final String CARD_SUGGESTIONS = "Suggestions";
     public static final String CARD_GROCERY = "Grocery List";
     public static final String CARD_DETAIL = "Recipe Detail";
+    public static final String CARD_ADD_EDIT = "Add Edit Recipe";
 
     private static final String[] NAV_ITEMS = {
         CARD_RECIPES,
@@ -49,9 +51,7 @@ public class MainFrame extends JFrame {
     private WeeklyPlannerPanel plannerPanel;
     private RecipeSuggestionsPanel suggestionsPanel;
     private GroceryListPanel  groceryListPanel;
-    private RecipeDetailPanel recipeDetailPanel;
     
-
     public MainFrame() {
         setTitle("Le Festin");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -148,11 +148,6 @@ public class MainFrame extends JFrame {
         return sidebar;
     }
 
-    public void showRecipeDetail(int recipeId) {
-        recipeDetailPanel.loadRecipe(recipeId);
-        navigateTo(CARD_DETAIL);
-    }
-
     private JButton buildNavButton(String label) {
         JButton btn = new JButton(label);
         btn.setMaximumSize(new Dimension(200, 44));
@@ -198,7 +193,6 @@ public class MainFrame extends JFrame {
         plannerPanel       = new WeeklyPlannerPanel(this);
         suggestionsPanel   = new RecipeSuggestionsPanel(this);
         groceryListPanel   = new GroceryListPanel(this);
-        recipeDetailPanel = new RecipeDetailPanel(this);
 
         // Register each panel under its card name
         contentArea.add(recipeListPanel,    CARD_RECIPES);
@@ -206,7 +200,6 @@ public class MainFrame extends JFrame {
         contentArea.add(plannerPanel,       CARD_PLANNER);
         contentArea.add(suggestionsPanel,   CARD_SUGGESTIONS);
         contentArea.add(groceryListPanel,   CARD_GROCERY);
-        contentArea.add(recipeDetailPanel, CARD_DETAIL);
 
         // Show recipes by default
         navigateTo(CARD_RECIPES);
@@ -259,5 +252,20 @@ public class MainFrame extends JFrame {
 
     public String getCurrentUsername() {
         return currentUser != null ? currentUser.getUsername() : "";
+    }
+
+    // Dynamically creates the editor panel, adds it to the CardLayout, and shows it
+    public void showAddEditRecipePanel(Recipe r) {
+        AddEditRecipePanel editor = new AddEditRecipePanel(this, r);
+        contentArea.add(editor, CARD_ADD_EDIT);
+        navigateTo(CARD_ADD_EDIT);
+    }
+
+    // Switches back to the Recipe List and forces it to refresh the database
+    public void showRecipeList() {
+        navigateTo(CARD_RECIPES);
+        if (recipeListPanel != null) {
+            recipeListPanel.loadRecipes(); 
+        }
     }
 }
