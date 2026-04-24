@@ -9,6 +9,7 @@ import com.lefestin.dao.PantryDAO;
 import com.lefestin.model.PantryItem;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
+import com.lefestin.ui.dialogs.AddEditIngredientDialog; // Added this import
 
 import java.awt.*;
 import java.awt.event.*;
@@ -339,13 +340,25 @@ public class PantryPanel extends BaseListPanel {
 
     @Override
     protected void onAddClicked() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'onAddClicked'");
+        AddEditIngredientDialog dialog = new AddEditIngredientDialog(frame, null);
+        dialog.setVisible(true);
+        
+        if (dialog.isSaved()) {
+            loadPantry();
+        }
     }
 
     @Override
     protected void onEditClicked() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'onEditClicked'");
+        PantryItem selectedItem = getSelectedPantryItem();
+        
+        if (selectedItem != null) {
+            AddEditIngredientDialog dialog = new AddEditIngredientDialog(frame, selectedItem);
+            dialog.setVisible(true);
+            
+            if (dialog.isSaved()) {
+                loadPantry();
+            }
+        }
     }
 }
