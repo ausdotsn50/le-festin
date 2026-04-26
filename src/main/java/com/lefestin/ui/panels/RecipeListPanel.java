@@ -70,7 +70,7 @@ public class RecipeListPanel extends JPanel {
         actionPanel.setBackground(AppTheme.BG_PAGE);
 
         JButton addBtn = new JButton("+");
-        styleCircleButton(addBtn, new Color(255, 152, 0), Color.WHITE); 
+        styleCircleButton(addBtn, AppTheme.GREEN_PRIMARY, Color.WHITE); 
         addBtn.addActionListener(e -> openAddEditPanel(null));
 
         actionPanel.add(addBtn);

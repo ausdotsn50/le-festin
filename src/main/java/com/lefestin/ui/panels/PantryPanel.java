@@ -9,7 +9,7 @@ import com.lefestin.dao.PantryDAO;
 import com.lefestin.model.PantryItem;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
-import com.lefestin.ui.dialogs.AddEditIngredientDialog; // Added this import
+import com.lefestin.ui.dialogs.AddEditIngredientDialog; 
 
 import java.awt.*;
 import java.awt.event.*;
