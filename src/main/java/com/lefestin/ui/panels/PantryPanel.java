@@ -9,7 +9,7 @@ import com.lefestin.dao.PantryDAO;
 import com.lefestin.model.PantryItem;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
-import com.lefestin.ui.dialogs.AddEditIngredientDialog;
+import com.lefestin.ui.dialogs.AddEditIngredientDialog; 
 
 import java.awt.*;
 import java.awt.event.*;
@@ -83,16 +83,6 @@ public class PantryPanel extends BaseListPanel {
     @Override
     protected JButton createActionButton() {
         return AppTheme.dangerButton("Remove");
-    }
-    
-    @Override
-    protected void onAddClicked() {
-        openAddDialog();
-    }
-    
-    @Override
-    protected void onEditClicked() {
-        openEditDialog();
     }
     
     @Override
@@ -218,17 +208,6 @@ public class PantryPanel extends BaseListPanel {
             }
         });
 
-        // Double-click → open edit dialog
-        table.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2
-                        && table.getSelectedRow() != -1) {
-                    openEditDialog();
-                }
-            }
-        });
-
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createEmptyBorder());
         scroll.getViewport().setBackground(AppTheme.BG_SURFACE);
@@ -287,27 +266,6 @@ public class PantryPanel extends BaseListPanel {
         }
         
         updateCountLabelDisplay();
-    }
-
-    //  ACTIONS
-    private void openAddDialog() {
-        AddEditIngredientDialog dialog =
-            new AddEditIngredientDialog(frame, null);
-        dialog.setVisible(true);
-        if (dialog.isSaved()) loadPantry();
-    }
-
-    private void openEditDialog() {
-        int viewRow = table.getSelectedRow();
-        if (viewRow == -1) return;
-
-        PantryItem item = getSelectedPantryItem();
-        if (item == null) return;
-
-        AddEditIngredientDialog dialog =
-            new AddEditIngredientDialog(frame, item);
-        dialog.setVisible(true);
-        if (dialog.isSaved()) loadPantry();
     }
 
     private void removeSelectedItem() {
@@ -378,5 +336,29 @@ public class PantryPanel extends BaseListPanel {
     public void setVisible(boolean visible) {
         super.setVisible(visible);
         if (visible) loadPantry();
+    }
+
+    @Override
+    protected void onAddClicked() {
+        AddEditIngredientDialog dialog = new AddEditIngredientDialog(frame, null);
+        dialog.setVisible(true);
+        
+        if (dialog.isSaved()) {
+            loadPantry();
+        }
+    }
+
+    @Override
+    protected void onEditClicked() {
+        PantryItem selectedItem = getSelectedPantryItem();
+        
+        if (selectedItem != null) {
+            AddEditIngredientDialog dialog = new AddEditIngredientDialog(frame, selectedItem);
+            dialog.setVisible(true);
+            
+            if (dialog.isSaved()) {
+                loadPantry();
+            }
+        }
     }
 }

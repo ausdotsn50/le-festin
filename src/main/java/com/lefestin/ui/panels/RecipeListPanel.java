@@ -1,355 +1,231 @@
 package com.lefestin.ui.panels;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableRowSorter;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import com.lefestin.dao.RecipeDAO;
 import com.lefestin.model.Recipe;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
-import com.lefestin.ui.dialogs.AddEditRecipeDialog;
 
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * RecipeListPanel — the main recipe browser.
- * Now extends BaseListPanel to share header structure.
+ * RecipeListPanel — Card-based recipe browser.
  */
-public class RecipeListPanel extends BaseListPanel {
-    // Dependencies
+public class RecipeListPanel extends JPanel {
+    private final MainFrame frame;
     private final RecipeDAO recipeDAO;
 
-    // For the table layout view
-    private JTable table;
-    private DefaultTableModel tableModel;
-    private TableRowSorter<DefaultTableModel> sorter;
+    private List<Recipe> allRecipes = new ArrayList<>();
+    private JPanel cardsContainer;
+    private JTextField searchField;
 
-    // Search filter components
-    private JComboBox<String> categoryFilter;
-
-    // Col indexes
-    private static final int COL_ID = 0;
-    private static final int COL_TITLE = 1;
-    private static final int COL_CATEGORY = 2;
-    private static final int COL_PREP = 3;
-
-    // Constructor
     public RecipeListPanel(MainFrame frame) {
-        super(frame);
+        this.frame = frame;
         this.recipeDAO = new RecipeDAO();
+
+        initComponents();
     }
 
-    @Override
-    protected String getHeaderTitle() {
-        return "Recipes";
+    private void initComponents() {
+        setLayout(new BorderLayout());
+        setBackground(AppTheme.BG_PAGE);
+        setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+
+        add(buildHeader(), BorderLayout.NORTH);
+
+        cardsContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 20));
+        cardsContainer.setBackground(AppTheme.BG_PAGE);
+
+        JScrollPane scrollPane = new JScrollPane(cardsContainer);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.getViewport().setBackground(AppTheme.BG_PAGE);
+
+        add(scrollPane, BorderLayout.CENTER);
     }
 
-    @Override
-    protected String getHeaderDescription() {
-        return "Browse and manage your recipe collection";
-    }
+    private JPanel buildHeader() {
+        JPanel headerPanel = new JPanel();
+        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
+        headerPanel.setBackground(AppTheme.BG_PAGE);
 
-    @Override
-    protected String getSearchPlaceholder() {
-        return "Search recipes...";
-    }
+        JPanel topRow = new JPanel(new BorderLayout());
+        topRow.setBackground(AppTheme.BG_PAGE);
 
-    @Override
-    protected JComponent buildHeaderRightControl() {
-        return Box.createHorizontalBox(); // empty — no header button
-    }
+        JLabel titleLabel = new JLabel("My Recipes");
+        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
+        titleLabel.setForeground(AppTheme.TEXT_PRIMARY);
 
-    @Override
-    protected JComponent buildSearchRightControl() {
-        // Category dropdown next to search field
-        categoryFilter = new JComboBox<>(new String[]{
-            "All",
-            Recipe.CATEGORY_BREAKFAST,
-            Recipe.CATEGORY_LUNCH,
-            Recipe.CATEGORY_DINNER,
-        });
-        categoryFilter.setFont(AppTheme.FONT_BODY);
-        categoryFilter.setBackground(AppTheme.BG_SURFACE);
-        categoryFilter.setForeground(AppTheme.TEXT_PRIMARY);
-        categoryFilter.setPreferredSize(new Dimension(140, 36));
+        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        actionPanel.setBackground(AppTheme.BG_PAGE);
+
+        JButton addBtn = new JButton("+");
+        styleCircleButton(addBtn, AppTheme.GREEN_PRIMARY, Color.WHITE); 
+        addBtn.addActionListener(e -> openAddEditPanel(null));
+
+        actionPanel.add(addBtn);
+
+        topRow.add(titleLabel, BorderLayout.WEST);
+        topRow.add(actionPanel, BorderLayout.EAST);
+
+        searchField = new JTextField();
+        searchField.setFont(AppTheme.FONT_BODY);
+        searchField.setBackground(AppTheme.BG_SURFACE);
+        searchField.setForeground(AppTheme.TEXT_PRIMARY);
+        searchField.setCaretColor(AppTheme.TEXT_PRIMARY);
         
-        // Renderer for consistent styling with theme colors
-        categoryFilter.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(
-                    JList<?> list, Object value, int index,
-                    boolean isSelected, boolean cellHasFocus) {
-                super.getListCellRendererComponent(
-                    list, value, index, isSelected, cellHasFocus);
-                
-                if (isSelected) {
-                    setBackground(AppTheme.SELECTION_BG);
-                    setForeground(AppTheme.SELECTION_FG);
-                } else {
-                    setBackground(AppTheme.BG_SURFACE);
-                    setForeground(AppTheme.TEXT_PRIMARY);
-                }
-                
-                return this;
-            }
+        Border line = BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true);
+        Border pad = BorderFactory.createEmptyBorder(10, 15, 10, 15);
+        searchField.setBorder(new CompoundBorder(line, pad));
+
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { filterCards(); }
+            public void removeUpdate(DocumentEvent e) { filterCards(); }
+            public void changedUpdate(DocumentEvent e) { filterCards(); }
         });
+
+        headerPanel.add(topRow);
+        headerPanel.add(Box.createVerticalStrut(20));
+        headerPanel.add(searchField);
+        headerPanel.add(Box.createVerticalStrut(10));
+
+        return headerPanel;
+    }
+
+    private void styleCircleButton(JButton btn, Color bg, Color fg) {
+        btn.setPreferredSize(new Dimension(40, 40));
+        btn.setBackground(bg);
+        btn.setForeground(fg);
+        btn.setFont(new Font("SansSerif", Font.BOLD, 18));
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+
+    private void renderCards(List<Recipe> recipes) {
+        cardsContainer.removeAll();
+        for (Recipe recipe : recipes) {
+            cardsContainer.add(createRecipeCard(recipe));
+        }
+        cardsContainer.revalidate();
+        cardsContainer.repaint();
+    }
+
+    private JPanel createRecipeCard(Recipe recipe) {
+        JPanel card = new JPanel(new BorderLayout(10, 10));
+        card.setPreferredSize(new Dimension(300, 130)); 
+        card.setBackground(AppTheme.BG_SURFACE);
         
-        categoryFilter.addActionListener(e -> applyFilters());
+        Border lineBorder = BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true);
+        Border padding = BorderFactory.createEmptyBorder(15, 20, 15, 20);
+        card.setBorder(new CompoundBorder(lineBorder, padding));
 
-        return categoryFilter;
-    }
+        JPanel headerRow = new JPanel(new BorderLayout());
+        headerRow.setOpaque(false);
+        
+        JButton deleteBtn = new JButton("✖");
+        deleteBtn.setFont(AppTheme.FONT_SMALL);
+        deleteBtn.setForeground(AppTheme.TEXT_MUTED);
+        deleteBtn.setContentAreaFilled(false);
+        deleteBtn.setBorderPainted(false);
+        deleteBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        deleteBtn.setToolTipText("Delete Recipe");
+        deleteBtn.addActionListener(e -> deleteRecipe(recipe));
+        
+        headerRow.add(deleteBtn, BorderLayout.EAST);
 
-    @Override
-    protected JComponent buildTableContent() {
-        return buildTable();
-    }
+        JLabel titleLbl = new JLabel("<html>" + recipe.getTitle() + "</html>");
+        titleLbl.setFont(new Font("SansSerif", Font.BOLD, 18));
+        titleLbl.setForeground(AppTheme.TEXT_PRIMARY);
+        titleLbl.setVerticalAlignment(SwingConstants.TOP);
 
-    @Override
-    protected JPanel buildToolbar() {
-        return buildStandardToolbar();
-    }
-    
-    @Override
-    protected JButton createActionButton() {
-        return AppTheme.dangerButton("Delete");
-    }
-    
-    @Override
-    protected void onAddClicked() {
-        openAddDialog();
-    }
-    
-    @Override
-    protected void onEditClicked() {
-        openEditDialog();
-    }
-    
-    @Override
-    protected void onActionClicked() {
-        deleteSelectedRecipe();
-    }
+        JPanel bottomRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        bottomRow.setOpaque(false);
+        
+        JLabel timeLbl = new JLabel("🕒 " + recipe.getFormattedPrepTime());
+        timeLbl.setFont(AppTheme.FONT_SMALL);
+        timeLbl.setForeground(new Color(255, 152, 0)); 
 
-    //  TABLE
-    private JScrollPane buildTable() {
-        // Set up search listener on inherited searchField
-        searchField.getDocument().addDocumentListener(
-            new javax.swing.event.DocumentListener() {
-                public void insertUpdate (javax.swing.event.DocumentEvent e) { applyFilters(); }
-                public void removeUpdate (javax.swing.event.DocumentEvent e) { applyFilters(); }
-                public void changedUpdate(javax.swing.event.DocumentEvent e) { applyFilters(); }
-            }
-        );
+        bottomRow.add(timeLbl);
 
-        // Column names — ID hidden but kept for selection lookups
-        String[] columns = { "ID", "Title", "Category", "Prep Time" };
+        card.add(headerRow, BorderLayout.NORTH);
+        card.add(titleLbl, BorderLayout.CENTER);
+        card.add(bottomRow, BorderLayout.SOUTH);
 
-        tableModel = new DefaultTableModel(columns, 0) {
-            @Override
-            public boolean isCellEditable(int row, int col) {
-                return false; // read-only — edits go through the dialog
-            }
-            @Override
-            public Class<?> getColumnClass(int col) {
-                return col == COL_ID ? Integer.class : String.class;
-            }
-        };
-
-        table = new JTable(tableModel);
-        AppTheme.styleTable(table);
-
-        // hide ID column — keep as-is
-        table.getColumnModel().getColumn(COL_ID).setMinWidth(0);
-        table.getColumnModel().getColumn(COL_ID).setMaxWidth(0);
-        table.getColumnModel().getColumn(COL_ID).setWidth(0);
-
-        // column widths — keep as-is
-        table.getColumnModel().getColumn(COL_TITLE)   .setPreferredWidth(340);
-        table.getColumnModel().getColumn(COL_CATEGORY).setPreferredWidth(120);
-        table.getColumnModel().getColumn(COL_PREP)    .setPreferredWidth(100);
-
-        // sorter — keep as-is
-        sorter = new TableRowSorter<>(tableModel);
-        table.setRowSorter(sorter);
-
-        // Sorter — enables column header click-to-sort
-        sorter = new TableRowSorter<>(tableModel);
-        table.setRowSorter(sorter);
-
-        // Enable/disable Edit + Delete based on selection
-        // in buildTable(), replace the selection listener:
-        table.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                boolean selected = table.getSelectedRow() != -1;
-                viewBtn.setEnabled(selected);
-                editBtn.setEnabled(selected);
-                actionBtn.setEnabled(selected);
-                updateCountLabelDisplay();
-            }
-        });
-
-        // Double-click row → open edit dialog
-        table.addMouseListener(new MouseAdapter() {
+        card.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        card.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2 && table.getSelectedRow() != -1) {
-                    onViewClicked();
-                }
+                openAddEditPanel(recipe);
+            }
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                card.setBorder(new CompoundBorder(
+                    BorderFactory.createLineBorder(new Color(255, 152, 0), 1, true),
+                    padding
+                ));
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                card.setBorder(new CompoundBorder(lineBorder, padding));
             }
         });
-        // Alternating row colors via custom renderer
-        table.setDefaultRenderer(Object.class,
-            AppTheme.alternatingRowRenderer());
-        
-        JScrollPane scroll = new JScrollPane(table);
-        scroll.setBorder(BorderFactory.createEmptyBorder());
-        scroll.getViewport().setBackground(AppTheme.BG_SURFACE);
 
-        return scroll;
+        return card;
     }
-    
-    @Override
-    protected void onViewClicked() {
-        int viewRow = table.getSelectedRow();
-        if (viewRow == -1) return;
-        int modelRow = table.convertRowIndexToModel(viewRow);
-        int recipeId = (int) tableModel.getValueAt(modelRow, COL_ID);
-        frame.showRecipeDetail(recipeId);
-    }
-
-    //  DATA — load, filter, refresh
-    /**
-     * Loads all recipes for the current user from the DB
-     * and populates the table. Call this on panel show and after
-     * any add/edit/delete operation.
-     */
 
     public void loadRecipes() {
-        tableModel.setRowCount(0); // clear existing rows
-
         try {
-            List<Recipe> recipes = recipeDAO.getAllRecipes(
-                frame.getCurrentUserId()
-            );
-            for (Recipe r : recipes) {
-                tableModel.addRow(new Object[]{
-                    r.getRecipeId(),
-                    r.getTitle(),
-                    r.getCategory(),
-                    r.getFormattedPrepTime()
-                });
-            }
+            allRecipes = recipeDAO.getAllRecipes(frame.getCurrentUserId());
+            filterCards(); 
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this,
-                "Failed to load recipes: " + e.getMessage(),
-                "Database Error",
-                JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Failed to load recipes: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
-
-        updateCountLabelDisplay();
     }
 
-    /**
-     * Applies search text + category filter simultaneously.
-     * Uses TableRowSorter's RowFilter — no DB call needed.
-     */
-    private void applyFilters() {
-        String  text     = searchField.getText().trim();
-        String  category = (String) categoryFilter.getSelectedItem();
-        boolean hasText  = !text.isEmpty();
-        boolean hasCategory = !"All".equals(category);
-
-        if (!hasText && !hasCategory) {
-            sorter.setRowFilter(null);
-        } else if (hasText && !hasCategory) {
-            // Filter by title only (column 1), case-insensitive
-            sorter.setRowFilter(
-                RowFilter.regexFilter("(?i)" + text, COL_TITLE)
-            );
-        } else if (!hasText) {
-            // Filter by category only (column 2), exact match
-            sorter.setRowFilter(
-                RowFilter.regexFilter("(?i)^" + category + "$", COL_CATEGORY)
-            );
+    private void filterCards() {
+        String query = searchField.getText().toLowerCase().trim();
+        if (query.isEmpty()) {
+            renderCards(allRecipes);
         } else {
-            // Both filters active — AND them together
-            sorter.setRowFilter(RowFilter.andFilter(List.of(
-                RowFilter.regexFilter("(?i)" + text,               COL_TITLE),
-                RowFilter.regexFilter("(?i)^" + category + "$",    COL_CATEGORY)
-            )));
-        }
-
-        updateCountLabelDisplay();
-    }
-
-    // Updates the count label to reflect visible filtered rows
-    private void updateCountLabelDisplay() {
-        int visible = table.getRowCount();
-        int total   = tableModel.getRowCount();
-        String text = visible == total
-            ? total + " recipe" + (total == 1 ? "" : "s")
-            : visible + " of " + total + " recipes";
-        updateCountLabel(text);
-    }
-
-    //  ACTIONS
-    private void openAddDialog() {
-        AddEditRecipeDialog dialog =
-            new AddEditRecipeDialog(frame, null);
-        dialog.setVisible(true);
-        if (dialog.isSaved()) loadRecipes();  // refresh if saved
-    }
-
-    private void openEditDialog() {
-        int viewRow  = table.getSelectedRow();
-        if (viewRow == -1) return;
-        int modelRow = table.convertRowIndexToModel(viewRow);
-        int recipeId = (int) tableModel.getValueAt(modelRow, COL_ID);
-
-        try {
-            Recipe recipe = recipeDAO.getRecipeById(recipeId);
-            AddEditRecipeDialog dialog =
-                new AddEditRecipeDialog(frame, recipe);
-            dialog.setVisible(true);
-            if (dialog.isSaved()) loadRecipes();
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this,
-                "Failed to load recipe: " + e.getMessage(),
-                "Database Error",
-                JOptionPane.ERROR_MESSAGE);
+            List<Recipe> filtered = allRecipes.stream()
+                .filter(r -> r.getTitle().toLowerCase().contains(query) || 
+                             r.getCategory().toLowerCase().contains(query))
+                .collect(Collectors.toList());
+            renderCards(filtered);
         }
     }
-    
-    private void deleteSelectedRecipe() {
-        int viewRow  = table.getSelectedRow();
-        if (viewRow == -1) return;
-        int modelRow = table.convertRowIndexToModel(viewRow);
-        int recipeId = (int) tableModel.getValueAt(modelRow, COL_ID);
-        String title = (String) tableModel.getValueAt(modelRow, COL_TITLE);
 
+    private void deleteRecipe(Recipe recipe) {
         int confirm = JOptionPane.showConfirmDialog(this,
-            "Delete \"" + title + "\"? This cannot be undone.",
-            "Confirm Delete",
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.WARNING_MESSAGE);
+            "Delete \"" + recipe.getTitle() + "\"? This cannot be undone.",
+            "Confirm Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                recipeDAO.deleteRecipe(recipeId);
+                recipeDAO.deleteRecipe(recipe.getRecipeId());
                 loadRecipes();
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this,
-                    "Failed to delete recipe: " + e.getMessage(),
-                    "Database Error",
-                    JOptionPane.ERROR_MESSAGE);
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, "Failed to delete: " + ex.getMessage());
             }
         }
     }
 
-    // Reload when panel becomes visible
+    private void openAddEditPanel(Recipe recipe) {
+        // Delegate to MainFrame so CardLayout handles the transition smoothly
+        frame.showAddEditRecipePanel(recipe);
+    }
+
     @Override
     public void setVisible(boolean visible) {
         super.setVisible(visible);
