@@ -4,53 +4,32 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 
-/**
- * AppTheme — single source of truth for all visual styling in Le Festin.
- *
- * Usage in any panel:
- *   setBackground(AppTheme.BG_PAGE);
- *   JButton btn = AppTheme.primaryButton("Save");
- *   label.setFont(AppTheme.FONT_BODY);
- *
- * Never hardcode Color or Font values in panels — always reference here.
- * To restyle the entire app, change values in this one file.
- */
 public class AppTheme {
-    //  COLOR PALETTE
-    //
-    //  Inspired by a warm bistro kitchen:
-    //    - Deep charcoal sidebar (like cast iron)
-    //    - Warm cream page backgrounds (like parchment / recipe cards)
-    //    - Herb green for actions (like fresh basil)
-    //    - Terracotta red for destructive actions (like paprika)
-    //    - Saffron amber for highlights (like turmeric)
-    //    - Clean white surfaces for cards and tables
-
     // Sidebar
     /** Deep charcoal — sidebar background */
-    public static final Color SIDEBAR_BG        = new Color(28, 32, 38);
+    public static final Color SIDEBAR_BG         = new Color(249, 249, 245);
     /** Slightly lighter — active nav item */
-    public static final Color SIDEBAR_ACTIVE     = new Color(44, 51, 64);
+    public static final Color SIDEBAR_ACTIVE     = new Color(252, 219, 109);
     /** Hover state */
-    public static final Color SIDEBAR_HOVER      = new Color(36, 42, 52);
+    public static final Color SIDEBAR_HOVER      = new Color(253, 235, 158);
     /** Nav item text — inactive */
-    public static final Color SIDEBAR_FG         = new Color(160, 168, 180);
+    public static final Color SIDEBAR_FG         = new Color(249, 249, 245);
     /** Nav item text — active */
-    public static final Color SIDEBAR_FG_ACTIVE  = Color.WHITE;
+    public static final Color SIDEBAR_FG_ACTIVE  = new Color(249, 249, 245);
 
     // Header
     /** Dark header bar */
-    public static final Color HEADER_BG         = new Color(34, 40, 49);
+    public static final Color HEADER_BG         = new Color(252, 219, 109);
     /** App name text */
     public static final Color HEADER_FG         = Color.WHITE;
     /** Username / subtitle text */
-    public static final Color HEADER_FG_MUTED   = new Color(160, 168, 180);
+    public static final Color HEADER_FG_MUTED   = Color.BLACK;
 
     // Page & surface backgrounds 
     /** Warm cream — outermost page background */
-    public static final Color BG_PAGE           = new Color(250, 248, 244);
+    public static final Color BG_PAGE           = new Color(249, 249, 245); 
     /** Clean white — cards, panels, table surfaces */
-    public static final Color BG_SURFACE        = Color.WHITE;
+    public static final Color BG_SURFACE        = new Color(249, 249, 245);
     /** Very light warm gray — alternating table rows, input fields */
     public static final Color BG_SUBTLE         = new Color(252, 250, 247);
     /** Soft divider/border color */
@@ -58,19 +37,19 @@ public class AppTheme {
 
     // Text
     /** Primary text — headings, table content */
-    public static final Color TEXT_PRIMARY      = new Color(28, 25, 20);
+    public static final Color TEXT_PRIMARY      = Color.BLACK;
     /** Secondary text — subtitles, labels */
-    public static final Color TEXT_SECONDARY    = new Color(100, 94, 84);
+    public static final Color TEXT_SECONDARY    = Color.BLACK;
     /** Muted/hint text — placeholders, counts */
-    public static final Color TEXT_MUTED        = new Color(155, 148, 136);
+    public static final Color TEXT_MUTED        = Color.BLACK;
     /** Inverted text — on dark backgrounds */
-    public static final Color TEXT_INVERTED     = Color.WHITE;
+    public static final Color TEXT_INVERTED     = Color.BLACK;
 
     // Herb green — primary action color
     /** Primary button background */
-    public static final Color GREEN_PRIMARY     = new Color(42, 122, 74);
+    public static final Color GREEN_PRIMARY     = new Color(252, 219, 109);
     /** Hover state */
-    public static final Color GREEN_HOVER       = new Color(34, 100, 60);
+    public static final Color GREEN_HOVER       = new Color(252, 219, 109);
     /** Light tint — filled meal slots, success states */
     public static final Color GREEN_TINT        = new Color(230, 247, 237);
     /** Text on green tint */

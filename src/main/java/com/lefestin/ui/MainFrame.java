@@ -2,6 +2,7 @@ package com.lefestin.ui;
 
 import javax.swing.*;
 
+import com.lefestin.model.Recipe;
 import com.lefestin.model.User;
 import com.lefestin.ui.dialogs.LoginDialog;
 import com.lefestin.ui.panels.*;
@@ -23,6 +24,7 @@ public class MainFrame extends JFrame {
     public static final String CARD_SUGGESTIONS = "Suggestions";
     public static final String CARD_GROCERY = "Grocery List";
     public static final String CARD_DETAIL = "Recipe Detail";
+    public static final String CARD_ADD_EDIT = "Add Edit Recipe";
 
     private static final String[] NAV_ITEMS = {
         CARD_RECIPES,
@@ -43,15 +45,12 @@ public class MainFrame extends JFrame {
     // Nav buttons
     private JButton[] navButtons;
 
-    // To be created: panels
     private RecipeListPanel recipeListPanel;
     private PantryPanel pantryPanel;
     private WeeklyPlannerPanel plannerPanel;
     private RecipeSuggestionsPanel suggestionsPanel;
     private GroceryListPanel  groceryListPanel;
-    private RecipeDetailPanel recipeDetailPanel;
     
-
     public MainFrame() {
         setTitle("Le Festin");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -81,6 +80,7 @@ public class MainFrame extends JFrame {
         JLabel appName = new JLabel("Le Festin");
         appName.setForeground(AppTheme.HEADER_FG);
         appName.setFont(AppTheme.FONT_APP_NAME);
+        appName.setForeground(Color.BLACK);
 
         userMenuButton = buildUserMenuButton();
 
@@ -114,13 +114,8 @@ public class MainFrame extends JFrame {
         menu.show(button, 0, button.getHeight());
     }
 
-    // Note on how logout is performed (for possible)
-    // Can add sleep later on Views transition for a smoother switch
     private void performLogout() {
-        // Close the current frame before showing login dialog
         dispose();
-
-        // Create a new MainFrame and LoginDialog to restart the login flow
         MainFrame newFrame = new MainFrame();
         LoginDialog loginDialog = new LoginDialog(newFrame);
         loginDialog.setVisible(true);
@@ -130,8 +125,10 @@ public class MainFrame extends JFrame {
         JPanel sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setBackground(AppTheme.SIDEBAR_BG);
-        sidebar.setPreferredSize(new Dimension(200, 0));
-        sidebar.setBorder(BorderFactory.createEmptyBorder(16, 0, 16, 0));
+        
+        // Narrower sidebar to fit the stacked icon design perfectly
+        sidebar.setPreferredSize(new Dimension(120, 0));
+        sidebar.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
 
         navButtons = new JButton[NAV_ITEMS.length];
 
@@ -139,7 +136,7 @@ public class MainFrame extends JFrame {
             JButton btn = buildNavButton(NAV_ITEMS[i]);
             navButtons[i] = btn;
             sidebar.add(btn);
-            sidebar.add(Box.createVerticalStrut(4));
+            sidebar.add(Box.createVerticalStrut(8)); // slightly larger gap between items
         }
 
         // Push everything to the top
@@ -148,23 +145,28 @@ public class MainFrame extends JFrame {
         return sidebar;
     }
 
-    public void showRecipeDetail(int recipeId) {
-        recipeDetailPanel.loadRecipe(recipeId);
-        navigateTo(CARD_DETAIL);
-    }
-
     private JButton buildNavButton(String label) {
         JButton btn = new JButton(label);
-        btn.setMaximumSize(new Dimension(200, 44));
-        btn.setPreferredSize(new Dimension(200, 44));
-        btn.setAlignmentX(Component.LEFT_ALIGNMENT);
-        btn.setHorizontalAlignment(SwingConstants.LEFT);
-        btn.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
+        
+        // Compact dimensions to fit nicely in the narrow sidebar
+        btn.setMaximumSize(new Dimension(120, 75));
+        btn.setPreferredSize(new Dimension(120, 75));
+        btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        btn.setVerticalTextPosition(SwingConstants.BOTTOM);
+        btn.setHorizontalTextPosition(SwingConstants.CENTER);
+        btn.setHorizontalAlignment(SwingConstants.CENTER);
+        btn.setIcon(new NavIcon(label)); 
+
+        btn.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
         btn.setFocusPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.setFont(AppTheme.FONT_BODY);
+        
+        // Derived a slightly smaller font size so it fits neatly under the icon
+        btn.setFont(AppTheme.FONT_BODY.deriveFont(12f)); 
+        
         btn.setBackground(AppTheme.SIDEBAR_BG);
-        btn.setForeground(AppTheme.SIDEBAR_FG);
+        btn.setForeground(AppTheme.TEXT_PRIMARY);
         btn.setOpaque(true);
         btn.setContentAreaFilled(true);
         btn.setBorderPainted(false);
@@ -198,7 +200,6 @@ public class MainFrame extends JFrame {
         plannerPanel       = new WeeklyPlannerPanel(this);
         suggestionsPanel   = new RecipeSuggestionsPanel(this);
         groceryListPanel   = new GroceryListPanel(this);
-        recipeDetailPanel = new RecipeDetailPanel(this);
 
         // Register each panel under its card name
         contentArea.add(recipeListPanel,    CARD_RECIPES);
@@ -206,7 +207,6 @@ public class MainFrame extends JFrame {
         contentArea.add(plannerPanel,       CARD_PLANNER);
         contentArea.add(suggestionsPanel,   CARD_SUGGESTIONS);
         contentArea.add(groceryListPanel,   CARD_GROCERY);
-        contentArea.add(recipeDetailPanel, CARD_DETAIL);
 
         // Show recipes by default
         navigateTo(CARD_RECIPES);
@@ -220,16 +220,17 @@ public class MainFrame extends JFrame {
         highlightActiveNavButton(cardName);
     }
 
-    // Highlight eff.
     private void highlightActiveNavButton(String activeCard) {
         for (int i = 0; i < NAV_ITEMS.length; i++) {
             boolean isActive = NAV_ITEMS[i].equals(activeCard);
+            
+            // Change the background if it's active
             navButtons[i].setBackground(isActive
                 ? AppTheme.SIDEBAR_ACTIVE
                 : AppTheme.SIDEBAR_BG);
-            navButtons[i].setForeground(isActive
-                ? AppTheme.SIDEBAR_FG_ACTIVE
-                : AppTheme.SIDEBAR_FG);
+                
+            // Lock the text to the default color no matter what
+            navButtons[i].setForeground(AppTheme.TEXT_PRIMARY);
         }
     }
 
@@ -259,5 +260,63 @@ public class MainFrame extends JFrame {
 
     public String getCurrentUsername() {
         return currentUser != null ? currentUser.getUsername() : "";
+    }
+
+    // Dynamically creates the editor panel, adds it to the CardLayout, and shows it
+    public void showAddEditRecipePanel(Recipe r) {
+        AddEditRecipePanel editor = new AddEditRecipePanel(this, r);
+        contentArea.add(editor, CARD_ADD_EDIT);
+        navigateTo(CARD_ADD_EDIT);
+    }
+
+    // Switches back to the Recipe List and forces it to refresh the database
+    public void showRecipeList() {
+        navigateTo(CARD_RECIPES);
+        if (recipeListPanel != null) {
+            recipeListPanel.loadRecipes(); 
+        }
+    }
+
+    /**
+     * Custom Icon implementation that draws perfectly centered symbols
+     * and automatically inherits the Button's foreground color.
+     */
+    private static class NavIcon implements Icon {
+        private final String label;
+
+        public NavIcon(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public int getIconWidth() { return 30; }
+
+        @Override
+        public int getIconHeight() { return 34; }
+
+        @Override
+        public void paintIcon(Component c, Graphics g, int x, int y) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            
+            String symbol = "📌"; 
+            switch (label) {
+                case CARD_RECIPES: symbol = "📖"; break; // Book / Bookmark
+                case CARD_PANTRY: symbol = "📦"; break; // Pantry Box
+                case CARD_PLANNER: symbol = "📅"; break; // Calendar
+                case CARD_SUGGESTIONS: symbol = "💡"; break; // Idea / Suggestions
+                case CARD_GROCERY: symbol = "🛒"; break; // Cart
+            }
+
+            g2.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 24)); // Universally supported icon font
+            g2.setColor(c.getForeground()); // This guarantees the icon turns active when the button does!
+            
+            FontMetrics fm = g2.getFontMetrics();
+            int textX = x + (getIconWidth() - fm.stringWidth(symbol)) / 2;
+            int textY = y + fm.getAscent() + (getIconHeight() - fm.getHeight()) / 2;
+            
+            g2.drawString(symbol, textX, textY);
+            g2.dispose();
+        }
     }
 }

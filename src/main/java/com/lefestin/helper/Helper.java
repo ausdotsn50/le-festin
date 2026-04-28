@@ -1,6 +1,8 @@
 package com.lefestin.helper;
 
 import javax.swing.JDialog;
+
+import java.awt.Component;
 import java.awt.Dimension;
 import java.sql.SQLException;
 import java.time.DayOfWeek;
@@ -40,18 +42,31 @@ public class Helper {
         dialog.setResizable(false);
     }
 
-    public static List<Ingredient> loadAllIngredients(JDialog dialog, IngredientDAO ingredientDAO) {
-        try {
-            return ingredientDAO.getAllIngredients();
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(dialog,
-                "Could not load ingredients from database.\n"
-                + e.getMessage(),
-                "Warning",
-                JOptionPane.WARNING_MESSAGE);
-            return new ArrayList<>();
-        }
+    // public static List<Ingredient> loadAllIngredients(JDialog dialog, IngredientDAO ingredientDAO) {
+    //     try {
+    //         return ingredientDAO.getAllIngredients();
+    //     } catch (SQLException e) {
+    //         JOptionPane.showMessageDialog(dialog,
+    //             "Could not load ingredients from database.\n"
+    //             + e.getMessage(),
+    //             "Warning",
+    //             JOptionPane.WARNING_MESSAGE);
+    //         return new ArrayList<>();
+    //     }
+    // }
+
+    public static List<Ingredient> loadAllIngredients(Component parentComponent, IngredientDAO ingredientDAO) {
+    try {
+        return ingredientDAO.getAllIngredients();
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(parentComponent,
+            "Could not load ingredients from database.\n"
+            + e.getMessage(),
+            "Warning",
+            JOptionPane.WARNING_MESSAGE);
+        return new ArrayList<>();
     }
+}
 
     public static String formatQty(double qty) {
         return (qty == Math.floor(qty))
