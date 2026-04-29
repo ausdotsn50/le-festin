@@ -343,14 +343,13 @@ public class WeeklyPlannerPanel extends JPanel {
 
         String prompt = day.format(
             DateTimeFormatter.ofPattern("EEEE, MMM d"))
-            + " — " + mealType
             + (isOccupied
                 ? "\nCurrent: " + existing.getRecipeTitle()
                 : "\nNo recipe assigned");
 
         int choice = JOptionPane.showOptionDialog(
             this, prompt,
-            mealType + " · " + day.format(DAY_DATE_FMT),
+            day.format(DAY_DATE_FMT),
             JOptionPane.DEFAULT_OPTION,
             JOptionPane.PLAIN_MESSAGE,
             null, options, options[0]);
