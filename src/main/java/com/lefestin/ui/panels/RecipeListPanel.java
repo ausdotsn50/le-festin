@@ -62,7 +62,8 @@ public class RecipeListPanel extends JPanel {
         cardsContainer = new JPanel();
         cardsContainer.setLayout(new BoxLayout(cardsContainer, BoxLayout.Y_AXIS));
         cardsContainer.setBackground(AppTheme.BG_PAGE);
-        cardsContainer.setAlignmentX(Component.LEFT_ALIGNMENT); 
+        cardsContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
+        cardsContainer.setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12)); 
 
         JScrollPane scrollPane = new JScrollPane(cardsContainer);
         scrollPane.setBorder(null);
@@ -107,8 +108,11 @@ public class RecipeListPanel extends JPanel {
         searchField.setBorder(new CompoundBorder(line, pad));
 
         searchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
             public void insertUpdate(DocumentEvent e) { filterCards(); }
+            @Override
             public void removeUpdate(DocumentEvent e) { filterCards(); }
+            @Override
             public void changedUpdate(DocumentEvent e) { filterCards(); }
         });
 
@@ -134,8 +138,11 @@ public class RecipeListPanel extends JPanel {
 
     private void renderCards(List<Recipe> recipes) {
         cardsContainer.removeAll();
-        for (Recipe recipe : recipes) {
-            cardsContainer.add(createRecipeCard(recipe));
+        for (int i = 0; i < recipes.size(); i++) {
+            cardsContainer.add(createRecipeCard(recipes.get(i)));
+            if (i < recipes.size() - 1) {
+                cardsContainer.add(Box.createVerticalStrut(12)); // 12px vertical gap
+            }
         }
         cardsContainer.revalidate();
         cardsContainer.repaint();

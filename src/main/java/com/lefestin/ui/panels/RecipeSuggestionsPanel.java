@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -129,6 +130,9 @@ public class RecipeSuggestionsPanel extends JPanel {
     private JButton buildFilterButton(String text, boolean active) {
         JButton btn = AppTheme.ghostButton(text);
         btn.setFont(AppTheme.FONT_SMALL);
+        if (active) {
+            styleAsActiveFilter(btn);
+        }
         return btn;
     }
 
@@ -226,7 +230,7 @@ public class RecipeSuggestionsPanel extends JPanel {
                     List<RecipeMatchResult> filtered = getFilteredResults();
                     renderCards(filtered);
                     updateStatusLabel();
-                } catch (Exception ex) {
+                } catch (InterruptedException | ExecutionException ex) {
                     cardsPanel.removeAll();
                     JLabel errLabel = new JLabel(
                         "Failed to load suggestions: " + ex.getMessage());
@@ -304,8 +308,7 @@ public class RecipeSuggestionsPanel extends JPanel {
 
         // ── Category + prep time subtitle ─────────────────────────────────
         JLabel subtitleLabel = new JLabel(
-            recipe.getCategory() + "  ·  "
-            + recipe.getFormattedPrepTime());
+            recipe.getFormattedPrepTime());
         subtitleLabel.setFont(AppTheme.FONT_SMALL);
         subtitleLabel.setForeground(AppTheme.TEXT_MUTED);
         subtitleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
