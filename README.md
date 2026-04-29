@@ -11,6 +11,7 @@ mvn compile exec:java -Dexec.mainClass="com.lefestin.Main"
 mvn compile exec:java "-Dexec.mainClass=com.lefestin.Main"
 
 Seedtest
+mvn compile exec:java -Dexec.mainClass="com.lefestin.config.SeedDataTest"
 mvn compile exec:java "-Dexec.mainClass=com.lefestin.config.SeedDataTest"
 ```
 
