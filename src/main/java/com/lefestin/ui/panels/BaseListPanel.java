@@ -1,11 +1,21 @@
 package com.lefestin.ui.panels;
 
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.FlowLayout;
+import java.awt.Font;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
-
-import java.awt.*;
 
 /**
  * BaseListPanel — abstract base class for list/table panels.
@@ -22,7 +32,6 @@ public abstract class BaseListPanel extends JPanel {
     protected JButton addBtn;
     protected JButton editBtn;
     protected JButton actionBtn;  // Delete/Remove/etc — customizable per panel
-    protected JButton viewBtn;
 
     protected JLabel countLabel;
 
@@ -138,21 +147,17 @@ public abstract class BaseListPanel extends JPanel {
         btnGroup.setBackground(AppTheme.BG_SURFACE);
 
         addBtn    = AppTheme.primaryButton("+ Add");
-        viewBtn   = AppTheme.secondaryButton("View");
         editBtn   = AppTheme.secondaryButton("Edit");
         actionBtn = createActionButton();
 
         editBtn.setEnabled(false);
-        viewBtn.setEnabled(false);
         actionBtn.setEnabled(false);
 
         addBtn.addActionListener(   e -> onAddClicked());
-        viewBtn.addActionListener(  e -> onViewClicked());
         editBtn.addActionListener(  e -> onEditClicked());
         actionBtn.addActionListener(e -> onActionClicked());
 
         btnGroup.add(addBtn);
-        btnGroup.add(viewBtn);
         btnGroup.add(editBtn);
         btnGroup.add(actionBtn);
 
@@ -165,15 +170,6 @@ public abstract class BaseListPanel extends JPanel {
         bar.add(countLabel, BorderLayout.EAST);
 
         return bar;
-    }
-
-    /**
-     * Called when View button is clicked.
-     * Subclasses override to navigate to detail view.
-     * Default is no-op so PantryPanel doesn't need to implement it.
-     */
-    protected void onViewClicked() {
-        // default no-op — only panels with a detail view override this
     }
     
     /**

@@ -1,20 +1,28 @@
 package com.lefestin.ui.panels;
 
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
+import java.awt.Component;
+import java.sql.SQLException;
+import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.RowFilter;
+import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 
 import com.lefestin.dao.PantryDAO;
 import com.lefestin.model.PantryItem;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
-import com.lefestin.ui.dialogs.AddEditIngredientDialog; 
-
-import java.awt.*;
-import java.awt.event.*;
-import java.sql.SQLException;
-import java.util.List;
+import com.lefestin.ui.dialogs.AddEditIngredientDialog;
 
 /**
  * PantryPanel — the virtual pantry browser.

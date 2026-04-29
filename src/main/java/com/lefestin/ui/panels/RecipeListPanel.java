@@ -1,6 +1,29 @@
 package com.lefestin.ui.panels;
 
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.event.DocumentEvent;
@@ -10,13 +33,6 @@ import com.lefestin.dao.RecipeDAO;
 import com.lefestin.model.Recipe;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
-
-import java.awt.*;
-import java.awt.event.*;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * RecipeListPanel — Card-based recipe browser.
@@ -43,8 +59,10 @@ public class RecipeListPanel extends JPanel {
 
         add(buildHeader(), BorderLayout.NORTH);
 
-        cardsContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 20));
+        cardsContainer = new JPanel();
+        cardsContainer.setLayout(new BoxLayout(cardsContainer, BoxLayout.Y_AXIS));
         cardsContainer.setBackground(AppTheme.BG_PAGE);
+        cardsContainer.setAlignmentX(Component.LEFT_ALIGNMENT); 
 
         JScrollPane scrollPane = new JScrollPane(cardsContainer);
         scrollPane.setBorder(null);
@@ -96,6 +114,8 @@ public class RecipeListPanel extends JPanel {
 
         headerPanel.add(topRow);
         headerPanel.add(Box.createVerticalStrut(20));
+        searchField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+        searchField.setAlignmentX(Component.LEFT_ALIGNMENT);   
         headerPanel.add(searchField);
         headerPanel.add(Box.createVerticalStrut(10));
 
@@ -123,6 +143,7 @@ public class RecipeListPanel extends JPanel {
 
     private JPanel createRecipeCard(Recipe recipe) {
         JPanel card = new JPanel(new BorderLayout(10, 10));
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 160));     
         card.setPreferredSize(new Dimension(300, 130)); 
         card.setBackground(AppTheme.BG_SURFACE);
         

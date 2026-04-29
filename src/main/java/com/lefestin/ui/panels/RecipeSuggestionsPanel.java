@@ -1,6 +1,32 @@
 package com.lefestin.ui.panels;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerDateModel;
+import javax.swing.SwingWorker;
+
 import com.lefestin.dao.MealEntryDAO;
+import com.lefestin.helper.Helper;
 import com.lefestin.model.MealEntry;
 import com.lefestin.model.Recipe;
 import com.lefestin.model.RecipeIngredient;
@@ -8,15 +34,6 @@ import com.lefestin.model.RecipeMatchResult;
 import com.lefestin.service.RecipeMatchingService;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
-
-import javax.swing.*;
-import java.awt.*;
-import java.sql.SQLException;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-
-import com.lefestin.helper.Helper;
 
 /**
  * RecipeSuggestionsPanel — ranked recipe cards based on pantry match %.

@@ -1,22 +1,37 @@
 package com.lefestin.ui.panels;
 
-import javax.swing.*;
-
-import com.lefestin.dao.MealEntryDAO;
-import com.lefestin.model.MealEntry;
-import com.lefestin.ui.AppTheme;
-import com.lefestin.ui.MainFrame;
-import com.lefestin.ui.dialogs.AssignRecipeDialog;
-
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.SQLException;
-import java.time.*;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.SwingConstants;
+
+import com.lefestin.dao.MealEntryDAO;
 import com.lefestin.helper.Helper;
+import com.lefestin.model.MealEntry;
+import com.lefestin.ui.AppTheme;
+import com.lefestin.ui.MainFrame;
+import com.lefestin.ui.dialogs.AssignRecipeDialog;
 
 /**
  * WeeklyPlannerPanel — 7-day meal planner grid.
@@ -224,29 +239,22 @@ public class WeeklyPlannerPanel extends JPanel {
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.setPreferredSize(new Dimension(120, 80));
 
-        // Meal type label (top)
-        JLabel mealLabel = new JLabel(mealType, SwingConstants.LEFT);        
-        mealLabel.setFont(AppTheme.FONT_TINY);
-        mealLabel.setForeground(AppTheme.TEXT_MUTED);
-        mealLabel.setBorder(BorderFactory.createEmptyBorder(5, 8, 0, 8));
-
         // Recipe name label (center)
         JLabel recipeLabel = new JLabel("", SwingConstants.CENTER);
         recipeLabel.setFont(AppTheme.FONT_SMALL);
         recipeLabel.setForeground(AppTheme.TEXT_MUTED);
         recipeLabel.setBorder(BorderFactory.createEmptyBorder(0, 6, 6, 6));
 
-        btn.add(mealLabel,   BorderLayout.NORTH);
         btn.add(recipeLabel, BorderLayout.CENTER);
 
         // Hover highlight
         btn.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseEntered(MouseEvent e) {
+            public void mouseExited(MouseEvent e) {
                 btn.setBackground(new Color(240, 248, 255));
             }
             @Override
-            public void mouseExited(MouseEvent e) {
+            public void mouseEntered(MouseEvent e) {
                 weekEntries.get(Helper.slotKey(day, mealType));
                 btn.setBackground(AppTheme.SELECTION_BG);
             }
@@ -420,14 +428,13 @@ public class WeeklyPlannerPanel extends JPanel {
     }
 
     private void autoGenerateWeek() {
-        int confirm = JOptionPane.showConfirmDialog(this,
-            "Auto-fill empty slots for this week?\n"
-            + "Existing assignments will not be changed.",
+        int confirm = JOptionPane.showConfirmDialog(this, """
+                                                          Auto-fill empty slots for this week?
+                                                          Existing assignments will not be changed.""",
             "Auto-Generate",
             JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
-            // TODO: wire to MealPlanGeneratorService in Week 3
             JOptionPane.showMessageDialog(this,
                 "Auto-generate coming in Week 3.",
                 "Coming Soon",

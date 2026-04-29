@@ -1,6 +1,32 @@
 package com.lefestin.ui.panels;
 
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 
@@ -13,11 +39,6 @@ import com.lefestin.model.Recipe;
 import com.lefestin.model.RecipeIngredient;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
-
-import java.awt.*;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * AddEditRecipePanel — Panel form for creating and editing recipes.
@@ -134,6 +155,7 @@ public class AddEditRecipePanel extends JPanel {
         ingredientsContainer = new JPanel();
         ingredientsContainer.setLayout(new BoxLayout(ingredientsContainer, BoxLayout.Y_AXIS));
         ingredientsContainer.setBackground(AppTheme.BG_SURFACE);
+        ingredientsContainer.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
         JButton addBtn = new JButton("+ Add ingredient");
         addBtn.setForeground(new Color(255, 152, 0)); 
@@ -176,7 +198,13 @@ public class AddEditRecipePanel extends JPanel {
             BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
 
-        card.add(procedureArea);
+        // Wrap the steps area in a scroll pane so it expands with the card
+        JScrollPane stepsScroll = new JScrollPane(procedureArea);
+        stepsScroll.setBorder(null);
+        stepsScroll.setBackground((AppTheme.BG_PAGE));
+        stepsScroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 220));
+        stepsScroll.setAlignmentX(Component.LEFT_ALIGNMENT); 
+        card.add(stepsScroll);  
         return card;
     }
 
@@ -204,11 +232,12 @@ public class AddEditRecipePanel extends JPanel {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(AppTheme.BG_SURFACE);
-        
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+
         Border line = BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true);
         Border empty = BorderFactory.createEmptyBorder(15, 20, 20, 20);
         panel.setBorder(new CompoundBorder(line, empty));
-        panel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel titleLabel = new JLabel(title);
         titleLabel.setFont(AppTheme.FONT_LABEL);
@@ -227,7 +256,6 @@ public class AddEditRecipePanel extends JPanel {
         field.setBackground(AppTheme.BG_PAGE);
         field.setForeground(AppTheme.TEXT_PRIMARY);
         field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        field.setPreferredSize(new Dimension(0, 40));
         
         Border line = BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true);
         Border pad = BorderFactory.createEmptyBorder(5, 10, 5, 10);
@@ -266,7 +294,7 @@ public class AddEditRecipePanel extends JPanel {
         JTextField ingredientNameField;
 
         public IngredientRowPanel(String initIngredientName, double initQty, String initUnit) {
-            setLayout(new FlowLayout(FlowLayout.LEFT, 10, 5));
+            setLayout(new GridBagLayout());
             setBackground(AppTheme.BG_SURFACE);
             setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -285,7 +313,7 @@ public class AddEditRecipePanel extends JPanel {
             unitCombo.setBackground(AppTheme.BG_PAGE);
             unitCombo.setForeground(AppTheme.TEXT_PRIMARY);
 
-            ingredientNameField = new JTextField(initIngredientName, 12);
+            ingredientNameField = new JTextField(initIngredientName);
             ingredientNameField.setFont(AppTheme.FONT_BODY);
             ingredientNameField.setBackground(AppTheme.BG_PAGE);
             ingredientNameField.setForeground(AppTheme.TEXT_PRIMARY);
@@ -293,6 +321,7 @@ public class AddEditRecipePanel extends JPanel {
                 BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)
             ));
+            ingredientNameField.setColumns(12);        
 
             JButton removeBtn = new JButton("✖");
             removeBtn.setForeground(AppTheme.TEXT_MUTED);
@@ -301,12 +330,40 @@ public class AddEditRecipePanel extends JPanel {
             removeBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
             removeBtn.addActionListener(e -> removeIngredientRow(this));
 
-            add(qtyField);
-            add(unitCombo);
-            add(ingredientNameField);
-            add(removeBtn);
+            GridBagConstraints c = new GridBagConstraints();
+            c.insets = new Insets(5,5,5,5);
+
+            //qty field - fixed width
+            c.gridx = 0;        
+            c.gridy = 0;
+            c.weightx = 0;
+            c.fill = GridBagConstraints.NONE;
+            add(qtyField, c);
+            
+            // unit combo - fixed
+            c.gridx = 1;
+            c.weightx = 0;
+            add(unitCombo, c);
+            
+            // ingredient name - takes horizontal space
+            c.gridx = 2;
+            c.weightx = 1.0;
+            c.fill = GridBagConstraints.HORIZONTAL;
+            add(ingredientNameField, c);
+
+            // remove button - no growth
+            c.gridx = 3;
+            c.weightx = 0;
+            c.fill = GridBagConstraints.NONE;
+            add(removeBtn, c);
+
+            setMaximumSize(new Dimension(Integer.MAX_VALUE, getPreferredSize().height));
         }
 
+        @Override
+        public Dimension getMaximumSize() {
+            return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
+        }
         public double getQuantity() throws NumberFormatException {
             return Double.parseDouble(qtyField.getText().trim());
         }

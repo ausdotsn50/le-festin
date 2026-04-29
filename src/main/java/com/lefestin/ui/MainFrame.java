@@ -1,13 +1,38 @@
 package com.lefestin.ui;
 
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.Icon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.SwingConstants;
 
 import com.lefestin.model.Recipe;
 import com.lefestin.model.User;
 import com.lefestin.ui.dialogs.LoginDialog;
-import com.lefestin.ui.panels.*;
-
-import java.awt.*;
+import com.lefestin.ui.panels.AddEditRecipePanel;
+import com.lefestin.ui.panels.GroceryListPanel;
+import com.lefestin.ui.panels.PantryPanel;
+import com.lefestin.ui.panels.RecipeListPanel;
+import com.lefestin.ui.panels.RecipeSuggestionsPanel;
+import com.lefestin.ui.panels.WeeklyPlannerPanel;
 
 /**
  * MainFrame — the root JFrame for Le Festin.
@@ -55,7 +80,6 @@ public class MainFrame extends JFrame {
         setTitle("Le Festin");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(1024, 680));
-        setPreferredSize(new Dimension(1280, 800));
 
         initComponents();
         pack();
@@ -301,11 +325,16 @@ public class MainFrame extends JFrame {
             
             String symbol = "📌"; 
             switch (label) {
-                case CARD_RECIPES: symbol = "📖"; break; // Book / Bookmark
-                case CARD_PANTRY: symbol = "📦"; break; // Pantry Box
-                case CARD_PLANNER: symbol = "📅"; break; // Calendar
-                case CARD_SUGGESTIONS: symbol = "💡"; break; // Idea / Suggestions
-                case CARD_GROCERY: symbol = "🛒"; break; // Cart
+                case CARD_RECIPES -> symbol = "📖";
+                // Book / Bookmark
+                case CARD_PANTRY -> symbol = "📦";
+                // Pantry Box
+                case CARD_PLANNER -> symbol = "📅";
+                // Calendar
+                case CARD_SUGGESTIONS -> symbol = "💡";
+                // Idea / Suggestions
+                case CARD_GROCERY -> symbol = "🛒";
+                // Cart
             }
 
             g2.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 24)); // Universally supported icon font
