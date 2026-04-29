@@ -13,16 +13,12 @@ import com.lefestin.ui.MainFrame;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * AddEditIngredientDialog — modal form for adding or editing a pantry item.
- *
  */
 public class AddEditIngredientDialog extends JDialog {
 
-    // Follows similar struct to AddEditRecipe
     private final MainFrame     frame;
     private final PantryItem    existingItem; // null = add mode
     private final PantryDAO     pantryDAO;
@@ -30,11 +26,9 @@ public class AddEditIngredientDialog extends JDialog {
 
     private boolean saved = false;
 
-    private JComboBox<Ingredient> ingredientCombo; // add mode only
-    private JTextField            quantityField;
-    private JComboBox<String>     unitCombo;
-
-    private List<Ingredient> allIngredients = new ArrayList<>();
+    private JTextField        ingredientNameField; // Replaced JComboBox with JTextField
+    private JTextField        quantityField;
+    private JComboBox<String> unitCombo;
 
     public AddEditIngredientDialog(MainFrame frame, PantryItem item) {
         super(frame,
@@ -45,10 +39,6 @@ public class AddEditIngredientDialog extends JDialog {
         this.existingItem = item;
         this.pantryDAO    = new PantryDAO();
         this.ingredientDAO= new IngredientDAO();
-
-        if (item == null) {
-            allIngredients = Helper.loadAllIngredients(this, ingredientDAO); // only needed in add mode
-        }
 
         initComponents();
         prefillIfEditing();
@@ -117,40 +107,22 @@ public class AddEditIngredientDialog extends JDialog {
         row.add(label, BorderLayout.WEST);
 
         if (existingItem == null) {
-            // ADD mode: dropdown of all ingredients
-            ingredientCombo = new JComboBox<>();
-            for (Ingredient i : allIngredients) {
-                ingredientCombo.addItem(i);
-            }
-            ingredientCombo.setFont(AppTheme.FONT_BODY);
-            ingredientCombo.setBackground(AppTheme.BG_SURFACE);
-            ingredientCombo.setForeground(AppTheme.TEXT_PRIMARY);
-            ingredientCombo.setRenderer(new DefaultListCellRenderer() {
+            // ADD mode: Text input box for free typing
+            ingredientNameField = new JTextField();
+            ingredientNameField.setFont(AppTheme.FONT_BODY);
+            ingredientNameField.setBackground(AppTheme.BG_SURFACE);
+            ingredientNameField.setForeground(AppTheme.TEXT_PRIMARY);
+            ingredientNameField.setBorder(AppTheme.BORDER_INPUT);
+
+            // Auto-suggest unit when the user clicks out of the ingredient text box
+            ingredientNameField.addFocusListener(new FocusAdapter() {
                 @Override
-                public Component getListCellRendererComponent(
-                        JList<?> list, Object value, int index,
-                        boolean isSelected, boolean cellHasFocus) {
-                    super.getListCellRendererComponent(
-                        list, value, index, isSelected, cellHasFocus);
-                    if (value instanceof Ingredient) {
-                        setText(Helper.capitalize(
-                            ((Ingredient) value).getName()));
-                    }
-                    if (isSelected) {
-                        setBackground(AppTheme.SELECTION_BG);
-                        setForeground(AppTheme.SELECTION_FG);
-                    } else {
-                        setBackground(AppTheme.BG_SURFACE);
-                        setForeground(AppTheme.TEXT_PRIMARY);
-                    }
-                    return this;
+                public void focusLost(FocusEvent e) {
+                    suggestUnit();
                 }
             });
 
-            // When ingredient changes, auto-set a sensible default unit
-            ingredientCombo.addActionListener(e -> suggestUnit());
-
-            row.add(ingredientCombo, BorderLayout.CENTER);
+            row.add(ingredientNameField, BorderLayout.CENTER);
 
         } else {
             // EDIT mode: locked label — ingredient cannot change 
@@ -232,15 +204,12 @@ public class AddEditIngredientDialog extends JDialog {
         return unitCombo;
     }
 
-    // Auto-suggest a unit when ingredient selection changes
-    // Maps common ingredient names to their natural unit.
-    // Falls back to "piece" for unknown ingredients.
+    // Auto-suggest a unit based on typed string
     private void suggestUnit() {
-        if (ingredientCombo == null
-                || ingredientCombo.getSelectedItem() == null) return;
-
-        String name = ((Ingredient) ingredientCombo.getSelectedItem())
-            .getName().toLowerCase();
+        if (existingItem != null || ingredientNameField == null) return;
+        
+        String name = ingredientNameField.getText().trim().toLowerCase();
+        if (name.isEmpty()) return;
 
         String suggested;
         if (name.contains("egg"))                         suggested = "whole";
@@ -266,7 +235,6 @@ public class AddEditIngredientDialog extends JDialog {
 
         unitCombo.setSelectedItem(suggested);
     }
-
 
     private void prefillIfEditing() {
         if (existingItem == null) return;
@@ -325,16 +293,11 @@ public class AddEditIngredientDialog extends JDialog {
 
         try {
             if (existingItem == null) {
-                Ingredient selected =
-                    (Ingredient) ingredientCombo.getSelectedItem();
+                // Get name from text field
+                String typedName = ingredientNameField.getText().trim();
 
-                if (selected == null) {
-                    JOptionPane.showMessageDialog(this,
-                        "Please select an ingredient.",
-                        "Invalid Input",
-                        JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
+                // Safely find the ingredient or create it in the database
+                Ingredient selected = ingredientDAO.findOrCreate(typedName);
 
                 // Check if already in pantry — add to existing quantity
                 PantryItem existing = pantryDAO.getPantryItem(
@@ -375,6 +338,13 @@ public class AddEditIngredientDialog extends JDialog {
     }
 
     private String validateForm() {
+        // Validate ingredient name first if adding
+        if (existingItem == null) {
+            if (ingredientNameField.getText().trim().isEmpty()) {
+                return "Ingredient name is required.";
+            }
+        }
+
         String qtyText = quantityField.getText().trim();
 
         if (qtyText.isEmpty()) {
@@ -391,11 +361,8 @@ public class AddEditIngredientDialog extends JDialog {
         } catch (NumberFormatException e) {
             return "Quantity must be a number (e.g. 3 or 0.5).";
         }
-        if (existingItem == null && ingredientCombo.getItemCount() == 0) {
-            return "No ingredients available.\n"
-                + "Add ingredients to the database first.";
-        }
-        return null;
+        
+        return null; // All valid
     }
 
     // ── Public API ────────────────────────────────────────────────────────

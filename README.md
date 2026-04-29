@@ -7,6 +7,7 @@
 
 ```
 Main
+mvn compile exec:java -Dexec.mainClass="com.lefestin.Main"
 mvn compile exec:java "-Dexec.mainClass=com.lefestin.Main"
 
 Seedtest
