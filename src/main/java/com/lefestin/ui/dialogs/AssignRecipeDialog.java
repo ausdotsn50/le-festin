@@ -1,19 +1,35 @@
 package com.lefestin.ui.dialogs;
 
-import com.lefestin.dao.RecipeDAO;
-import com.lefestin.model.Recipe;
-import com.lefestin.ui.AppTheme;
-import com.lefestin.ui.MainFrame;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableRowSorter;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
+import javax.swing.RowFilter;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
+
+import com.lefestin.dao.RecipeDAO;
+import com.lefestin.model.Recipe;
+import com.lefestin.ui.AppTheme;
+import com.lefestin.ui.MainFrame;
 
 /**
  * AssignRecipeDialog — recipe picker for a single meal slot.
@@ -26,8 +42,8 @@ import java.util.List;
  *   ┌─────────────────────────────────────────────┐
  *   │  Thursday, Apr 17 — Breakfast               │  ← header
  *   ├─────────────────────────────────────────────┤
- *   │  [Search recipes...........................] │  ← search bar
- *   │  Title              Category   Prep Time    │
+ *   │  [Search recipes..........................] │  ← search bar
+ *   │  Title                         Prep Time    │
  *   │  ─────────────────────────────────────────  │
  *   │  Classic Scrambled  Breakfast  10 min       │  ← table
  *   │  Garlic Fried Rice  Breakfast  15 min       │
@@ -64,16 +80,14 @@ public class AssignRecipeDialog extends JDialog {
     // ── Column indexes ────────────────────────────────────────────────────
     private static final int COL_ID       = 0; // hidden
     private static final int COL_TITLE    = 1;
-    private static final int COL_CATEGORY = 2;
-    private static final int COL_PREP     = 3;
+    private static final int COL_PREP     = 2;
 
     // ── Constructor ───────────────────────────────────────────────────────
     public AssignRecipeDialog(MainFrame frame,
                                LocalDate date,
                                String mealType) {
         super(frame,
-            mealType + "  ·  "
-                + date.format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
+            date.format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
             true);
 
         this.frame     = frame;
@@ -157,7 +171,7 @@ public class AssignRecipeDialog extends JDialog {
 
     private JScrollPane buildTable() {
         tableModel = new DefaultTableModel(
-            new String[]{"ID", "Title", "Category", "Prep Time"}, 0) {
+            new String[]{"ID", "Title", "Prep Time"}, 0) {
             @Override
             public boolean isCellEditable(int row, int col) {
                 return false;
@@ -179,8 +193,6 @@ public class AssignRecipeDialog extends JDialog {
         // Column widths
         table.getColumnModel().getColumn(COL_TITLE)
             .setPreferredWidth(240);
-        table.getColumnModel().getColumn(COL_CATEGORY)
-            .setPreferredWidth(110);
         table.getColumnModel().getColumn(COL_PREP)
             .setPreferredWidth(90);
 
@@ -259,7 +271,6 @@ public class AssignRecipeDialog extends JDialog {
                 tableModel.addRow(new Object[]{
                     r.getRecipeId(),
                     r.getTitle(),
-                    r.getCategory(),
                     r.getFormattedPrepTime()
                 });
             }
