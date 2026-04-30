@@ -1,6 +1,10 @@
 package com.lefestin.dao;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -92,6 +96,73 @@ public class MealEntryDAO {
     public void replaceEntry(MealEntry e) throws SQLException {
         deleteEntry(e.getUserId(), e.getScheduledDate(), e.getMealType());
         addEntry(e);
+    }
+
+    /**
+     * Moves a meal entry to a different slot when the destination is empty.
+     * Used by the planner's drag-and-drop flow.
+     */
+    public void moveEntryToSlot(MealEntry entry,
+                                LocalDate newDate,
+                                String newMealType) throws SQLException {
+        String sql = """
+            UPDATE meal_entry
+            SET scheduled_date = ?,
+                meal_type      = ?
+            WHERE user_id        = ?
+              AND scheduled_date = ?
+              AND meal_type      = ?
+            """;
+
+        try (PreparedStatement stmt = conn().prepareStatement(sql)) {
+            stmt.setDate(  1, Date.valueOf(newDate));
+            stmt.setString(2, newMealType);
+            stmt.setInt(   3, entry.getUserId());
+            stmt.setDate(  4, Date.valueOf(entry.getScheduledDate()));
+            stmt.setString(5, entry.getMealType());
+
+            stmt.executeUpdate();
+        }
+    }
+
+    /**
+     * Swaps two occupied meal slots in a single transaction.
+     * Used when a dragged recipe is dropped onto another occupied slot.
+     */
+    public void swapEntries(MealEntry first, MealEntry second)
+            throws SQLException {
+        Connection connection = conn();
+        boolean previousAutoCommit = connection.getAutoCommit();
+
+        try {
+            connection.setAutoCommit(false);
+
+            deleteEntry(first.getUserId(), first.getScheduledDate(), first.getMealType());
+            deleteEntry(second.getUserId(), second.getScheduledDate(), second.getMealType());
+
+            addEntry(new MealEntry(
+                first.getRecipeId(),
+                first.getUserId(),
+                second.getMealType(),
+                second.getScheduledDate(),
+                first.getRecipeTitle(),
+                first.getRecipeCategory()));
+
+            addEntry(new MealEntry(
+                second.getRecipeId(),
+                second.getUserId(),
+                first.getMealType(),
+                first.getScheduledDate(),
+                second.getRecipeTitle(),
+                second.getRecipeCategory()));
+
+            connection.commit();
+        } catch (SQLException e) {
+            connection.rollback();
+            throw e;
+        } finally {
+            connection.setAutoCommit(previousAutoCommit);
+        }
     }
 
     // ══════════════════════════════════════════════════════════════════════
