@@ -2,7 +2,11 @@ package com.lefestin.service;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.lefestin.dao.MealEntryDAO;
 import com.lefestin.dao.PantryDAO;
@@ -76,6 +80,8 @@ public class GroceryListService {
         // ── Step 2 + 3: aggregate total required quantities ────────────────
         // key   = "ingredientId|unit"  (unit-aware aggregation)
         // value = AggregatedIngredient (running total + display fields)
+        // Every meal entry in the selected range contributes,
+        // even if the same recipe appears more than once.
         Map<String, AggregatedIngredient> required =
             aggregateRequired(entries);
 
@@ -130,9 +136,9 @@ public class GroceryListService {
 
         return list.size() + " item"
             + (list.size() == 1 ? "" : "s")
-            + " needed for "
+            + " needed from "
             + from.format(fmt)
-            + (from.equals(to) ? "" : " – " + to.format(fmt));
+            + (from.equals(to) ? "" : " to " + to.format(fmt));
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -176,18 +182,8 @@ public class GroceryListService {
 
         Map<String, AggregatedIngredient> required = new LinkedHashMap<>();
 
-        // Track which recipeIds we've already fetched to avoid
-        // re-fetching ingredients when the same recipe appears
-        // in multiple meal slots across the week
-        Set<Integer> processedRecipes = new HashSet<>();
-
         for (MealEntry entry : entries) {
             int recipeId = entry.getRecipeId();
-
-            if (processedRecipes.contains(recipeId)) {
-                continue; // same recipe in multiple slots — count once
-            }
-            processedRecipes.add(recipeId);
 
             List<RecipeIngredient> ingredients =
                 riDAO.getIngredientsByRecipeId(recipeId);

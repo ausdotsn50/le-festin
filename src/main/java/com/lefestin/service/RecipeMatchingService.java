@@ -15,24 +15,26 @@ import com.lefestin.model.RecipeIngredient;
 import com.lefestin.model.RecipeMatchResult;
 
 /**
- * RecipeMatchingService — ranks recipes by how many of their
- * ingredients the user already has in their pantry.
+ * RecipeMatchingService — ranks recipes by how much of each recipe's
+ * ingredient quantity the user already has in their pantry.
  *
  * Algorithm:
  *  1. Load the user's pantry into a Map<ingredientId, PantryItem>
  *     for O(1) lookup per ingredient check
  *  2. For each recipe, fetch its required ingredients
- *  3. For each required ingredient, check if it exists in the pantry map
- *  4. matchPercent = (present / total) * 100, rounded to nearest int
- *  5. Collect missing ingredients into a list
+ *  3. For each required ingredient, compare available quantity to
+ *     required quantity
+ *  4. matchPercent = (fulfilledQuantity / requiredQuantity) * 100,
+ *     rounded to nearest int
+ *  5. Collect ingredients that are still short into a list
  *  6. Sort all results by matchPercent descending, then by recipe title
  *
  * Note on unit matching:
  *  Unit comparison is intentionally skipped — checking whether
  *  "3 tablespoon soy sauce" satisfies "4 tablespoon soy sauce"
  *  requires unit conversion (tablespoon → teaspoon → ml) which is
- *  out of scope for this version. The match is ingredient presence only.
- *  A future version could add a UnitConverter utility class.
+ *  out of scope for this version. The match is quantity-aware only
+ *  when the ingredient row uses the same stored unit semantics.
  */
 public class RecipeMatchingService {
 
@@ -150,10 +152,12 @@ public class RecipeMatchingService {
      * Scores one recipe against the pantry map.
      *
      * For each required ingredient:
-     *  - If ingredientId exists in pantryMap → present
-     *  - Otherwise → missing, add to missing list
+     *  - Compare available quantity against the recipe quantity
+     *  - For missing ingredients, calculate the exact shortage
+     *    (required - available, capped at 0)
+     *  - Store the shortage amount in the missing ingredient's quantity field
      *
-     * matchPercent = round((present / total) * 100)
+     * matchPercent = round((fulfilledQuantity / requiredQuantity) * 100)
      * Edge case: recipe with 0 ingredients = 100% match
      * (nothing required = nothing missing)
      */
@@ -170,21 +174,49 @@ public class RecipeMatchingService {
         }
 
         List<RecipeIngredient> missing = new ArrayList<>();
-        int present = 0;
+        double fulfilledQuantity = 0.0;
+        double requiredQuantity = 0.0;
 
         for (RecipeIngredient ri : required) {
-            if (pantryMap.containsKey(ri.getIngredientId())) {
-                present++;
-            } else {
-                missing.add(ri);
+            double recipeQty = Math.max(ri.getQuantity(), 0.0);
+            requiredQuantity += recipeQty;
+
+            PantryItem pantryItem = pantryMap.get(ri.getIngredientId());
+            double availableQty = pantryItem != null ? pantryItem.getQuantity() : 0.0;
+            double matchedQty = Math.min(availableQty, recipeQty);
+            fulfilledQuantity += matchedQty;
+
+            if (matchedQty < recipeQty) {
+                // Calculate exact shortage: how much is still needed
+                double shortage = recipeQty - availableQty;
+                shortage = Math.max(shortage, 0.0); // cap at 0
+                shortage = roundQty(shortage); // round to avoid float artifacts
+                
+                // Create a new RecipeIngredient with shortage quantity
+                RecipeIngredient shortageIngredient = new RecipeIngredient(
+                    ri.getRecipeId(),
+                    ri.getIngredientId(),
+                    shortage,
+                    ri.getUnit(),
+                    ri.getIngredientName()
+                );
+                missing.add(shortageIngredient);
             }
         }
 
-        // Round to nearest integer — 3/4 = 75%, 1/3 = 33%
-        int matchPercent = (int) Math.round(
-            (double) present / required.size() * 100
-        );
+        int matchPercent = requiredQuantity <= 0.0
+            ? 100
+            : (int) Math.round(fulfilledQuantity / requiredQuantity * 100);
 
         return new RecipeMatchResult(recipe, matchPercent, missing);
+    }
+
+    /**
+     * Rounds quantity to 2 decimal places.
+     * Prevents float artifacts like 0.30000000000000004
+     * from appearing in the UI.
+     */
+    private double roundQty(double qty) {
+        return Math.round(qty * 100.0) / 100.0;
     }
 }

@@ -335,10 +335,7 @@ public class RecipeSuggestionsPanel extends JPanel {
             allGood.setForeground(AppTheme.GREEN_PRIMARY);
             bottomSection.add(allGood);
         } else {
-            JLabel missingHeader = new JLabel(
-                "Missing " + result.getMissingIngredients().size()
-                + " ingredient"
-                + (result.getMissingIngredients().size() == 1 ? "" : "s") + ":");
+            JLabel missingHeader = new JLabel("Still needed:");
             missingHeader.setFont(AppTheme.FONT_LABEL);
             missingHeader.setForeground(AppTheme.TEXT_SECONDARY);
             bottomSection.add(missingHeader);

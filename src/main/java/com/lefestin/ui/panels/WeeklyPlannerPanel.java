@@ -12,9 +12,13 @@ import java.awt.event.MouseEvent;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -27,8 +31,10 @@ import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 
 import com.lefestin.dao.MealEntryDAO;
+import com.lefestin.dao.RecipeDAO;
 import com.lefestin.helper.Helper;
 import com.lefestin.model.MealEntry;
+import com.lefestin.model.Recipe;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
 import com.lefestin.ui.dialogs.AssignRecipeDialog;
@@ -39,6 +45,7 @@ import com.lefestin.ui.dialogs.AssignRecipeDialog;
 public class WeeklyPlannerPanel extends JPanel {
     private final MainFrame    frame;
     private final MealEntryDAO mealEntryDAO;
+    private final RecipeDAO    recipeDAO;
 
     // Week state 
     private LocalDate weekStart; // always a Monday
@@ -74,6 +81,7 @@ public class WeeklyPlannerPanel extends JPanel {
     public WeeklyPlannerPanel(MainFrame frame) {
         this.frame = frame;
         this.mealEntryDAO = new MealEntryDAO();
+        this.recipeDAO = new RecipeDAO();
         this.weekStart = Helper.getMonday(LocalDate.now());
 
         setLayout(new BorderLayout(0, 0));
@@ -261,7 +269,7 @@ public class WeeklyPlannerPanel extends JPanel {
         });
 
         btn.addActionListener(
-            e -> openSlotDialog(day, mealType, btn));
+            e -> openSlotDialog(day, mealType));
 
         return btn;
     }
@@ -331,7 +339,7 @@ public class WeeklyPlannerPanel extends JPanel {
 
     //  SLOT DIALOG — assign or clear a single slot
     private void openSlotDialog(LocalDate day,
-                                String mealType, JButton btn) {
+                                String mealType) {
         String    key         = Helper.slotKey(day, mealType);
         MealEntry existing    = weekEntries.get(key);
         boolean   isOccupied  = existing != null;
@@ -341,10 +349,15 @@ public class WeeklyPlannerPanel extends JPanel {
             ? new String[]{ "Change Recipe", "Clear Slot", "Cancel" }
             : new String[]{ "Assign Recipe", "Cancel" };
 
+        String currentTitle = (existing != null
+            && existing.getRecipeTitle() != null)
+            ? existing.getRecipeTitle()
+            : "(no recipe title)";
+
         String prompt = day.format(
             DateTimeFormatter.ofPattern("EEEE, MMM d"))
             + (isOccupied
-                ? "\nCurrent: " + existing.getRecipeTitle()
+                ? "\nCurrent: " + currentTitle
                 : "\nNo recipe assigned");
 
         int choice = JOptionPane.showOptionDialog(
@@ -433,12 +446,151 @@ public class WeeklyPlannerPanel extends JPanel {
             "Auto-Generate",
             JOptionPane.YES_NO_OPTION);
 
-        if (confirm == JOptionPane.YES_OPTION) {
-            JOptionPane.showMessageDialog(this,
-                "Auto-generate coming in Week 3.",
-                "Coming Soon",
-                JOptionPane.INFORMATION_MESSAGE);
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
         }
+
+        try {
+            int created = autoFillEmptyWeekSlots();
+            renderSlots();
+
+            if (created == 0) {
+                JOptionPane.showMessageDialog(this,
+                    "No empty slots to fill for this week.",
+                    "Auto-Generate",
+                    JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                    "Added " + created + " meal"
+                        + (created == 1 ? "" : "s")
+                        + " to this week.",
+                    "Auto-Generate",
+                    JOptionPane.INFORMATION_MESSAGE);
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this,
+                "Auto-generate failed: " + e.getMessage(),
+                "Database Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     * Fills empty week slots using user recipes.
+     * Strategy: prefer same-category recipes, fall back to any recipe,
+     * and balance reuse by choosing least-used recipes first.
+     */
+    private int autoFillEmptyWeekSlots() throws SQLException {
+        List<Recipe> recipes = recipeDAO.getAllRecipes(frame.getCurrentUserId());
+        if (recipes.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                "Add at least one recipe before auto-generating a week.",
+                "No Recipes",
+                JOptionPane.INFORMATION_MESSAGE);
+            return 0;
+        }
+
+        Map<Integer, Integer> recipeUseCount = new HashMap<>();
+        for (MealEntry entry : weekEntries.values()) {
+            if (entry != null) {
+                recipeUseCount.merge(entry.getRecipeId(), 1, Integer::sum);
+            }
+        }
+
+        int created = 0;
+        for (int d = 0; d < 7; d++) {
+            LocalDate day = weekStart.plusDays(d);
+
+            for (String mealType : MealEntry.MEAL_TYPES) {
+                String key = Helper.slotKey(day, mealType);
+                if (weekEntries.get(key) != null) {
+                    continue; // never overwrite existing assignments
+                }
+
+                Recipe pick = pickRecipeForSlot(recipes, day, mealType, recipeUseCount);
+                if (pick == null) {
+                    continue;
+                }
+
+                MealEntry newEntry = new MealEntry(
+                    pick.getRecipeId(),
+                    frame.getCurrentUserId(),
+                    mealType,
+                    day,
+                    pick.getTitle(),
+                    pick.getCategory()
+                );
+
+                mealEntryDAO.addEntry(newEntry);
+                weekEntries.put(key, newEntry);
+                recipeUseCount.merge(pick.getRecipeId(), 1, Integer::sum);
+                created++;
+            }
+        }
+
+        return created;
+    }
+
+    private Recipe pickRecipeForSlot(List<Recipe> recipes,
+                                     LocalDate day,
+                                     String mealType,
+                                     Map<Integer, Integer> recipeUseCount) {
+        Set<Integer> usedToday = weekEntries.values().stream()
+            .filter(e -> e != null && day.equals(e.getScheduledDate()))
+            .map(MealEntry::getRecipeId)
+            .collect(Collectors.toSet());
+
+        List<Recipe> preferred = recipes.stream()
+            .filter(r -> mealType.equalsIgnoreCase(r.getCategory()))
+            .collect(Collectors.toList());
+
+        Recipe chosen = chooseLeastUsed(preferred, usedToday, day, mealType, recipeUseCount);
+        if (chosen != null) {
+            return chosen;
+        }
+
+        return chooseLeastUsed(recipes, usedToday, day, mealType, recipeUseCount);
+    }
+
+    private Recipe chooseLeastUsed(List<Recipe> pool,
+                                   Set<Integer> usedToday,
+                                   LocalDate day,
+                                   String mealType,
+                                   Map<Integer, Integer> recipeUseCount) {
+        if (pool == null || pool.isEmpty()) {
+            return null;
+        }
+
+        List<Recipe> allowed = pool.stream()
+            .filter(r -> !usedToday.contains(r.getRecipeId()))
+            .collect(Collectors.toList());
+
+        if (allowed.isEmpty()) {
+            allowed = new ArrayList<>(pool);
+        }
+
+        int minCount = Integer.MAX_VALUE;
+        for (Recipe recipe : allowed) {
+            int count = recipeUseCount.getOrDefault(recipe.getRecipeId(), 0);
+            if (count < minCount) {
+                minCount = count;
+            }
+        }
+
+        List<Recipe> leastUsed = new ArrayList<>();
+        for (Recipe recipe : allowed) {
+            if (recipeUseCount.getOrDefault(recipe.getRecipeId(), 0) == minCount) {
+                leastUsed.add(recipe);
+            }
+        }
+
+        Collections.sort(leastUsed,
+            (a, b) -> a.getTitle().compareToIgnoreCase(b.getTitle()));
+
+        int idx = Math.floorMod((int) day.toEpochDay() + mealType.hashCode(),
+            leastUsed.size());
+        return leastUsed.get(idx);
     }
 
     private void clearWeek() {
