@@ -30,6 +30,7 @@ import com.lefestin.ui.dialogs.LoginDialog;
 import com.lefestin.ui.panels.AddEditRecipePanel;
 import com.lefestin.ui.panels.GroceryListPanel;
 import com.lefestin.ui.panels.PantryPanel;
+import com.lefestin.ui.panels.RecipeDetailPanel;
 import com.lefestin.ui.panels.RecipeListPanel;
 import com.lefestin.ui.panels.RecipeSuggestionsPanel;
 import com.lefestin.ui.panels.WeeklyPlannerPanel;
@@ -75,6 +76,7 @@ public class MainFrame extends JFrame {
     private WeeklyPlannerPanel plannerPanel;
     private RecipeSuggestionsPanel suggestionsPanel;
     private GroceryListPanel  groceryListPanel;
+    private RecipeDetailPanel recipeDetailPanel;
     
     public MainFrame() {
         setTitle("Le Festin");
@@ -224,6 +226,7 @@ public class MainFrame extends JFrame {
         plannerPanel       = new WeeklyPlannerPanel(this);
         suggestionsPanel   = new RecipeSuggestionsPanel(this);
         groceryListPanel   = new GroceryListPanel(this);
+        recipeDetailPanel   = null;
 
         // Register each panel under its card name
         contentArea.add(recipeListPanel,    CARD_RECIPES);
@@ -291,6 +294,12 @@ public class MainFrame extends JFrame {
         AddEditRecipePanel editor = new AddEditRecipePanel(this, r);
         contentArea.add(editor, CARD_ADD_EDIT);
         navigateTo(CARD_ADD_EDIT);
+    }
+
+    public void showRecipeDetailPanel(Recipe r) {
+        recipeDetailPanel = new RecipeDetailPanel(this, r);
+        contentArea.add(recipeDetailPanel, CARD_DETAIL);
+        navigateTo(CARD_DETAIL);
     }
 
     // Switches back to the Recipe List and forces it to refresh the database
