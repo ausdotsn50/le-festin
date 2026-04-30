@@ -53,7 +53,6 @@ public class AddEditRecipePanel extends JPanel {
     // Form fields
     private JTextField titleField;
     private JSpinner prepTimeSpinner;
-    private JSpinner servingsSpinner;
     private JTextArea procedureArea;
 
     // Ingredients
@@ -127,24 +126,7 @@ public class AddEditRecipePanel extends JPanel {
         row1.add(timeLabel, BorderLayout.WEST);
         row1.add(prepTimeSpinner, BorderLayout.EAST);
 
-        JPanel row2 = new JPanel(new BorderLayout());
-        row2.setBackground(AppTheme.BG_SURFACE);
-        row2.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        row2.setAlignmentX(Component.LEFT_ALIGNMENT); 
-        
-        JLabel servingsLabel = new JLabel("👥 Servings");
-        servingsLabel.setForeground(AppTheme.TEXT_PRIMARY);
-        servingsLabel.setFont(AppTheme.FONT_BODY);
-
-        servingsSpinner = new JSpinner(new SpinnerNumberModel(4, 1, 50, 1));
-        styleSpinner(servingsSpinner);
-
-        row2.add(servingsLabel, BorderLayout.WEST);
-        row2.add(servingsSpinner, BorderLayout.EAST);
-
         card.add(row1);
-        card.add(Box.createVerticalStrut(10));
-        card.add(row2);
 
         return card;
     }

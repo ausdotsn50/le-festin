@@ -1,14 +1,5 @@
 package com.lefestin.service;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
-
-import com.lefestin.dao.MealEntryDAO;
-import com.lefestin.dao.RecipeDAO;
-import com.lefestin.helper.Helper;
-import com.lefestin.model.MealEntry;
-import com.lefestin.model.Recipe;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -18,6 +9,15 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+
+import com.lefestin.dao.MealEntryDAO;
+import com.lefestin.dao.RecipeDAO;
+import com.lefestin.helper.Helper;
+import com.lefestin.model.MealEntry;
+import com.lefestin.model.Recipe;
+
 /**
  * CsvExportService — exports meal plan data to CSV files.
  *
@@ -25,7 +25,7 @@ import java.util.List;
  * and header handling — never raw string concatenation.
  *
  * Output columns:
- *   Date | Meal Type | Recipe Title | Category | Prep Time (mins)
+ *   Date | Meal Type | Recipe Title | Prep Time (mins)
  *
  * Example output:
  *   Date,Meal Type,Recipe Title,Category,Prep Time (mins)
@@ -41,7 +41,6 @@ public class CsvExportService {
     public static final String COL_DATE      = "Date";
     public static final String COL_MEAL_TYPE = "Meal Type";
     public static final String COL_TITLE     = "Recipe Title";
-    public static final String COL_CATEGORY  = "Category";
     public static final String COL_PREP_TIME = "Prep Time (mins)";
 
     // ── Date format written to CSV ─────────────────────────────────────────
@@ -91,10 +90,9 @@ public class CsvExportService {
                 mealEntryDAO.getEntriesByWeek(userId, from, to);
 
             if (entries.isEmpty()) {
-                return ExportResult.fail(
-                    "No meals planned for this period.\n"
-                    + "Add meals to your planner before exporting."
-                );
+                return ExportResult.fail("""
+                                         No meals planned for this period.
+                                         Add meals to your planner before exporting.""");
             }
 
             // ── Step 2 + 3: write CSV ──────────────────────────────────────
@@ -109,14 +107,16 @@ public class CsvExportService {
 
         } catch (SQLException e) {
             return ExportResult.fail(
-                "Failed to load meal data from database.\n"
-                + "Detail: " + e.getMessage()
+                """
+                Failed to load meal data from database.
+                Detail: """ + e.getMessage()
             );
         } catch (IOException e) {
             return ExportResult.fail(
-                "Failed to write CSV file.\n"
-                + "Check that the destination folder is writable.\n"
-                + "Detail: " + e.getMessage()
+                """
+                Failed to write CSV file.
+                Check that the destination folder is writable.
+                Detail: """ + e.getMessage()
             );
         }
     }
@@ -215,7 +215,6 @@ public class CsvExportService {
                 COL_DATE,
                 COL_MEAL_TYPE,
                 COL_TITLE,
-                COL_CATEGORY,
                 COL_PREP_TIME)
             .setSkipHeaderRecord(false) // always write the header row
             .build();
@@ -243,7 +242,6 @@ public class CsvExportService {
                     entry.getScheduledDate().format(DATE_FMT), // "2026-04-17"
                     entry.getMealType(),                        // "Breakfast"
                     title,                                      // "Garlic Fried Rice"
-                    category,                                   // "Breakfast"
                     prepTime                                    // 15
                 );
 

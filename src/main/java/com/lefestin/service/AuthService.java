@@ -1,11 +1,11 @@
 package com.lefestin.service;
 
+import java.sql.SQLException;
+
 import org.mindrot.jbcrypt.BCrypt;
 
 import com.lefestin.dao.UserDAO;
 import com.lefestin.model.User;
-
-import java.sql.SQLException;
 
 /**
  * AuthService — registration and login for Le Festin.
@@ -107,17 +107,14 @@ public class AuthService {
             userDAO.addUser(newUser); // sets newUser.userId from generated key
 
             // Step 5: return success
-            // Clear local hash reference — no longer needed
-            hash = null;
-
             return AuthResult.ok(newUser,
                 "Welcome to Le Festin, " + newUser.getUsername() + "!");
 
         } catch (SQLException e) {
-            return AuthResult.fail(
-                "Registration failed due to a database error.\n"
-                + "Please try again.\n"
-            );
+            return AuthResult.fail("""
+                                   Registration failed due to a database error.
+                                   Please try again.
+                                   """);
         }
     }
 
@@ -168,10 +165,10 @@ public class AuthService {
 
         } catch (SQLException e) {
             // Removed long detail, will disrupt the UI
-            return AuthResult.fail(
-                "Login failed due to a database error.\n"
-                + "Please try again.\n"
-            );
+            return AuthResult.fail("""
+                                   Login failed due to a database error.
+                                   Please try again.
+                                   """);
         }
     }
 
