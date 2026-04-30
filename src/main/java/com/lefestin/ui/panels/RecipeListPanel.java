@@ -160,17 +160,23 @@ public class RecipeListPanel extends JPanel {
 
         JPanel headerRow = new JPanel(new BorderLayout());
         headerRow.setOpaque(false);
+
+        JPanel actionsRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+        actionsRow.setOpaque(false);
+
+        JButton editBtn = new JButton("✎");
+        styleCardActionButton(editBtn);
+        editBtn.setToolTipText("Edit Recipe");
+        editBtn.addActionListener(e -> openAddEditPanel(recipe));
         
         JButton deleteBtn = new JButton("✖");
-        deleteBtn.setFont(AppTheme.FONT_SMALL);
-        deleteBtn.setForeground(AppTheme.TEXT_MUTED);
-        deleteBtn.setContentAreaFilled(false);
-        deleteBtn.setBorderPainted(false);
-        deleteBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        styleCardActionButton(deleteBtn);
         deleteBtn.setToolTipText("Delete Recipe");
         deleteBtn.addActionListener(e -> deleteRecipe(recipe));
         
-        headerRow.add(deleteBtn, BorderLayout.EAST);
+        actionsRow.add(editBtn);
+        actionsRow.add(deleteBtn);
+        headerRow.add(actionsRow, BorderLayout.EAST);
 
         JLabel titleLbl = new JLabel("<html>" + recipe.getTitle() + "</html>");
         titleLbl.setFont(new Font("SansSerif", Font.BOLD, 18));
@@ -194,7 +200,7 @@ public class RecipeListPanel extends JPanel {
         card.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                openAddEditPanel(recipe);
+                openDetailPanel(recipe);
             }
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -252,6 +258,19 @@ public class RecipeListPanel extends JPanel {
     private void openAddEditPanel(Recipe recipe) {
         // Delegate to MainFrame so CardLayout handles the transition smoothly
         frame.showAddEditRecipePanel(recipe);
+    }
+
+    private void openDetailPanel(Recipe recipe) {
+        frame.showRecipeDetailPanel(recipe);
+    }
+
+    private void styleCardActionButton(JButton button) {
+        button.setFont(AppTheme.FONT_SMALL);
+        button.setForeground(AppTheme.TEXT_MUTED);
+        button.setContentAreaFilled(false);
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     @Override
