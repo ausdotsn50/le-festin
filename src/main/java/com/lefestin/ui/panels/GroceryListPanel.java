@@ -1,14 +1,9 @@
 package com.lefestin.ui.panels;
 
-import com.lefestin.model.RecipeIngredient;
-import com.lefestin.service.CsvExportService;
-import com.lefestin.service.GroceryListService;
-import com.lefestin.ui.AppTheme;
-import com.lefestin.ui.MainFrame;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.print.PrinterException;
 import java.io.File;
 import java.sql.SQLException;
@@ -20,6 +15,28 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
+import javax.swing.JTable;
+import javax.swing.SpinnerDateModel;
+import javax.swing.SwingWorker;
+import javax.swing.table.DefaultTableModel;
+
+import com.lefestin.model.RecipeIngredient;
+import com.lefestin.service.CsvExportService;
+import com.lefestin.service.GroceryListService;
+import com.lefestin.ui.AppTheme;
+import com.lefestin.ui.MainFrame;
 
 /**
  * GroceryListPanel — shows missing ingredients for a planned date range.
@@ -275,7 +292,7 @@ public class GroceryListPanel extends JPanel {
                     exportBtn.setEnabled(hasItems);
                     printBtn.setEnabled(hasItems);
 
-                } catch (Exception ex) {
+                } catch (InterruptedException | ExecutionException ex) {
                     summaryLabel.setText("Failed to generate list.");
                     JOptionPane.showMessageDialog(
                         GroceryListPanel.this,

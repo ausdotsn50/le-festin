@@ -5,10 +5,12 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -24,6 +26,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -35,6 +38,7 @@ import com.lefestin.dao.RecipeDAO;
 import com.lefestin.helper.Helper;
 import com.lefestin.model.MealEntry;
 import com.lefestin.model.Recipe;
+import com.lefestin.service.CsvExportService;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
 import com.lefestin.ui.dialogs.AssignRecipeDialog;
@@ -60,6 +64,10 @@ public class WeeklyPlannerPanel extends JPanel {
     // Header labels updated when week changes
     private JLabel weekRangeLabel;
     private JPanel gridPanel;
+    private JButton exportBtn;
+
+    // CSV exporter
+    private final CsvExportService csvService;
 
     // Formatters
     private static final DateTimeFormatter DAY_NAME_FMT =
@@ -83,6 +91,7 @@ public class WeeklyPlannerPanel extends JPanel {
         this.mealEntryDAO = new MealEntryDAO();
         this.recipeDAO = new RecipeDAO();
         this.weekStart = Helper.getMonday(LocalDate.now());
+        this.csvService = new CsvExportService();
 
         setLayout(new BorderLayout(0, 0));
         setBackground(AppTheme.BG_PAGE);
@@ -119,7 +128,7 @@ public class WeeklyPlannerPanel extends JPanel {
         topRow.add(weekRangeLabel, BorderLayout.CENTER);
         topRow.add(nextBtn,        BorderLayout.EAST);
 
-        // Bottom row: Auto-generate | spacer | Clear week
+        // Bottom row: Auto-generate | spacer | Export CSV + Clear week
         JPanel bottomRow = new JPanel(new BorderLayout());
         bottomRow.setBackground(AppTheme.BG_SURFACE);
         bottomRow.setBorder(
@@ -131,8 +140,18 @@ public class WeeklyPlannerPanel extends JPanel {
         autoBtn.addActionListener( e -> autoGenerateWeek());
         clearBtn.addActionListener(e -> clearWeek());
 
-        bottomRow.add(autoBtn,  BorderLayout.WEST);
-        bottomRow.add(clearBtn, BorderLayout.EAST);
+        exportBtn = AppTheme.secondaryButton("Export CSV");
+        exportBtn.setEnabled(false);
+        exportBtn.addActionListener(e -> exportMealPlan());
+
+        bottomRow.add(autoBtn, BorderLayout.WEST);
+
+        JPanel rightGroup = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        rightGroup.setBackground(AppTheme.BG_SURFACE);
+        rightGroup.add(exportBtn);
+        rightGroup.add(clearBtn);
+
+        bottomRow.add(rightGroup, BorderLayout.EAST);
 
         nav.add(topRow,    BorderLayout.NORTH);
         nav.add(bottomRow, BorderLayout.SOUTH);
@@ -298,6 +317,54 @@ public class WeeklyPlannerPanel extends JPanel {
 
         renderSlots();
         updateWeekRangeLabel();
+        // Enable export button only when there are entries for the week
+        boolean hasEntries = false;
+        for (MealEntry e : weekEntries.values()) {
+            if (e != null) { hasEntries = true; break; }
+        }
+        if (exportBtn != null) exportBtn.setEnabled(hasEntries);
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    //  EXPORT CSV
+    // ══════════════════════════════════════════════════════════════════════
+
+    private void exportMealPlan() {
+        LocalDate from = weekStart;
+        LocalDate to   = weekStart.plusDays(6);
+
+        String suggestedName = "meal_plan_"
+            + from.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            + "_to_"
+            + to.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            + ".csv";
+
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Save Meal Plan");
+        chooser.setSelectedFile(new File(suggestedName));
+
+        int choice = chooser.showSaveDialog(this);
+        if (choice != JFileChooser.APPROVE_OPTION) return;
+
+        File outputFile = chooser.getSelectedFile();
+        if (!outputFile.getName().toLowerCase().endsWith(".csv")) {
+            outputFile = new File(outputFile.getAbsolutePath() + ".csv");
+        }
+
+        CsvExportService.ExportResult result =
+            csvService.exportMealPlan(frame.getCurrentUserId(), from, to, outputFile);
+
+        if (result.isSuccess()) {
+            JOptionPane.showMessageDialog(this,
+                result.getMessage() + "\n\nSaved to: " + outputFile.getAbsolutePath(),
+                "Export Complete",
+                JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this,
+                result.getMessage(),
+                "Export Failed",
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /**
