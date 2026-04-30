@@ -39,6 +39,8 @@ public class RecipeDetailPanel extends JPanel {
 
     private JPanel ingredientsList;
     private JTextArea procedureArea;
+    private JLabel categoryBadge;
+    private JLabel prepTimeBadge;
 
     public RecipeDetailPanel(MainFrame frame, Recipe recipe) {
         this.frame = frame;
@@ -94,7 +96,14 @@ public class RecipeDetailPanel extends JPanel {
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         leftSide.add(title);
-        leftSide.add(buildMetaBadge(recipe.getFormattedPrepTime()));
+        // Prep time badge (kept as a field so we can update after loading full recipe)
+        prepTimeBadge = buildMetaBadge(recipe.getFormattedPrepTime());
+        leftSide.add(prepTimeBadge);
+
+        // Category badge
+        String cat = recipe.getCategory() != null ? recipe.getCategory() : "";
+        categoryBadge = buildMetaBadge(cat);
+        leftSide.add(categoryBadge);
 
         JButton backBtn = AppTheme.secondaryButton("Back");
         backBtn.addActionListener(e -> frame.showRecipeList());
@@ -188,6 +197,15 @@ public class RecipeDetailPanel extends JPanel {
         try {
             Recipe fullRecipe = recipeDAO.getRecipeById(recipe.getRecipeId());
             Recipe recipeToShow = fullRecipe != null ? fullRecipe : recipe;
+
+            // Update header badges
+            if (prepTimeBadge != null) {
+                prepTimeBadge.setText(recipeToShow.getFormattedPrepTime());
+            }
+            if (categoryBadge != null) {
+                String cat = recipeToShow.getCategory();
+                categoryBadge.setText(cat != null ? cat : "");
+            }
 
             procedureArea.setText(recipeToShow.getProcedure());
             procedureArea.setCaretPosition(0);

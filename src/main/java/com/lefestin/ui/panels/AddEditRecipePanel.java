@@ -53,6 +53,7 @@ public class AddEditRecipePanel extends JPanel {
     // Form fields
     private JTextField titleField;
     private JSpinner prepTimeSpinner;
+    private JComboBox<String> categoryCombo;
     private JTextArea procedureArea;
 
     // Ingredients
@@ -127,6 +128,34 @@ public class AddEditRecipePanel extends JPanel {
         row1.add(prepTimeSpinner, BorderLayout.EAST);
 
         card.add(row1);
+
+        card.add(Box.createVerticalStrut(10));
+
+        JPanel row2 = new JPanel(new BorderLayout());
+        row2.setBackground(AppTheme.BG_SURFACE);
+        row2.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        row2.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel catLabel = new JLabel("📦 Category");
+        catLabel.setForeground(AppTheme.TEXT_PRIMARY);
+        catLabel.setFont(AppTheme.FONT_BODY);
+
+        categoryCombo = new JComboBox<>(new String[]{
+            Recipe.CATEGORY_BREAKFAST,
+            Recipe.CATEGORY_LUNCH,
+            Recipe.CATEGORY_DINNER
+        });
+        categoryCombo.setFont(AppTheme.FONT_BODY);
+        categoryCombo.setBackground(AppTheme.BG_PAGE);
+        categoryCombo.setForeground(AppTheme.TEXT_PRIMARY);
+        categoryCombo.setPreferredSize(new Dimension(160, 35));
+        categoryCombo.setMaximumSize(new Dimension(200, 35));
+        categoryCombo.setSelectedItem(Recipe.CATEGORY_DINNER);
+
+        row2.add(catLabel, BorderLayout.WEST);
+        row2.add(categoryCombo, BorderLayout.EAST);
+
+        card.add(row2);
 
         return card;
     }
@@ -364,6 +393,9 @@ public class AddEditRecipePanel extends JPanel {
 
         titleField.setText(existingRecipe.getTitle());
         prepTimeSpinner.setValue(existingRecipe.getPrepTime());
+        if (existingRecipe.getCategory() != null) {
+            categoryCombo.setSelectedItem(existingRecipe.getCategory());
+        }
         procedureArea.setText(existingRecipe.getProcedure());
         procedureArea.setCaretPosition(0);
 
@@ -395,17 +427,19 @@ public class AddEditRecipePanel extends JPanel {
 
         try {
             String title = titleField.getText().trim();
+            String category = (String) categoryCombo.getSelectedItem();
             int prepTime = (int) prepTimeSpinner.getValue();
             String procedure = procedureArea.getText().trim();
 
             Recipe recipe;
 
             if (existingRecipe == null) {
-                recipe = new Recipe(frame.getCurrentUserId(), title, Recipe.CATEGORY_DINNER, prepTime, procedure);
+                recipe = new Recipe(frame.getCurrentUserId(), title, category, prepTime, procedure);
                 recipeDAO.addRecipe(recipe);
             } else {
                 recipe = existingRecipe;
                 recipe.setTitle(title);
+                recipe.setCategory(category);
                 recipe.setPrepTime(prepTime);
                 recipe.setProcedure(procedure);
                 recipeDAO.updateRecipe(recipe);

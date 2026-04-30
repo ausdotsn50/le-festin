@@ -8,9 +8,14 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -26,12 +31,14 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
+import javax.swing.TransferHandler;
 
 import com.lefestin.dao.MealEntryDAO;
 import com.lefestin.dao.RecipeDAO;
@@ -85,6 +92,7 @@ public class WeeklyPlannerPanel extends JPanel {
     private static final Color COL_SLOT_BORDER = AppTheme.BG_BORDER;
     // private static final Color COL_MEAL_LABEL  = AppTheme.TEXT_MUTED;
     private static final Color COL_RECIPE_TEXT = AppTheme.GREEN_TINT_TEXT;
+    private static final DataFlavor SLOT_KEY_FLAVOR = DataFlavor.stringFlavor;
 
     public WeeklyPlannerPanel(MainFrame frame) {
         this.frame = frame;
@@ -265,6 +273,10 @@ public class WeeklyPlannerPanel extends JPanel {
         btn.setFocusPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.setPreferredSize(new Dimension(120, 80));
+        btn.putClientProperty("slotKey", Helper.slotKey(day, mealType));
+        btn.setToolTipText("Click to edit, drag to move or swap");
+        btn.setTransferHandler(new SlotTransferHandler());
+        installDragSupport(btn);
 
         // Recipe name label (center)
         JLabel recipeLabel = new JLabel("", SwingConstants.CENTER);
@@ -291,6 +303,30 @@ public class WeeklyPlannerPanel extends JPanel {
             e -> openSlotDialog(day, mealType));
 
         return btn;
+    }
+
+    private void installDragSupport(JButton btn) {
+        MouseAdapter dragListener = new MouseAdapter() {
+            private boolean dragStarted;
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                dragStarted = false;
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (dragStarted || btn.getTransferHandler() == null) {
+                    return;
+                }
+                dragStarted = true;
+                btn.getTransferHandler().exportAsDrag(
+                    btn, e, TransferHandler.MOVE);
+            }
+        };
+
+        btn.addMouseListener(dragListener);
+        btn.addMouseMotionListener(dragListener);
     }
 
     //  DATA — load and render
@@ -476,6 +512,35 @@ public class WeeklyPlannerPanel extends JPanel {
             }
         }
     }
+
+        private void moveOrSwapSlot(String sourceKey, String targetKey)
+                throws SQLException {
+            if (sourceKey.equals(targetKey)) {
+                return;
+            }
+
+            MealEntry sourceEntry = weekEntries.get(sourceKey);
+            MealEntry targetEntry = weekEntries.get(targetKey);
+            if (sourceEntry == null) {
+                return;
+            }
+
+            SlotRef targetRef = parseSlotKey(targetKey);
+
+            if (targetEntry == null) {
+                mealEntryDAO.moveEntryToSlot(
+                    sourceEntry, targetRef.day, targetRef.mealType);
+            } else {
+                mealEntryDAO.swapEntries(sourceEntry, targetEntry);
+            }
+
+            loadWeek();
+        }
+
+        private SlotRef parseSlotKey(String slotKey) {
+            String[] parts = slotKey.split("\\|", 2);
+            return new SlotRef(LocalDate.parse(parts[0]), parts[1]);
+        }
 
     private void clearSlot(LocalDate day, String mealType) {
         int confirm = JOptionPane.showConfirmDialog(this,
@@ -703,6 +768,70 @@ public class WeeklyPlannerPanel extends JPanel {
         if (cut == -1) cut = maxLen;
         return text.substring(0, cut) + "<br>"
              + text.substring(cut).trim();
+    }
+
+    private class SlotTransferHandler extends TransferHandler {
+        @Override
+        protected Transferable createTransferable(JComponent c) {
+            Object slotKey = c.getClientProperty("slotKey");
+            return slotKey == null
+                ? null
+                : new StringSelection(slotKey.toString());
+        }
+
+        @Override
+        public int getSourceActions(JComponent c) {
+            return MOVE;
+        }
+
+        @Override
+        public boolean canImport(TransferSupport support) {
+            return support.isDrop()
+                && support.isDataFlavorSupported(SLOT_KEY_FLAVOR);
+        }
+
+        @Override
+        public boolean importData(TransferSupport support) {
+            if (!canImport(support)) {
+                return false;
+            }
+
+            try {
+                JComponent target = (JComponent) support.getComponent();
+                Object slotKey = target.getClientProperty("slotKey");
+                if (slotKey == null) {
+                    return false;
+                }
+
+                String sourceKey = (String) support.getTransferable()
+                    .getTransferData(SLOT_KEY_FLAVOR);
+
+                moveOrSwapSlot(sourceKey, slotKey.toString());
+                return true;
+            } catch (UnsupportedFlavorException | IOException e) {
+                JOptionPane.showMessageDialog(WeeklyPlannerPanel.this,
+                    "Could not move meal slot: " + e.getMessage(),
+                    "Drag and Drop Error",
+                    JOptionPane.ERROR_MESSAGE);
+                return false;
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(WeeklyPlannerPanel.this,
+                    "Failed to update meal plan: " + e.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+        }
+    }
+
+    private static class SlotRef {
+        final LocalDate day;
+        final String mealType;
+
+        SlotRef(LocalDate day, String mealType) {
+            this.day = day;
+            this.mealType = mealType;
+        }
     }
 
     // Reload when panel becomes visible
