@@ -1,24 +1,10 @@
 package com.lefestin.ui.panels;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
+import java.awt.*;
 import java.sql.SQLException;
 import java.util.List;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.border.Border;
-import javax.swing.border.CompoundBorder;
+import javax.swing.*;
+import javax.swing.border.*;
 
 import com.lefestin.dao.RecipeDAO;
 import com.lefestin.dao.RecipeIngredientDAO;
@@ -33,8 +19,8 @@ import com.lefestin.ui.MainFrame;
  */
 public class RecipeDetailPanel extends JPanel {
     private final MainFrame frame;
-    private final RecipeDAO recipeDAO;
-    private final RecipeIngredientDAO riDAO;
+    private final RecipeDAO recipeDAO = new RecipeDAO();
+    private final RecipeIngredientDAO riDAO = new RecipeIngredientDAO();
     private final Recipe recipe;
 
     private JPanel ingredientsList;
@@ -44,19 +30,20 @@ public class RecipeDetailPanel extends JPanel {
 
     public RecipeDetailPanel(MainFrame frame, Recipe recipe) {
         this.frame = frame;
-        this.recipeDAO = new RecipeDAO();
-        this.riDAO = new RecipeIngredientDAO();
         this.recipe = recipe;
 
+        setupLayout();
         initComponents();
         loadRecipeDetails();
     }
 
-    private void initComponents() {
+    private void setupLayout() {
         setLayout(new BorderLayout());
         setBackground(AppTheme.BG_PAGE);
         setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+    }
 
+    private void initComponents() {
         JPanel content = new JPanel();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setBackground(AppTheme.BG_PAGE);
@@ -67,9 +54,9 @@ public class RecipeDetailPanel extends JPanel {
         content.add(Box.createVerticalStrut(15));
         content.add(buildStepsCard());
 
-        JPanel wrapper = new JPanel(new BorderLayout());    
+        JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.setBackground(AppTheme.BG_PAGE);
-        wrapper.add(content, BorderLayout.NORTH);   
+        wrapper.add(content, BorderLayout.NORTH);
 
         JScrollPane scrollPane = new JScrollPane(wrapper);
         scrollPane.setBorder(null);
@@ -95,14 +82,11 @@ public class RecipeDetailPanel extends JPanel {
         title.setForeground(AppTheme.TEXT_PRIMARY);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        leftSide.add(title);
-        // Prep time badge (kept as a field so we can update after loading full recipe)
         prepTimeBadge = buildMetaBadge(recipe.getFormattedPrepTime());
-        leftSide.add(prepTimeBadge);
+        categoryBadge = buildMetaBadge(recipe.getCategory() != null ? recipe.getCategory() : "");
 
-        // Category badge
-        String cat = recipe.getCategory() != null ? recipe.getCategory() : "";
-        categoryBadge = buildMetaBadge(cat);
+        leftSide.add(title);
+        leftSide.add(prepTimeBadge);
         leftSide.add(categoryBadge);
 
         JButton backBtn = AppTheme.secondaryButton("Back");
@@ -117,34 +101,31 @@ public class RecipeDetailPanel extends JPanel {
         topRow.add(actions, BorderLayout.EAST);
 
         card.add(topRow);
-
         return card;
     }
 
     private JPanel buildIngredientsCard() {
-        JPanel card = createCardPanel();
+        JPanel card = createCardPanel(18, 20);
 
         JLabel heading = AppTheme.headingLabel("Ingredients");
         heading.setAlignmentX(Component.LEFT_ALIGNMENT);
-        card.add(heading);
-        card.add(Box.createVerticalStrut(12));
-
+        
         ingredientsList = new JPanel();
         ingredientsList.setLayout(new BoxLayout(ingredientsList, BoxLayout.Y_AXIS));
         ingredientsList.setOpaque(false);
         ingredientsList.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+        card.add(heading);
+        card.add(Box.createVerticalStrut(12));
         card.add(ingredientsList);
         return card;
     }
 
     private JPanel buildStepsCard() {
-        JPanel card = createCardPanel();
+        JPanel card = createCardPanel(18, 20);
 
         JLabel heading = AppTheme.headingLabel("Steps");
         heading.setAlignmentX(Component.LEFT_ALIGNMENT);
-        card.add(heading);
-        card.add(Box.createVerticalStrut(12));
 
         procedureArea = new JTextArea();
         procedureArea.setEditable(false);
@@ -154,29 +135,60 @@ public class RecipeDetailPanel extends JPanel {
         procedureArea.setFont(AppTheme.FONT_BODY);
         procedureArea.setForeground(AppTheme.TEXT_PRIMARY);
         procedureArea.setBackground(AppTheme.BG_PAGE);
-        procedureArea.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        procedureArea.setBorder(null);
 
-        JScrollPane stepsScroll = new JScrollPane(procedureArea);
-        stepsScroll.setBorder(BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true));
-        stepsScroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 260));
-        stepsScroll.setAlignmentX(Component.LEFT_ALIGNMENT);
-
+        card.add(heading);
+        card.add(Box.createVerticalStrut(12));
         card.add(procedureArea);
         return card;
     }
 
-    private JPanel createCardPanel() {
-        return createCardPanel(18, 20);
+    private void loadRecipeDetails() {
+        try {
+            Recipe fullRecipe = recipeDAO.getRecipeById(recipe.getRecipeId());
+            Recipe r = (fullRecipe != null) ? fullRecipe : recipe;
+
+            prepTimeBadge.setText(r.getFormattedPrepTime());
+            categoryBadge.setText(r.getCategory() != null ? r.getCategory() : "");
+            procedureArea.setText(r.getProcedure());
+            procedureArea.setCaretPosition(0);
+
+            List<RecipeIngredient> ingredients = riDAO.getIngredientsByRecipeId(r.getRecipeId());
+            ingredientsList.removeAll();
+
+            if (ingredients.isEmpty()) {
+                addIngredientLabel("No ingredients found.", AppTheme.TEXT_MUTED);
+            } else {
+                for (RecipeIngredient ri : ingredients) {
+                    String text = "• " + Helper.formatQty(ri.getQuantity()) + " " + ri.getUnit() + " " + Helper.capitalize(ri.getIngredientName());
+                    addIngredientLabel(text, AppTheme.TEXT_PRIMARY);
+                    ingredientsList.add(Box.createVerticalStrut(8));
+                }
+            }
+            ingredientsList.revalidate();
+            ingredientsList.repaint();
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Could not load recipe details: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
-    private JPanel createCardPanel(int verticalPadding, int horizontalPadding) {
+    private void addIngredientLabel(String text, Color color) {
+        JLabel label = new JLabel(text);
+        label.setFont(AppTheme.FONT_BODY);
+        label.setForeground(color);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        ingredientsList.add(label);
+    }
+
+    private JPanel createCardPanel(int vPad, int hPad) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(AppTheme.BG_SURFACE);
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
+        
         Border line = BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true);
-        Border empty = BorderFactory.createEmptyBorder(verticalPadding, horizontalPadding, verticalPadding, horizontalPadding);
+        Border empty = BorderFactory.createEmptyBorder(vPad, hPad, vPad, hPad);
         panel.setBorder(new CompoundBorder(line, empty));
         return panel;
     }
@@ -185,61 +197,11 @@ public class RecipeDetailPanel extends JPanel {
         JLabel label = new JLabel(text);
         label.setFont(AppTheme.FONT_SMALL);
         label.setForeground(AppTheme.TEXT_PRIMARY);
+        label.setOpaque(true);
+        label.setBackground(AppTheme.BG_PAGE);
         label.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true),
             BorderFactory.createEmptyBorder(4, 10, 4, 10)));
-        label.setOpaque(true);
-        label.setBackground(AppTheme.BG_PAGE);
         return label;
-    }
-
-    private void loadRecipeDetails() {
-        try {
-            Recipe fullRecipe = recipeDAO.getRecipeById(recipe.getRecipeId());
-            Recipe recipeToShow = fullRecipe != null ? fullRecipe : recipe;
-
-            // Update header badges
-            if (prepTimeBadge != null) {
-                prepTimeBadge.setText(recipeToShow.getFormattedPrepTime());
-            }
-            if (categoryBadge != null) {
-                String cat = recipeToShow.getCategory();
-                categoryBadge.setText(cat != null ? cat : "");
-            }
-
-            procedureArea.setText(recipeToShow.getProcedure());
-            procedureArea.setCaretPosition(0);
-
-            List<RecipeIngredient> ingredients =
-                riDAO.getIngredientsByRecipeId(recipeToShow.getRecipeId());
-
-            ingredientsList.removeAll();
-            if (ingredients.isEmpty()) {
-                JLabel empty = new JLabel("No ingredients found.");
-                empty.setFont(AppTheme.FONT_BODY);
-                empty.setForeground(AppTheme.TEXT_MUTED);
-                empty.setAlignmentX(Component.LEFT_ALIGNMENT);
-                ingredientsList.add(empty);
-            } else {
-                for (RecipeIngredient ingredient : ingredients) {
-                    JLabel item = new JLabel("• " + Helper.formatQty(ingredient.getQuantity())
-                        + " " + ingredient.getUnit() + " "
-                        + Helper.capitalize(ingredient.getIngredientName()));
-                    item.setFont(AppTheme.FONT_BODY);
-                    item.setForeground(AppTheme.TEXT_PRIMARY);
-                    item.setAlignmentX(Component.LEFT_ALIGNMENT);
-                    ingredientsList.add(item);
-                    ingredientsList.add(Box.createVerticalStrut(8));
-                }
-            }
-
-            ingredientsList.revalidate();
-            ingredientsList.repaint();
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this,
-                "Could not load recipe details: " + e.getMessage(),
-                "Error",
-                JOptionPane.ERROR_MESSAGE);
-        }
     }
 }
