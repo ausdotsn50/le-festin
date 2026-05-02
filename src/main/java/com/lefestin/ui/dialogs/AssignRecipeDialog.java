@@ -80,7 +80,8 @@ public class AssignRecipeDialog extends JDialog {
     // ── Column indexes ────────────────────────────────────────────────────
     private static final int COL_ID       = 0; // hidden
     private static final int COL_TITLE    = 1;
-    private static final int COL_PREP     = 2;
+    private static final int COL_CATEGORY = 2;
+    private static final int COL_PREP     = 3;
 
     // ── Constructor ───────────────────────────────────────────────────────
     public AssignRecipeDialog(MainFrame frame,
@@ -171,7 +172,7 @@ public class AssignRecipeDialog extends JDialog {
 
     private JScrollPane buildTable() {
         tableModel = new DefaultTableModel(
-            new String[]{"ID", "Title", "Prep Time"}, 0) {
+            new String[]{"ID", "Title", "Category", "Prep Time"}, 0) {
             @Override
             public boolean isCellEditable(int row, int col) {
                 return false;
@@ -192,9 +193,11 @@ public class AssignRecipeDialog extends JDialog {
 
         // Column widths
         table.getColumnModel().getColumn(COL_TITLE)
-            .setPreferredWidth(240);
+            .setPreferredWidth(200);
+        table.getColumnModel().getColumn(COL_CATEGORY)
+            .setPreferredWidth(100);
         table.getColumnModel().getColumn(COL_PREP)
-            .setPreferredWidth(90);
+            .setPreferredWidth(80);
 
         // Row sorter — click header to sort
         sorter = new TableRowSorter<>(tableModel);
@@ -271,6 +274,7 @@ public class AssignRecipeDialog extends JDialog {
                 tableModel.addRow(new Object[]{
                     r.getRecipeId(),
                     r.getTitle(),
+                    r.getCategory(),
                     r.getFormattedPrepTime()
                 });
             }
