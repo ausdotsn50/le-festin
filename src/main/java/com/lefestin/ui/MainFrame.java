@@ -145,6 +145,7 @@ public class MainFrame extends JFrame {
         MainFrame newFrame = new MainFrame();
         LoginDialog loginDialog = new LoginDialog(newFrame);
         loginDialog.setVisible(true);
+        newFrame.setVisible(true);
     }
 
     private JPanel buildSidebar() {
