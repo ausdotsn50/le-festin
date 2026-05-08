@@ -277,6 +277,13 @@ public class WeeklyPlannerPanel extends JPanel {
         btn.setToolTipText("Click to edit, drag to move or swap");
         btn.setTransferHandler(new SlotTransferHandler());
         installDragSupport(btn);
+        
+        // Meal type label (top)    
+        JLabel mealLabel = new JLabel(mealType, SwingConstants.LEFT);
+        mealLabel.setFont(AppTheme.FONT_TINY);
+        mealLabel.setForeground(AppTheme.TEXT_MUTED);
+        mealLabel.setBorder(BorderFactory.createEmptyBorder(6, 6, 0, 6));
+        btn.add(mealLabel, BorderLayout.NORTH);
 
         // Recipe name label (center)
         JLabel recipeLabel = new JLabel("", SwingConstants.CENTER);
