@@ -164,8 +164,8 @@ public class RecipeSuggestionsPanel extends JPanel {
     }
 
     private void styleAsActiveFilter(JButton btn) {
-        btn.setBackground(AppTheme.GREEN_PRIMARY);
-        btn.setForeground(AppTheme.TEXT_INVERTED);
+        btn.setBackground(AppTheme.PRIMARY_ACCENT);
+        btn.setForeground(AppTheme.TEXT_PRIMARY);
         btn.setBorderPainted(false);
         btn.setBorder(BorderFactory.createEmptyBorder(7, 15, 7, 15));
     }
@@ -332,7 +332,7 @@ public class RecipeSuggestionsPanel extends JPanel {
         if (result.getMissingIngredients().isEmpty()) {
             JLabel allGood = new JLabel("All ingredients available in pantry");
             allGood.setFont(AppTheme.FONT_SMALL);
-            allGood.setForeground(AppTheme.GREEN_PRIMARY);
+            allGood.setForeground(AppTheme.GREEN_SUCCESS);
             bottomSection.add(allGood);
         } else {
             JLabel missingHeader = new JLabel("Still needed:");
@@ -401,7 +401,7 @@ public class RecipeSuggestionsPanel extends JPanel {
     }
 
     private Color barColor(int pct) {
-        if (pct == 100) return AppTheme.GREEN_PRIMARY;
+        if (pct == 100) return AppTheme.GREEN_SUCCESS;
         if (pct >= 50)  return AppTheme.AMBER_PRIMARY;
         return AppTheme.TERRA_PRIMARY;
     }

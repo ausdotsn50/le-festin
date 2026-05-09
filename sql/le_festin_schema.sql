@@ -6,11 +6,11 @@
 -- ============================================================
 
 -- ── Database ──────────────────────────────────────────────
-CREATE DATABASE IF NOT EXISTS la_festin
+CREATE DATABASE IF NOT EXISTS le_festin
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 
-USE la_festin;
+USE le_festin;
 
 -- ── Safety: drop in reverse dependency order ──────────────
 -- Child tables first, parent tables last.
@@ -163,4 +163,4 @@ CREATE INDEX idx_me_user_date ON meal_entry       (user_id, scheduled_date);
 -- ============================================================
 --  DONE
 -- ============================================================
-SELECT 'la_festin schema created successfully.' AS status;
+SELECT 'le_festin schema created successfully.' AS status;

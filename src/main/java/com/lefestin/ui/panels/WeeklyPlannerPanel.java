@@ -170,9 +170,9 @@ public class WeeklyPlannerPanel extends JPanel {
     //  GRID — 7 columns (days) × 4 rows (header + 3 meal slots)
     private JPanel buildGrid() {
         gridPanel = new JPanel(new GridLayout(4, 7, 1, 1));
-        gridPanel.setBackground(new Color(200, 200, 200)); // gap color
+        gridPanel.setBackground(AppTheme.GRID_GAP);
         gridPanel.setBorder(BorderFactory.createLineBorder(
-            new Color(200, 200, 200), 1));
+            AppTheme.GRID_GAP, 1));
 
         rebuildGridCells();
 
@@ -228,14 +228,14 @@ public class WeeklyPlannerPanel extends JPanel {
 
         JLabel dayName = new JLabel(
             day.format(DAY_NAME_FMT).toUpperCase());
-        dayName.setFont(new Font("SansSerif", Font.BOLD, 11));
+        dayName.setFont(AppTheme.FONT_DAY_LABEL);
         dayName.setForeground(isToday
             ? AppTheme.AMBER_PRIMARY
             : AppTheme.TEXT_MUTED);
         dayName.setFont(AppTheme.FONT_TINY);
 
         JLabel dayDate = new JLabel(day.format(DAY_DATE_FMT));
-        dayDate.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        dayDate.setFont(AppTheme.FONT_DAY_DATE);
         dayDate.setForeground(isToday
             ? AppTheme.AMBER_PRIMARY
             : AppTheme.TEXT_PRIMARY);
@@ -290,7 +290,7 @@ public class WeeklyPlannerPanel extends JPanel {
         btn.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseExited(MouseEvent e) {
-                btn.setBackground(new Color(240, 248, 255));
+                btn.setBackground(AppTheme.CELL_HOVER);
             }
             @Override
             public void mouseEntered(MouseEvent e) {

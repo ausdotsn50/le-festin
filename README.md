@@ -1,4 +1,4 @@
-# la-festin
+# le-festin
 
 ## Run the project w/ Maven
 - mvn clean install        # downloads all deps + compiles
@@ -11,6 +11,15 @@ mvn compile exec:java "-Dexec.mainClass=com.lefestin.Main"
 
 Seedtest
 mvn compile exec:java "-Dexec.mainClass=com.lefestin.config.SeedDataTest"
+```
+
+## Configure
+```
+Import schema
+mysql -u root -p < sql/le_festin_schema.sql
+
+Import seed
+mysql -u root -p< sql/le_festin_seed.sql
 ```
 
 ## DAO

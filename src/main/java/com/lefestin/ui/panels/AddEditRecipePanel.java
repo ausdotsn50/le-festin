@@ -169,7 +169,7 @@ public class AddEditRecipePanel extends JPanel {
         ingredientsContainer.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
         JButton addBtn = new JButton("+ Add ingredient");
-        addBtn.setForeground(new Color(255, 152, 0)); 
+        addBtn.setForeground(AppTheme.AMBER_PRIMARY);
         addBtn.setContentAreaFilled(false);
         addBtn.setBorderPainted(false);
         addBtn.setFocusPainted(false);

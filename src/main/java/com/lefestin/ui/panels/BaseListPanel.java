@@ -64,12 +64,12 @@ public abstract class BaseListPanel extends JPanel {
         titleGroup.setBackground(AppTheme.BG_SURFACE);
         
         JLabel title = new JLabel(getHeaderTitle());
-        title.setFont(new Font("SansSerif", Font.BOLD, 18));
-        title.setForeground(new Color(30, 30, 30));
+        title.setFont(AppTheme.FONT_SUBTITLE);
+        title.setForeground(AppTheme.TEXT_PRIMARY);
         
         JLabel subtitle = new JLabel(getHeaderDescription());
-        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        subtitle.setForeground(new Color(140, 140, 140));
+        subtitle.setFont(AppTheme.FONT_SMALL);
+        subtitle.setForeground(AppTheme.TEXT_MUTED);
         
         titleGroup.add(title);
         titleGroup.add(Box.createVerticalStrut(2));

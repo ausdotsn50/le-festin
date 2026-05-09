@@ -82,14 +82,14 @@ public class RecipeListPanel extends JPanel {
         topRow.setBackground(AppTheme.BG_PAGE);
 
         JLabel titleLabel = new JLabel("My Recipes");
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
+        titleLabel.setFont(AppTheme.FONT_DISPLAY_LARGE);
         titleLabel.setForeground(AppTheme.TEXT_PRIMARY);
 
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         actionPanel.setBackground(AppTheme.BG_PAGE);
 
         JButton addBtn = new JButton("+");
-        styleCircleButton(addBtn, AppTheme.GREEN_PRIMARY, Color.WHITE); 
+        styleCircleButton(addBtn, AppTheme.PRIMARY_ACCENT, AppTheme.COLOR_BLACK); 
         addBtn.addActionListener(e -> openAddEditPanel(null));
 
         actionPanel.add(addBtn);
@@ -130,7 +130,7 @@ public class RecipeListPanel extends JPanel {
         btn.setPreferredSize(new Dimension(40, 40));
         btn.setBackground(bg);
         btn.setForeground(fg);
-        btn.setFont(new Font("SansSerif", Font.BOLD, 18));
+        btn.setFont(AppTheme.FONT_SUBTITLE);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -179,7 +179,7 @@ public class RecipeListPanel extends JPanel {
         headerRow.add(actionsRow, BorderLayout.EAST);
 
         JLabel titleLbl = new JLabel("<html>" + recipe.getTitle() + "</html>");
-        titleLbl.setFont(new Font("SansSerif", Font.BOLD, 18));
+        titleLbl.setFont(AppTheme.FONT_SUBTITLE);
         titleLbl.setForeground(AppTheme.TEXT_PRIMARY);
         titleLbl.setVerticalAlignment(SwingConstants.TOP);
 
@@ -188,7 +188,7 @@ public class RecipeListPanel extends JPanel {
         
         JLabel timeLbl = new JLabel("🕒 " + recipe.getFormattedPrepTime());
         timeLbl.setFont(AppTheme.FONT_SMALL);
-        timeLbl.setForeground(new Color(255, 152, 0)); 
+        timeLbl.setForeground(AppTheme.AMBER_PRIMARY); 
 
         bottomRow.add(timeLbl);
 
@@ -205,7 +205,7 @@ public class RecipeListPanel extends JPanel {
             @Override
             public void mouseEntered(MouseEvent e) {
                 card.setBorder(new CompoundBorder(
-                    BorderFactory.createLineBorder(new Color(255, 152, 0), 1, true),
+                    BorderFactory.createLineBorder(AppTheme.AMBER_PRIMARY, 1, true),
                     padding
                 ));
             }

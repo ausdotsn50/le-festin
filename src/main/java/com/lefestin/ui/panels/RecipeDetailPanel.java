@@ -91,7 +91,7 @@ public class RecipeDetailPanel extends JPanel {
         leftSide.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel title = new JLabel(recipe.getTitle());
-        title.setFont(new Font("Serif", Font.BOLD, 24));
+        title.setFont(AppTheme.FONT_DISPLAY);
         title.setForeground(AppTheme.TEXT_PRIMARY);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
 

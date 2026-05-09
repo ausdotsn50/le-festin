@@ -17,25 +17,39 @@ import javax.swing.UIManager;
 import javax.swing.border.Border;
 
 public class AppTheme {
+    //  BASE COLORS — Use these instead of Color.BLACK/Color.WHITE directly
+    /** Pure black — used for text on light backgrounds */
+    public static final Color COLOR_BLACK       = Color.BLACK;
+    /** Pure white — used for text on dark backgrounds */
+    public static final Color COLOR_WHITE       = Color.WHITE;
+
+    // Primary saffron amber — brand color for headers and primary actions
+    /** Primary accent — saffron amber */
+    public static final Color PRIMARY_ACCENT    = new Color(252, 219, 109);
+
+    // Secondary accent — buttons and alternate CTAs
+    /** Secondary accent — warm brown for buttons */
+    public static final Color SECONDARY_ACCENT  = new Color(139, 101, 76);
+
     // Sidebar
-    /** Deep charcoal — sidebar background */
-    public static final Color SIDEBAR_BG         = new Color(249, 249, 245);
-    /** Slightly lighter — active nav item */
-    public static final Color SIDEBAR_ACTIVE     = new Color(252, 219, 109);
-    /** Hover state */
-    public static final Color SIDEBAR_HOVER      = new Color(253, 235, 158);
-    /** Nav item text — inactive */
-    public static final Color SIDEBAR_FG         = new Color(249, 249, 245);
-    /** Nav item text — active */
-    public static final Color SIDEBAR_FG_ACTIVE  = new Color(249, 249, 245);
+    /** Sidebar background — warm cream */
+    public static final Color SIDEBAR_BG        = new Color(249, 249, 245);
+    /** Active nav item background */
+    public static final Color SIDEBAR_ACTIVE    = PRIMARY_ACCENT;
+    /** Hover state — lighter amber */
+    public static final Color SIDEBAR_HOVER     = new Color(253, 235, 158);
+    /** Nav item text — dark */
+    public static final Color SIDEBAR_FG        = COLOR_BLACK;
+    /** Nav item text — active dark */
+    public static final Color SIDEBAR_FG_ACTIVE = COLOR_BLACK;
 
     // Header
-    /** Dark header bar */
-    public static final Color HEADER_BG         = new Color(252, 219, 109);
+    /** Header bar — saffron amber */
+    public static final Color HEADER_BG         = PRIMARY_ACCENT;
     /** App name text */
-    public static final Color HEADER_FG         = Color.WHITE;
+    public static final Color HEADER_FG         = COLOR_BLACK;
     /** Username / subtitle text */
-    public static final Color HEADER_FG_MUTED   = Color.BLACK;
+    public static final Color HEADER_FG_MUTED   = COLOR_BLACK;
 
     // Page & surface backgrounds 
     /** Warm cream — outermost page background */
@@ -45,27 +59,25 @@ public class AppTheme {
     /** Very light warm gray — alternating table rows, input fields */
     public static final Color BG_SUBTLE         = new Color(252, 250, 247);
     /** Soft divider/border color */
-    public static final Color BG_BORDER         = new Color(225, 220, 213);
+    public static final Color BG_BORDER         = new Color(200, 200, 200);
 
     // Text
     /** Primary text — headings, table content */
-    public static final Color TEXT_PRIMARY      = Color.BLACK;
+    public static final Color TEXT_PRIMARY      = new Color(30, 30, 30);
     /** Secondary text — subtitles, labels */
-    public static final Color TEXT_SECONDARY    = Color.BLACK;
+    public static final Color TEXT_SECONDARY    = new Color(30, 30, 30);
     /** Muted/hint text — placeholders, counts */
-    public static final Color TEXT_MUTED        = Color.BLACK;
+    public static final Color TEXT_MUTED        = new Color(140, 140, 140);
     /** Inverted text — on dark backgrounds */
-    public static final Color TEXT_INVERTED     = Color.BLACK;
+    public static final Color TEXT_INVERTED     = COLOR_WHITE;
 
-    // Herb green — primary action color
-    /** Primary button background */
-    public static final Color GREEN_PRIMARY     = new Color(252, 219, 109);
-    /** Hover state */
-    public static final Color GREEN_HOVER       = new Color(252, 219, 109);
-    /** Light tint — filled meal slots, success states */
+    // Herb green — success and filled states
+    /** Green tint — filled meal slots, success states */
     public static final Color GREEN_TINT        = new Color(230, 247, 237);
     /** Text on green tint */
     public static final Color GREEN_TINT_TEXT   = new Color(22, 88, 48);
+    /** Success indicator — all good badge */
+    public static final Color GREEN_SUCCESS     = new Color(76, 175, 80);
 
     // Terracotta — destructive / warning actions
     /** Delete / remove button background */
@@ -79,7 +91,7 @@ public class AppTheme {
 
     // Saffron amber — highlights and today indicator
     /** Accent — today badge, match % bar */
-    public static final Color AMBER_PRIMARY     = new Color(210, 140, 30);
+    public static final Color AMBER_PRIMARY     = PRIMARY_ACCENT;
     /** Light tint — today column header */
     public static final Color AMBER_TINT        = new Color(255, 248, 225);
     /** Text on amber tint */
@@ -90,6 +102,12 @@ public class AppTheme {
     public static final Color SELECTION_BG      = new Color(224, 238, 255);
     /** Table row selection foreground */
     public static final Color SELECTION_FG      = new Color(20, 40, 80);
+
+    // Grid & layout colors
+    /** Grid gap / border between cells */
+    public static final Color GRID_GAP          = BG_BORDER;
+    /** Light blue tint for focused/hovered cells */
+    public static final Color CELL_HOVER        = new Color(224, 238, 255);
 
 
     //  TYPOGRAPHY
@@ -129,6 +147,26 @@ public class AppTheme {
     public static final Font FONT_MONO          =
         new Font("Monospaced", Font.PLAIN, 13);
 
+    /** Large display font — recipe list title, dialog headers */
+    public static final Font FONT_DISPLAY_LARGE =
+        new Font("Serif", Font.BOLD, 28);
+
+    /** Display font — recipe detail page title */
+    public static final Font FONT_DISPLAY       =
+        new Font("Serif", Font.BOLD, 24);
+
+    /** Subtitle font — card titles, list headers */
+    public static final Font FONT_SUBTITLE      =
+        new Font("SansSerif", Font.BOLD, 18);
+
+    /** Day label — week planner day names */
+    public static final Font FONT_DAY_LABEL     =
+        new Font("SansSerif", Font.BOLD, 11);
+
+    /** Day date — week planner dates */
+    public static final Font FONT_DAY_DATE      =
+        new Font("SansSerif", Font.PLAIN, 13);
+
     
     //  BORDERS
     /** Standard divider line — bottom of header, toolbar */
@@ -159,15 +197,15 @@ public class AppTheme {
     //  COMPONENT FACTORIES
     //  Use these instead of constructing styled components inline.
     /**
-     * Primary action button — herb green, white text.
+     * Primary action button — warm brown, white text.
      * Use for: Save, Add, Match Recipes, Auto-Generate.
      */
     public static JButton primaryButton(String text) {
         JButton btn = baseButton(text);
-        btn.setBackground(GREEN_PRIMARY);
+        btn.setBackground(SECONDARY_ACCENT);
         btn.setForeground(TEXT_INVERTED);
         btn.addMouseListener(hoverEffect(
-            btn, GREEN_PRIMARY, GREEN_HOVER));
+            btn, SECONDARY_ACCENT, new Color(110, 80, 60)));
         return btn;
     }
 
@@ -209,8 +247,8 @@ public class AppTheme {
             btn, TERRA_PRIMARY, TERRA_HOVER));
         btn.addChangeListener(e -> {
             if (!btn.isEnabled()) {
-                btn.setBackground(new Color(180, 120, 100));
-                btn.setForeground(new Color(200, 180, 170));
+                btn.setBackground(BG_SUBTLE);
+                btn.setForeground(TEXT_MUTED);
             } else {
                 btn.setBackground(TERRA_PRIMARY);
                 btn.setForeground(TEXT_INVERTED);
@@ -355,12 +393,12 @@ public class AppTheme {
         UIManager.put("nimbusBase",         SIDEBAR_BG);
         UIManager.put("nimbusBlueGrey",     new Color(130, 125, 115));
         UIManager.put("nimbusDisabledText", TEXT_MUTED);
-        UIManager.put("nimbusFocus",        GREEN_PRIMARY);
-        UIManager.put("nimbusGreen",        GREEN_PRIMARY);
+        UIManager.put("nimbusFocus",        PRIMARY_ACCENT);
+        UIManager.put("nimbusGreen",        GREEN_TINT);
         UIManager.put("nimbusOrange",       AMBER_PRIMARY);
         UIManager.put("nimbusRed",          TERRA_PRIMARY);
         
-        UIManager.put("nimbusSelectedText", TEXT_MUTED);
+        UIManager.put("nimbusSelectedText", TEXT_PRIMARY);
 
         UIManager.put("nimbusSelectionBackground", SELECTION_BG);
         UIManager.put("text",               TEXT_PRIMARY);
@@ -373,7 +411,6 @@ public class AppTheme {
     }
 
     // Private helpers 
-
     private static JButton baseButton(String text) {
         JButton btn = new StyledButton(text);
         btn.setFont(FONT_BODY);
