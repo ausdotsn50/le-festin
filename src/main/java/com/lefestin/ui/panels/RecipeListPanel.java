@@ -50,15 +50,14 @@ public class RecipeListPanel extends BaseListPanel {
 
     @Override
     protected JComponent buildHeaderRightControl() {
-        JButton addBtn = new JButton("+");
-        styleCircleButton(addBtn, AppTheme.PRIMARY_ACCENT, AppTheme.COLOR_BLACK);
-        addBtn.addActionListener(e -> openAddEditPanel(null));
-        return addBtn;
+        return Box.createHorizontalBox();
     }
 
     @Override
     protected JComponent buildSearchRightControl() {
-        return new JPanel();  // Empty panel for spacing
+        JButton addBtn = AppTheme.primaryButton("Add Recipe");
+        addBtn.addActionListener(e -> openAddEditPanel(null));
+        return addBtn;
     }
 
     @Override
@@ -67,10 +66,9 @@ public class RecipeListPanel extends BaseListPanel {
         cardsContainer.setLayout(new BoxLayout(cardsContainer, BoxLayout.Y_AXIS));
         cardsContainer.setBackground(AppTheme.BG_PAGE);
         cardsContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
-        cardsContainer.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
         JScrollPane scrollPane = new JScrollPane(cardsContainer);
-        scrollPane.setBorder(null);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         scrollPane.getViewport().setBackground(AppTheme.BG_PAGE);
 
@@ -103,16 +101,6 @@ public class RecipeListPanel extends BaseListPanel {
     @Override
     protected void onActionClicked() {
         // Not used in card view
-    }
-
-    private void styleCircleButton(JButton btn, Color bg, Color fg) {
-        btn.setPreferredSize(new Dimension(40, 40));
-        btn.setBackground(bg);
-        btn.setForeground(fg);
-        btn.setFont(AppTheme.FONT_SUBTITLE);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     private void renderCards(List<Recipe> recipes) {

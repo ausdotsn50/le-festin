@@ -63,7 +63,14 @@ public class PantryPanel extends BaseListPanel {
     protected JComponent buildTableContent() { return buildTable(); }
 
     @Override
-    protected JPanel buildToolbar() { return buildStandardToolbar(); }
+    protected JPanel buildToolbar() {
+        JPanel bar = buildStandardToolbar();
+        bar.setBorder(BorderFactory.createCompoundBorder(
+            AppTheme.BORDER_DIVIDER_TOP,
+            BorderFactory.createEmptyBorder(10, 20, 10, 20)
+        ));
+        return bar;
+    }
 
     @Override
     protected JButton createActionButton() { return AppTheme.dangerButton("Remove"); }
@@ -123,7 +130,7 @@ public class PantryPanel extends BaseListPanel {
         });
 
         JScrollPane scroll = new JScrollPane(table);
-        scroll.setBorder(BorderFactory.createEmptyBorder());
+        scroll.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
         scroll.getViewport().setBackground(AppTheme.BG_SURFACE);
         return scroll;
     }

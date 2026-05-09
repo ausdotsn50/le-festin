@@ -1,9 +1,7 @@
 package com.lefestin.ui.panels;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.FlowLayout;
-import java.awt.Font;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -50,39 +48,39 @@ public abstract class BaseListPanel extends JPanel {
      * Builds header (title + description) and search bar combined.
      */
     private JPanel buildHeaderAndSearch() {
-        JPanel container = new JPanel(new BorderLayout());
+        JPanel container = new JPanel();
+        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
         container.setBackground(AppTheme.BG_SURFACE);
-        
-        // Header: title + description (top)
+
+        // Header: title + description
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(AppTheme.BG_SURFACE);
-        header.setBorder(BorderFactory.createEmptyBorder(16, 20, 12, 20));
-        
-        // Title and description on the left
+        header.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
+
         JPanel titleGroup = new JPanel();
         titleGroup.setLayout(new BoxLayout(titleGroup, BoxLayout.Y_AXIS));
         titleGroup.setBackground(AppTheme.BG_SURFACE);
-        
+
         JLabel title = new JLabel(getHeaderTitle());
         title.setFont(AppTheme.FONT_SUBTITLE);
         title.setForeground(AppTheme.TEXT_PRIMARY);
-        
+
         JLabel subtitle = new JLabel(getHeaderDescription());
         subtitle.setFont(AppTheme.FONT_SMALL);
         subtitle.setForeground(AppTheme.TEXT_MUTED);
-        
+
         titleGroup.add(title);
         titleGroup.add(Box.createVerticalStrut(2));
         titleGroup.add(subtitle);
-        
+
         header.add(titleGroup, BorderLayout.WEST);
         header.add(buildHeaderRightControl(), BorderLayout.EAST);
-        
-        // Search bar (bottom)
+
+        // Search bar — stacks directly below header
         JPanel searchBar = new JPanel(new BorderLayout(10, 0));
         searchBar.setBackground(AppTheme.BG_SURFACE);
         searchBar.setBorder(BorderFactory.createEmptyBorder(0, 20, 16, 20));
-        
+
         searchField = new JTextField();
         searchField.setFont(AppTheme.FONT_BODY);
         searchField.setBorder(BorderFactory.createCompoundBorder(
@@ -90,17 +88,13 @@ public abstract class BaseListPanel extends JPanel {
             BorderFactory.createEmptyBorder(6, 10, 6, 10)
         ));
         searchField.putClientProperty("JTextField.placeholderText", getSearchPlaceholder());
-        
+
         searchBar.add(searchField, BorderLayout.CENTER);
         searchBar.add(buildSearchRightControl(), BorderLayout.EAST);
-        
-        container.add(header, BorderLayout.NORTH);
-        container.add(searchBar, BorderLayout.SOUTH);
-        container.setBorder(BorderFactory.createCompoundBorder(
-            AppTheme.BORDER_DIVIDER_TOP,
-            BorderFactory.createEmptyBorder(0, 0, 0, 0)
-        ));
-        
+
+        container.add(header);
+        container.add(searchBar);
+
         return container;
     }
 
