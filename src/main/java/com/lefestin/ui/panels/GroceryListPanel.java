@@ -1,35 +1,18 @@
 package com.lefestin.ui.panels;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
+import java.awt.*;
 import java.awt.print.PrinterException;
 import java.io.File;
 import java.sql.SQLException;
 import java.text.MessageFormat;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
-import java.util.Date;
+import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
-import javax.swing.JTable;
-import javax.swing.SpinnerDateModel;
-import javax.swing.SwingWorker;
+import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
 import com.lefestin.model.RecipeIngredient;
@@ -39,58 +22,51 @@ import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
 
 /**
- * GroceryListPanel — shows missing ingredients for a planned date range.
+ * GroceryListPanel — Refactored read-only view for missing ingredients.
  */
 public class GroceryListPanel extends JPanel {
 
     private final MainFrame frame;
-    private final GroceryListService groceryService;
-    private final CsvExportService   csvService;
+    private final GroceryListService groceryService = new GroceryListService();
+    private final CsvExportService csvService = new CsvExportService();
 
-    // Date range spinners
-    private JSpinner fromSpinner;
-    private JSpinner toSpinner;
-
+    private JSpinner fromSpinner, toSpinner;
     private JTable table;
     private DefaultTableModel tableModel;
-
-    // Labels updated on load
     private JLabel summaryLabel;
+    private JButton exportBtn, printBtn;
 
-    // Action buttons — disabled until list is generated
-    private JButton exportBtn;
-    private JButton printBtn;
-
-    // Column indexes
+    // Table Configuration
     private static final int COL_NAME = 0;
     private static final int COL_QUANTITY = 1;
     private static final int COL_UNIT = 2;
-
-    // Date formatter for spinners
     private static final String DATE_FORMAT = "MMM d, yyyy";
 
     public GroceryListPanel(MainFrame frame) {
-        this.frame          = frame;
-        this.groceryService = new GroceryListService();
-        this.csvService     = new CsvExportService();
-
-        setLayout(new BorderLayout(0, 0));
-        setBackground(AppTheme.BG_PAGE);
-
-        add(buildHeader(),  BorderLayout.NORTH);
-        add(buildTable(),   BorderLayout.CENTER);
+        this.frame = frame;
+        setupMainLayout();
+        initComponents();
     }
 
+    private void setupMainLayout() {
+        setLayout(new BorderLayout());
+        setBackground(AppTheme.BG_PAGE);
+    }
+
+    private void initComponents() {
+        add(buildHeader(), BorderLayout.NORTH);
+        add(buildTableArea(), BorderLayout.CENTER);
+    }
+
+    // --- UI Assembly ---
+
     private JPanel buildHeader() {
-        JPanel header = new JPanel(new BorderLayout(0, 0));
+        JPanel header = new JPanel(new BorderLayout());
         header.setBackground(AppTheme.BG_SURFACE);
-        header.setBorder(BorderFactory.createCompoundBorder(
-            AppTheme.BORDER_DIVIDER,
-            BorderFactory.createEmptyBorder(0, 0, 0, 0)));
+        header.setBorder(AppTheme.BORDER_DIVIDER);
 
-        header.add(buildTitleRow(),   BorderLayout.NORTH);
+        header.add(buildTitleRow(), BorderLayout.NORTH);
         header.add(buildControlRow(), BorderLayout.SOUTH);
-
         return header;
     }
 
@@ -104,11 +80,10 @@ public class GroceryListPanel extends JPanel {
         titleStack.setBackground(AppTheme.BG_SURFACE);
 
         JLabel title = AppTheme.titleLabel("Grocery List");
-        title.setAlignmentX(Component.LEFT_ALIGNMENT);
+        title.setAlignmentX(LEFT_ALIGNMENT);
 
-        summaryLabel = AppTheme.subtitleLabel(
-            "Select a date range and click Generate List");
-        summaryLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        summaryLabel = AppTheme.subtitleLabel("Select a date range and click Generate List");
+        summaryLabel.setAlignmentX(LEFT_ALIGNMENT);
 
         titleStack.add(title);
         titleStack.add(Box.createVerticalStrut(2));
@@ -121,311 +96,192 @@ public class GroceryListPanel extends JPanel {
     private JPanel buildControlRow() {
         JPanel row = new JPanel(new BorderLayout(12, 0));
         row.setBackground(AppTheme.BG_SURFACE);
-        row.setBorder(BorderFactory.createCompoundBorder(
-            AppTheme.BORDER_DIVIDER,
-            BorderFactory.createEmptyBorder(10, 20, 12, 20)));
+        row.setBorder(new javax.swing.border.CompoundBorder(
+                AppTheme.BORDER_DIVIDER,
+                BorderFactory.createEmptyBorder(10, 20, 12, 20)));
 
-        // ── Left: date range pickers + Generate button ─────────────────────
+        // Left Actions
         JPanel leftGroup = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-        leftGroup.setBackground(AppTheme.BG_SURFACE);
+        leftGroup.setOpaque(false);
 
-        // Default to current Monday–Sunday
-        LocalDate monday = LocalDate.now()
-            .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        LocalDate sunday = monday.plusDays(6);
-
+        LocalDate monday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         fromSpinner = buildDateSpinner(monday);
-        toSpinner   = buildDateSpinner(sunday);
-
-        JLabel fromLabel = new JLabel("From");
-        fromLabel.setFont(AppTheme.FONT_LABEL);
-        fromLabel.setForeground(AppTheme.TEXT_SECONDARY);
-
-        JLabel toLabel = new JLabel("To");
-        toLabel.setFont(AppTheme.FONT_LABEL);
-        toLabel.setForeground(AppTheme.TEXT_SECONDARY);
+        toSpinner = buildDateSpinner(monday.plusDays(6));
 
         JButton generateBtn = AppTheme.primaryButton("Generate List");
-        generateBtn.addActionListener(e -> generateGroceryList());
+        generateBtn.addActionListener(e -> executeGeneration());
 
-        leftGroup.add(fromLabel);
+        leftGroup.add(new JLabel("From") {{ setFont(AppTheme.FONT_LABEL); setForeground(AppTheme.TEXT_SECONDARY); }});
         leftGroup.add(fromSpinner);
-        leftGroup.add(toLabel);
+        leftGroup.add(new JLabel("To") {{ setFont(AppTheme.FONT_LABEL); setForeground(AppTheme.TEXT_SECONDARY); }});
         leftGroup.add(toSpinner);
         leftGroup.add(generateBtn);
 
-        // ── Right: Export CSV + Print ─────────────────────────────────────
-        JPanel rightGroup = new JPanel(new FlowLayout(
-            FlowLayout.RIGHT, 8, 0));
-        rightGroup.setBackground(AppTheme.BG_SURFACE);
+        // Right Actions
+        JPanel rightGroup = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        rightGroup.setOpaque(false);
 
         exportBtn = AppTheme.secondaryButton("Export CSV");
-        printBtn  = AppTheme.secondaryButton("Print");
-
-        // Disabled until a list has been generated
+        printBtn = AppTheme.secondaryButton("Print");
         exportBtn.setEnabled(false);
         printBtn.setEnabled(false);
 
         exportBtn.addActionListener(e -> exportToCsv());
-        printBtn.addActionListener( e -> printTable());
+        printBtn.addActionListener(e -> printTable());
 
         rightGroup.add(exportBtn);
         rightGroup.add(printBtn);
 
-        row.add(leftGroup,  BorderLayout.WEST);
+        row.add(leftGroup, BorderLayout.WEST);
         row.add(rightGroup, BorderLayout.EAST);
-
         return row;
     }
 
-    // ── Styled date spinner ───────────────────────────────────────────────
-    private JSpinner buildDateSpinner(LocalDate initial) {
-        // Convert LocalDate → java.util.Date for SpinnerDateModel
-        Date date = Date.from(initial
-            .atStartOfDay(ZoneId.systemDefault()).toInstant());
-
-        SpinnerDateModel model = new SpinnerDateModel(
-            date, null, null, java.util.Calendar.DAY_OF_MONTH);
-
-        JSpinner spinner = new JSpinner(model);
-        spinner.setEditor(new JSpinner.DateEditor(spinner, DATE_FORMAT));
-        spinner.setFont(AppTheme.FONT_BODY);
-        spinner.setPreferredSize(new Dimension(130, 32));
-
-        return spinner;
-    }
-
-    // ── Helper: read LocalDate from a date spinner ────────────────────────
-    private LocalDate spinnerToLocalDate(JSpinner spinner) {
-        Date date = (Date) spinner.getValue();
-        return date.toInstant()
-            .atZone(ZoneId.systemDefault())
-            .toLocalDate();
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    //  TABLE
-    // ══════════════════════════════════════════════════════════════════════
-
-    private JScrollPane buildTable() {
-        tableModel = new DefaultTableModel(
-            new String[]{"Ingredient", "Quantity", "Unit"}, 0) {
-            @Override
-            public boolean isCellEditable(int row, int col) {
-                return false;
-            }
+    private JScrollPane buildTableArea() {
+        tableModel = new DefaultTableModel(new String[]{"Ingredient", "Quantity", "Unit"}, 0) {
+            @Override public boolean isCellEditable(int row, int col) { return false; }
         };
 
         table = new JTable(tableModel);
         AppTheme.styleTable(table);
 
-        // Column widths
-        table.getColumnModel().getColumn(COL_NAME)
-            .setPreferredWidth(320);
-        table.getColumnModel().getColumn(COL_QUANTITY)
-            .setPreferredWidth(120);
-        table.getColumnModel().getColumn(COL_UNIT)
-            .setPreferredWidth(120);
-
-        // Alternating rows
-        table.setDefaultRenderer(Object.class,
-            AppTheme.alternatingRowRenderer());
+        table.getColumnModel().getColumn(COL_NAME).setPreferredWidth(320);
+        table.getColumnModel().getColumn(COL_QUANTITY).setPreferredWidth(120);
+        table.getColumnModel().getColumn(COL_UNIT).setPreferredWidth(120);
+        table.setDefaultRenderer(Object.class, AppTheme.alternatingRowRenderer());
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createEmptyBorder());
         scroll.getViewport().setBackground(AppTheme.BG_SURFACE);
-
         return scroll;
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  GENERATE — SwingWorker keeps EDT responsive
-    // ══════════════════════════════════════════════════════════════════════
+    // --- Logic & SwingWorker ---
 
-    private void generateGroceryList() {
+    private void executeGeneration() {
         LocalDate from = spinnerToLocalDate(fromSpinner);
-        LocalDate to   = spinnerToLocalDate(toSpinner);
+        LocalDate to = spinnerToLocalDate(toSpinner);
 
         if (from.isAfter(to)) {
-            JOptionPane.showMessageDialog(this,
-                "Start date must be before or equal to end date.",
-                "Invalid Date Range",
-                JOptionPane.WARNING_MESSAGE);
+            showWarning("Start date must be before or equal to end date.", "Invalid Date Range");
             return;
         }
 
-        // Reset UI state while loading
-        tableModel.setRowCount(0);
-        exportBtn.setEnabled(false);
-        printBtn.setEnabled(false);
-
+        resetUI();
         int userId = frame.getCurrentUserId();
 
         new SwingWorker<List<RecipeIngredient>, Void>() {
-
             @Override
-            protected List<RecipeIngredient> doInBackground()
-                    throws SQLException {
+            protected List<RecipeIngredient> doInBackground() throws SQLException {
                 return groceryService.getGroceryList(userId, from, to);
             }
 
             @Override
             protected void done() {
                 try {
-                    List<RecipeIngredient> items = get();
-
-                    // Populate table
-                    tableModel.setRowCount(0);
-                    for (RecipeIngredient item : items) {
-                        tableModel.addRow(new Object[]{
-                            capitalize(item.getIngredientName()),
-                            formatQty(item.getQuantity()),
-                            item.getUnit()
-                        });
-                    }
-
-                    // Update summary label
-                    updateSummary(userId, from, to, items.size());
-
-                    // Enable export + print only if list is non-empty
-                    boolean hasItems = !items.isEmpty();
-                    exportBtn.setEnabled(hasItems);
-                    printBtn.setEnabled(hasItems);
-
+                    updateTable(get());
+                    updateSummary(userId, from, to, tableModel.getRowCount());
                 } catch (InterruptedException | ExecutionException ex) {
                     summaryLabel.setText("Failed to generate list.");
-                    JOptionPane.showMessageDialog(
-                        GroceryListPanel.this,
-                        "Failed to load grocery list: " + ex.getMessage(),
-                        "Database Error",
-                        JOptionPane.ERROR_MESSAGE);
+                    showError("Failed to load grocery list: " + ex.getMessage(), "Database Error");
                 }
             }
         }.execute();
     }
 
-    // Updates summary label after generation ────────────────────────────
-    private void updateSummary(int userId,
-                                LocalDate from,
-                                LocalDate to,
-                                int itemCount) {
+    private void updateTable(List<RecipeIngredient> items) {
+        tableModel.setRowCount(0);
+        for (RecipeIngredient item : items) {
+            tableModel.addRow(new Object[]{
+                capitalize(item.getIngredientName()),
+                formatQty(item.getQuantity()),
+                item.getUnit()
+            });
+        }
+        boolean hasItems = !items.isEmpty();
+        exportBtn.setEnabled(hasItems);
+        printBtn.setEnabled(hasItems);
+    }
+
+    private void updateSummary(int userId, LocalDate from, LocalDate to, int itemCount) {
         try {
-            summaryLabel.setText(
-                groceryService.getSummary(userId, from, to));
+            summaryLabel.setText(groceryService.getSummary(userId, from, to));
         } catch (SQLException e) {
-            // Fallback — build summary from item count directly
-            if (itemCount == 0) {
-                summaryLabel.setText(
-                    "Pantry covers all planned meals");
-            } else {
-                DateTimeFormatter fmt =
-                    DateTimeFormatter.ofPattern("MMM d");
-                summaryLabel.setText(
-                    itemCount + " item"
-                    + (itemCount == 1 ? "" : "s")
-                    + " needed for "
-                    + from.format(fmt)
-                    + (from.equals(to)
-                        ? "" : " – " + to.format(fmt)));
-            }
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("MMM d");
+            String countTxt = itemCount + " item" + (itemCount == 1 ? "" : "s");
+            String rangeTxt = from.format(fmt) + (from.equals(to) ? "" : " – " + to.format(fmt));
+            summaryLabel.setText(itemCount == 0 ? "Pantry covers all planned meals" : countTxt + " needed for " + rangeTxt);
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  EXPORT CSV
-    // ══════════════════════════════════════════════════════════════════════
+    // --- IO & Utils ---
 
     private void exportToCsv() {
         LocalDate from = spinnerToLocalDate(fromSpinner);
-        LocalDate to   = spinnerToLocalDate(toSpinner);
-
-        // Suggest a filename using the from date
-        String suggestedName = "grocery_list_"
-            + from.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-            + ".csv";
+        String suggestedName = "grocery_list_" + from.format(DateTimeFormatter.ISO_LOCAL_DATE) + ".csv";
 
         JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Save Grocery List");
         chooser.setSelectedFile(new File(suggestedName));
 
-        int choice = chooser.showSaveDialog(this);
-        if (choice != JFileChooser.APPROVE_OPTION) return;
+        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File file = chooser.getSelectedFile();
+            if (!file.getName().toLowerCase().endsWith(".csv")) {
+                file = new File(file.getAbsolutePath() + ".csv");
+            }
 
-        File outputFile = chooser.getSelectedFile();
-
-        // Ensure .csv extension
-        if (!outputFile.getName().toLowerCase().endsWith(".csv")) {
-            outputFile = new File(outputFile.getAbsolutePath() + ".csv");
-        }
-
-        CsvExportService.ExportResult result =
-            csvService.exportGroceryList(
-                frame.getCurrentUserId(), from, to, outputFile);
-
-        if (result.isSuccess()) {
-            JOptionPane.showMessageDialog(this,
-                result.getMessage()
-                + "\n\nSaved to: " + outputFile.getAbsolutePath(),
-                "Export Complete",
-                JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(this,
-                result.getMessage(),
-                "Export Failed",
-                JOptionPane.ERROR_MESSAGE);
+            CsvExportService.ExportResult result = csvService.exportGroceryList(frame.getCurrentUserId(), from, spinnerToLocalDate(toSpinner), file);
+            if (result.isSuccess()) {
+                showInfo(result.getMessage() + "\n\nSaved to: " + file.getAbsolutePath(), "Export Complete");
+            } else {
+                showError(result.getMessage(), "Export Failed");
+            }
         }
     }
-
-    // ══════════════════════════════════════════════════════════════════════
-    //  PRINT
-    // ══════════════════════════════════════════════════════════════════════
 
     private void printTable() {
         try {
-            boolean printed = table.print(
-                JTable.PrintMode.FIT_WIDTH,
-                new MessageFormat("Grocery List"),
-                new MessageFormat("Page {0}"));
-
-            if (printed) {
-                JOptionPane.showMessageDialog(this,
-                    "Grocery list sent to printer.",
-                    "Print Complete",
-                    JOptionPane.INFORMATION_MESSAGE);
-            }
+            boolean printed = table.print(JTable.PrintMode.FIT_WIDTH, new MessageFormat("Grocery List"), new MessageFormat("Page {0}"));
+            if (printed) showInfo("Grocery list sent to printer.", "Print Complete");
         } catch (PrinterException e) {
-            JOptionPane.showMessageDialog(this,
-                "Failed to print: " + e.getMessage(),
-                "Print Error",
-                JOptionPane.ERROR_MESSAGE);
+            showError("Failed to print: " + e.getMessage(), "Print Error");
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  AUTO-REFRESH ON SHOW
-    // ══════════════════════════════════════════════════════════════════════
+    private JSpinner buildDateSpinner(LocalDate initial) {
+        Date date = Date.from(initial.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        SpinnerDateModel model = new SpinnerDateModel(date, null, null, Calendar.DAY_OF_MONTH);
+        JSpinner spinner = new JSpinner(model);
+        spinner.setEditor(new JSpinner.DateEditor(spinner, DATE_FORMAT));
+        spinner.setFont(AppTheme.FONT_BODY);
+        spinner.setPreferredSize(new Dimension(130, 32));
+        return spinner;
+    }
+
+    private LocalDate spinnerToLocalDate(JSpinner spinner) {
+        return ((Date) spinner.getValue()).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    }
+
+    private void resetUI() {
+        tableModel.setRowCount(0);
+        exportBtn.setEnabled(false);
+        printBtn.setEnabled(false);
+    }
+
+    private String capitalize(String s) {
+        return (s == null || s.isEmpty()) ? s : Character.toUpperCase(s.charAt(0)) + s.substring(1);
+    }
+
+    private String formatQty(double qty) {
+        return (qty == Math.floor(qty)) ? String.valueOf((int) qty) : String.valueOf(qty);
+    }
+
+    private void showWarning(String msg, String title) { JOptionPane.showMessageDialog(this, msg, title, JOptionPane.WARNING_MESSAGE); }
+    private void showInfo(String msg, String title) { JOptionPane.showMessageDialog(this, msg, title, JOptionPane.INFORMATION_MESSAGE); }
+    private void showError(String msg, String title) { JOptionPane.showMessageDialog(this, msg, title, JOptionPane.ERROR_MESSAGE); }
 
     @Override
     public void setVisible(boolean visible) {
         super.setVisible(visible);
-        // Auto-generate for current week when panel becomes visible
-        if (visible && frame.getCurrentUserId() != -1) {
-            generateGroceryList();
-        }
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    //  HELPERS
-    // ══════════════════════════════════════════════════════════════════════
-
-    private String capitalize(String s) {
-        if (s == null || s.isEmpty()) return s;
-        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
-    }
-
-    private String formatQty(double qty) {
-        return (qty == Math.floor(qty))
-            ? String.valueOf((int) qty)
-            : String.valueOf(qty);
+        if (visible && frame.getCurrentUserId() != -1) executeGeneration();
     }
 }
