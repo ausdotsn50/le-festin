@@ -1,23 +1,47 @@
 package com.lefestin.ui.panels;
 
-import java.awt.*;
-import java.awt.datatransfer.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
-import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.SwingConstants;
+import javax.swing.TransferHandler;
 import javax.swing.border.CompoundBorder;
 
-import com.lefestin.dao.*;
+import com.lefestin.dao.MealEntryDAO;
+import com.lefestin.dao.RecipeDAO;
 import com.lefestin.helper.Helper;
-import com.lefestin.model.*;
+import com.lefestin.model.MealEntry;
+import com.lefestin.model.Recipe;
 import com.lefestin.service.CsvExportService;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
@@ -239,7 +263,14 @@ public class WeeklyPlannerPanel extends JPanel {
 
         renderSlots();
         updateWeekRangeLabel();
-        if (exportBtn != null) exportBtn.setEnabled(weekEntries.values().stream().anyMatch(Objects::nonNull));
+        updateExportButtonState();
+    }
+
+    private void updateExportButtonState() {
+        if (exportBtn != null) {
+            boolean hasRecipes = weekEntries.values().stream().anyMatch(Objects::nonNull);
+            exportBtn.setEnabled(hasRecipes);
+        }
     }
 
     private void renderSlots() {
@@ -292,6 +323,7 @@ public class WeeklyPlannerPanel extends JPanel {
                 mealEntryDAO.addEntry(newEntry);
                 weekEntries.put(Helper.slotKey(day, mealType), newEntry);
                 renderSlots();
+                updateExportButtonState();
             } catch (SQLException e) {
                 showError("Failed to assign recipe", e);
             }
@@ -305,6 +337,7 @@ public class WeeklyPlannerPanel extends JPanel {
                 mealEntryDAO.deleteEntry(frame.getCurrentUserId(), day, mealType);
                 weekEntries.remove(Helper.slotKey(day, mealType));
                 renderSlots();
+                updateExportButtonState();
             } catch (SQLException e) {
                 showError("Failed to clear slot", e);
             }
@@ -318,6 +351,7 @@ public class WeeklyPlannerPanel extends JPanel {
                 mealEntryDAO.clearWeek(frame.getCurrentUserId(), weekStart, weekStart.plusDays(6));
                 weekEntries.clear();
                 renderSlots();
+                updateExportButtonState();
             } catch (SQLException e) {
                 showError("Failed to clear week", e);
             }
@@ -331,6 +365,7 @@ public class WeeklyPlannerPanel extends JPanel {
         try {
             int created = autoFillEmptyWeekSlots();
             renderSlots();
+            updateExportButtonState();
             String resultMsg = created == 0 ? "No empty slots to fill for this week." : "Added " + created + " meal" + (created == 1 ? "" : "s") + " to this week.";
             JOptionPane.showMessageDialog(this, resultMsg, "Auto-Generate", JOptionPane.INFORMATION_MESSAGE);
         } catch (SQLException e) {
