@@ -36,19 +36,14 @@ public class PantryPanel extends BaseListPanel {
     }
 
     // --- Header Configuration ---
-
     @Override
     protected String getHeaderTitle() { return "My Pantry"; }
-
     @Override
     protected String getHeaderDescription() { return "Ingredients you currently have at home"; }
-
     @Override
     protected String getSearchPlaceholder() { return "Search ingredients..."; }
-
     @Override
     protected JComponent buildHeaderRightControl() { return Box.createHorizontalBox(); }
-
     @Override
     protected JComponent buildSearchRightControl() {
         JButton matchBtn = AppTheme.primaryButton("Match Recipes");
@@ -58,7 +53,6 @@ public class PantryPanel extends BaseListPanel {
     }
 
     // --- UI Structure ---
-
     @Override
     protected JComponent buildTableContent() { return buildTable(); }
 
@@ -98,7 +92,6 @@ public class PantryPanel extends BaseListPanel {
     protected void onActionClicked() { removeSelectedItem(); }
 
     // --- Table Construction ---
-
     private JScrollPane buildTable() {
         searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             public void insertUpdate(javax.swing.event.DocumentEvent e) { applyFilters(); }

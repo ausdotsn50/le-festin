@@ -132,6 +132,14 @@ public class AppTheme {
     public static final Font FONT_CARD_TITLE    =
         new Font("SansSerif", Font.BOLD, 15);
 
+    /** Nav button label — sidebar navigation items */
+    public static final Font FONT_NAV_LABEL     =
+        new Font("SansSerif", Font.PLAIN, 12);
+
+    /** Nav icon emoji font — sidebar navigation icons */
+    public static final Font FONT_NAV_ICON      =
+        new Font("Segoe UI Emoji", Font.PLAIN, 24);
+
     
     //  BORDERS
     /** Standard divider line — bottom of header, toolbar */

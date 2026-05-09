@@ -118,12 +118,10 @@ public class MainFrame extends JFrame {
         JButton btn = new JButton("Not logged in");
         btn.setForeground(AppTheme.HEADER_FG_MUTED);
         btn.setFont(AppTheme.FONT_SMALL);
-        btn.setBackground(AppTheme.HEADER_BG);
         btn.setBorderPainted(false);
         btn.setContentAreaFilled(false);
         btn.setFocusPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-
         btn.addActionListener(e -> showUserMenu(btn));
 
         return btn;
@@ -133,6 +131,8 @@ public class MainFrame extends JFrame {
         JPopupMenu menu = new JPopupMenu();
 
         JMenuItem logoutItem = new JMenuItem("Logout");
+        logoutItem.setForeground(AppTheme.COLOR_BLACK);
+        logoutItem.setFont(AppTheme.FONT_SMALL);
         logoutItem.addActionListener(e -> performLogout());
         menu.add(logoutItem);
 
@@ -188,8 +188,7 @@ public class MainFrame extends JFrame {
         btn.setFocusPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         
-        // Derived a slightly smaller font size so it fits neatly under the icon
-        btn.setFont(AppTheme.FONT_BODY.deriveFont(12f)); 
+        btn.setFont(AppTheme.FONT_NAV_LABEL); 
         
         btn.setBackground(AppTheme.SIDEBAR_BG);
         btn.setForeground(AppTheme.TEXT_PRIMARY);
@@ -346,7 +345,7 @@ public class MainFrame extends JFrame {
                 // Cart
             }
 
-            g2.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 24)); // Universally supported icon font
+            g2.setFont(AppTheme.FONT_NAV_ICON);
             g2.setColor(c.getForeground()); // This guarantees the icon turns active when the button does!
             
             FontMetrics fm = g2.getFontMetrics();
