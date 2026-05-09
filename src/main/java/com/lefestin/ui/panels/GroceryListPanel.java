@@ -215,7 +215,6 @@ public class GroceryListPanel extends JPanel {
     }
 
     // --- IO & Utils ---
-
     private void exportToCsv() {
         LocalDate from = spinnerToLocalDate(fromSpinner);
         String suggestedName = "grocery_list_" + from.format(DateTimeFormatter.ISO_LOCAL_DATE) + ".csv";
