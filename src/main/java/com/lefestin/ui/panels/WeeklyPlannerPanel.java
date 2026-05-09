@@ -357,7 +357,10 @@ public class WeeklyPlannerPanel extends JPanel {
 
         try {
             int created = autoFillEmptyWeekSlots();
-            renderSlots();
+            
+            renderSlots(); // Bugfix on fail enable of Auto Generate Week
+            if (exportBtn != null) exportBtn.setEnabled(weekEntries.values().stream().anyMatch(Objects::nonNull));
+
             String resultMsg = created == 0 ? "No empty slots to fill for this week." : "Added " + created + " meal" + (created == 1 ? "" : "s") + " to this week.";
             JOptionPane.showMessageDialog(this, resultMsg, "Auto-Generate", JOptionPane.INFORMATION_MESSAGE);
         } catch (SQLException e) {
