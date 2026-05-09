@@ -11,6 +11,9 @@ import java.util.Map;
 import com.lefestin.dao.MealEntryDAO;
 import com.lefestin.dao.PantryDAO;
 import com.lefestin.dao.RecipeIngredientDAO;
+import com.lefestin.dao.impl.MealEntryDAOImpl;
+import com.lefestin.dao.impl.PantryDAOImpl;
+import com.lefestin.dao.impl.RecipeIngredientDAOImpl;
 import com.lefestin.model.MealEntry;
 import com.lefestin.model.PantryItem;
 import com.lefestin.model.RecipeIngredient;
@@ -38,15 +41,15 @@ import com.lefestin.model.RecipeIngredient;
  */
 public class GroceryListService {
 
-    private final MealEntryDAO        mealEntryDAO;
-    private final RecipeIngredientDAO riDAO;
-    private final PantryDAO           pantryDAO;
+    private final MealEntryDAOImpl        mealEntryDAO;
+    private final RecipeIngredientDAOImpl riDAO;
+    private final PantryDAOImpl           pantryDAO;
 
     // ── Constructor ───────────────────────────────────────────────────────
     public GroceryListService() {
-        this.mealEntryDAO = new MealEntryDAO();
-        this.riDAO        = new RecipeIngredientDAO();
-        this.pantryDAO    = new PantryDAO();
+        this.mealEntryDAO = new MealEntryDAOImpl();
+        this.riDAO        = new RecipeIngredientDAOImpl();
+        this.pantryDAO    = new PantryDAOImpl();
     }
 
     // ══════════════════════════════════════════════════════════════════════

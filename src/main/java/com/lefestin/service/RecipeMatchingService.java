@@ -9,6 +9,9 @@ import java.util.Map;
 import com.lefestin.dao.PantryDAO;
 import com.lefestin.dao.RecipeDAO;
 import com.lefestin.dao.RecipeIngredientDAO;
+import com.lefestin.dao.impl.PantryDAOImpl;
+import com.lefestin.dao.impl.RecipeDAOImpl;
+import com.lefestin.dao.impl.RecipeIngredientDAOImpl;
 import com.lefestin.model.PantryItem;
 import com.lefestin.model.Recipe;
 import com.lefestin.model.RecipeIngredient;
@@ -38,15 +41,15 @@ import com.lefestin.model.RecipeMatchResult;
  */
 public class RecipeMatchingService {
 
-    private final PantryDAO           pantryDAO;
-    private final RecipeDAO           recipeDAO;
-    private final RecipeIngredientDAO riDAO;
+    private final PantryDAOImpl           pantryDAO;
+    private final RecipeDAOImpl           recipeDAO;
+    private final RecipeIngredientDAOImpl riDAO;
 
     // ── Constructor ───────────────────────────────────────────────────────
     public RecipeMatchingService() {
-        this.pantryDAO = new PantryDAO();
-        this.recipeDAO = new RecipeDAO();
-        this.riDAO     = new RecipeIngredientDAO();
+        this.pantryDAO = new PantryDAOImpl();
+        this.recipeDAO = new RecipeDAOImpl();
+        this.riDAO     = new RecipeIngredientDAOImpl();
     }
 
     // ══════════════════════════════════════════════════════════════════════

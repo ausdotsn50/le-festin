@@ -6,11 +6,11 @@
 -- ============================================================
 
 -- ── Database ──────────────────────────────────────────────
-CREATE DATABASE IF NOT EXISTS la_festin
+CREATE DATABASE IF NOT EXISTS le_festin
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 
-USE la_festin;
+USE le_festin;
 
 -- ── Safety: drop in reverse dependency order ──────────────
 -- Child tables first, parent tables last.
@@ -28,6 +28,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 --  TABLE 1: user
 --  No dependencies — created first.
 -- ============================================================
+-- Enforcing unique usernames
 CREATE TABLE user (
     user_id       INT          NOT NULL AUTO_INCREMENT,
     username      VARCHAR(50)  NOT NULL,
@@ -41,6 +42,10 @@ CREATE TABLE user (
 --  TABLE 2: ingredient
 --  No dependencies — created alongside user.
 -- ============================================================
+-- Enforcing unique ingredient names such that it does not get added to the DB if
+-- there is an existing one
+
+-- 
 CREATE TABLE ingredient (
     ingredient_id INT          NOT NULL AUTO_INCREMENT,
     name          VARCHAR(100) NOT NULL,
@@ -163,4 +168,4 @@ CREATE INDEX idx_me_user_date ON meal_entry       (user_id, scheduled_date);
 -- ============================================================
 --  DONE
 -- ============================================================
-SELECT 'la_festin schema created successfully.' AS status;
+SELECT 'le_festin schema created successfully.' AS status;

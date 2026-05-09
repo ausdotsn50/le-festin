@@ -37,8 +37,8 @@ import javax.swing.SwingConstants;
 import javax.swing.TransferHandler;
 import javax.swing.border.CompoundBorder;
 
-import com.lefestin.dao.MealEntryDAO;
-import com.lefestin.dao.RecipeDAO;
+import com.lefestin.dao.impl.MealEntryDAOImpl;
+import com.lefestin.dao.impl.RecipeDAOImpl;
 import com.lefestin.helper.Helper;
 import com.lefestin.model.MealEntry;
 import com.lefestin.model.Recipe;
@@ -52,8 +52,8 @@ import com.lefestin.ui.dialogs.AssignRecipeDialog;
  */
 public class WeeklyPlannerPanel extends JPanel {
     private final MainFrame frame;
-    private final MealEntryDAO mealEntryDAO = new MealEntryDAO();
-    private final RecipeDAO recipeDAO = new RecipeDAO();
+    private final MealEntryDAOImpl mealEntryDAO = new MealEntryDAOImpl();
+    private final RecipeDAOImpl recipeDAO = new RecipeDAOImpl();
     private final CsvExportService csvService = new CsvExportService();
 
     private LocalDate weekStart;
@@ -144,8 +144,14 @@ public class WeeklyPlannerPanel extends JPanel {
 
     private JPanel buildGridWrapper() {
         gridPanel = new JPanel(new GridLayout(4, 7, 1, 1));
+        gridPanel.setBackground(AppTheme.GRID_GAP);
+        gridPanel.setBorder(BorderFactory.createLineBorder(
+            AppTheme.GRID_GAP, 1));
+
+        /*
         gridPanel.setBackground(new Color(200, 200, 200));
         gridPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
+ */     
 
         rebuildGridCells();
 
@@ -193,19 +199,22 @@ public class WeeklyPlannerPanel extends JPanel {
         dayName.setFont(AppTheme.FONT_TINY);
         dayName.setForeground(isToday ? AppTheme.AMBER_PRIMARY : AppTheme.TEXT_MUTED);
 
+        // change
         JLabel dayDate = new JLabel(day.format(DAY_DATE_FMT));
-        dayDate.setFont(AppTheme.FONT_BODY);
-        dayDate.setForeground(isToday ? AppTheme.AMBER_PRIMARY : AppTheme.TEXT_PRIMARY);
+        dayDate.setFont(AppTheme.FONT_DAY_DATE);
+        dayDate.setForeground(isToday
+            ? AppTheme.AMBER_PRIMARY
+            : AppTheme.TEXT_PRIMARY);
 
         cell.add(dayName);
         cell.add(Box.createVerticalStrut(isToday ? 2 : 4));
         cell.add(dayDate);
-
+        
+        /* use default styling for the dates -- highlight color would suffice */
         if (isToday) {
             JLabel badge = new JLabel("Today");
             badge.setFont(AppTheme.FONT_TINY);
             badge.setForeground(AppTheme.AMBER_PRIMARY);
-            badge.setAlignmentX(CENTER_ALIGNMENT);
             cell.add(Box.createVerticalStrut(2));
             cell.add(badge);
         }
@@ -242,6 +251,18 @@ public class WeeklyPlannerPanel extends JPanel {
         btn.add(recipeLabel, BorderLayout.CENTER);
 
         btn.addMouseListener(new MouseAdapter() {
+// clean
+            /*
+            @Override
+            public void mouseExited(MouseEvent e) {
+                btn.setBackground(AppTheme.CELL_HOVER);
+            }
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                weekEntries.get(Helper.slotKey(day, mealType));
+                btn.setBackground(AppTheme.SELECTION_BG);
+            }
+ */
             @Override public void mouseEntered(MouseEvent e) { btn.setBackground(AppTheme.SELECTION_BG); }
             @Override public void mouseExited(MouseEvent e) { renderSingleSlot(key); }
         });
@@ -267,10 +288,7 @@ public class WeeklyPlannerPanel extends JPanel {
     }
 
     private void updateExportButtonState() {
-        if (exportBtn != null) {
-            boolean hasRecipes = weekEntries.values().stream().anyMatch(Objects::nonNull);
-            exportBtn.setEnabled(hasRecipes);
-        }
+        if (exportBtn != null) exportBtn.setEnabled(weekEntries.values().stream().anyMatch(Objects::nonNull));
     }
 
     private void renderSlots() {
@@ -364,6 +382,7 @@ public class WeeklyPlannerPanel extends JPanel {
 
         try {
             int created = autoFillEmptyWeekSlots();
+
             renderSlots();
             updateExportButtonState();
             String resultMsg = created == 0 ? "No empty slots to fill for this week." : "Added " + created + " meal" + (created == 1 ? "" : "s") + " to this week.";

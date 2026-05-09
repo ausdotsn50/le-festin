@@ -4,7 +4,7 @@ import java.sql.SQLException;
 
 import org.mindrot.jbcrypt.BCrypt;
 
-import com.lefestin.dao.UserDAO;
+import com.lefestin.dao.impl.UserDAOImpl;
 import com.lefestin.model.User;
 
 /**
@@ -57,10 +57,10 @@ public class AuthService {
         public boolean isSuccess()  { return success; }
     }
 
-    private final UserDAO userDAO;
+    private final UserDAOImpl userDAO;
 
     public AuthService() {
-        this.userDAO = new UserDAO();
+        this.userDAO = new UserDAOImpl();
     }
 
     /**

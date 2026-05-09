@@ -4,6 +4,8 @@ import javax.swing.*;
 
 import com.lefestin.dao.IngredientDAO;
 import com.lefestin.dao.PantryDAO;
+import com.lefestin.dao.impl.IngredientDAOImpl;
+import com.lefestin.dao.impl.PantryDAOImpl;
 import com.lefestin.helper.Helper;
 import com.lefestin.model.Ingredient;
 import com.lefestin.model.PantryItem;
@@ -21,8 +23,8 @@ public class AddEditIngredientDialog extends JDialog {
 
     private final MainFrame     frame;
     private final PantryItem    existingItem; // null = add mode
-    private final PantryDAO     pantryDAO;
-    private final IngredientDAO ingredientDAO;
+    private final PantryDAOImpl     pantryDAO;
+    private final IngredientDAOImpl ingredientDAO;
 
     private boolean saved = false;
 
@@ -37,8 +39,8 @@ public class AddEditIngredientDialog extends JDialog {
 
         this.frame        = frame;
         this.existingItem = item;
-        this.pantryDAO    = new PantryDAO();
-        this.ingredientDAO= new IngredientDAO();
+        this.pantryDAO    = new PantryDAOImpl();
+        this.ingredientDAO= new IngredientDAOImpl();
 
         initComponents();
         prefillIfEditing();

@@ -10,6 +10,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 
 import com.lefestin.dao.PantryDAO;
+import com.lefestin.dao.impl.PantryDAOImpl;
 import com.lefestin.model.PantryItem;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
@@ -20,7 +21,7 @@ import com.lefestin.ui.dialogs.AddEditIngredientDialog;
  */
 public class PantryPanel extends BaseListPanel {
 
-    private final PantryDAO pantryDAO;
+    private final PantryDAOImpl pantryDAO;
     private JTable table;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
@@ -32,23 +33,18 @@ public class PantryPanel extends BaseListPanel {
 
     public PantryPanel(MainFrame frame) {
         super(frame);
-        this.pantryDAO = new PantryDAO();
+        this.pantryDAO = new PantryDAOImpl();
     }
 
     // --- Header Configuration ---
-
     @Override
     protected String getHeaderTitle() { return "My Pantry"; }
-
     @Override
     protected String getHeaderDescription() { return "Ingredients you currently have at home"; }
-
     @Override
     protected String getSearchPlaceholder() { return "Search ingredients..."; }
-
     @Override
     protected JComponent buildHeaderRightControl() { return Box.createHorizontalBox(); }
-
     @Override
     protected JComponent buildSearchRightControl() {
         JButton matchBtn = AppTheme.primaryButton("Match Recipes");
@@ -58,12 +54,18 @@ public class PantryPanel extends BaseListPanel {
     }
 
     // --- UI Structure ---
-
     @Override
     protected JComponent buildTableContent() { return buildTable(); }
 
     @Override
-    protected JPanel buildToolbar() { return buildStandardToolbar(); }
+    protected JPanel buildToolbar() {
+        JPanel bar = buildStandardToolbar();
+        bar.setBorder(BorderFactory.createCompoundBorder(
+            AppTheme.BORDER_DIVIDER_TOP,
+            BorderFactory.createEmptyBorder(10, 20, 10, 20)
+        ));
+        return bar;
+    }
 
     @Override
     protected JButton createActionButton() { return AppTheme.dangerButton("Remove"); }
@@ -91,7 +93,6 @@ public class PantryPanel extends BaseListPanel {
     protected void onActionClicked() { removeSelectedItem(); }
 
     // --- Table Construction ---
-
     private JScrollPane buildTable() {
         searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             public void insertUpdate(javax.swing.event.DocumentEvent e) { applyFilters(); }
@@ -123,7 +124,7 @@ public class PantryPanel extends BaseListPanel {
         });
 
         JScrollPane scroll = new JScrollPane(table);
-        scroll.setBorder(BorderFactory.createEmptyBorder());
+        scroll.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
         scroll.getViewport().setBackground(AppTheme.BG_SURFACE);
         return scroll;
     }

@@ -112,7 +112,7 @@ public class LoginDialog extends JDialog {
         header.setBorder(BorderFactory.createEmptyBorder(28, 0, 24, 0));
 
         JLabel appName = new JLabel("Le Festin", SwingConstants.CENTER);
-        appName.setFont(new Font("Serif", Font.BOLD, 28));
+        appName.setFont(AppTheme.FONT_DISPLAY_LARGE);
         appName.setForeground(AppTheme.HEADER_FG);
         appName.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -461,7 +461,7 @@ public class LoginDialog extends JDialog {
     private JButton buildLinkButton(String text) {
         JButton btn = new JButton(text);
         btn.setFont(AppTheme.FONT_SMALL);
-        btn.setForeground(AppTheme.GREEN_PRIMARY);
+        btn.setForeground(AppTheme.SECONDARY_ACCENT);
         btn.setBackground(AppTheme.BG_PAGE);
         btn.setBorderPainted(false);
         btn.setContentAreaFilled(false);

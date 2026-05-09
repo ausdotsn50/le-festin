@@ -6,8 +6,8 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.border.*;
 
-import com.lefestin.dao.RecipeDAO;
-import com.lefestin.dao.RecipeIngredientDAO;
+import com.lefestin.dao.impl.RecipeDAOImpl;
+import com.lefestin.dao.impl.RecipeIngredientDAOImpl;
 import com.lefestin.helper.Helper;
 import com.lefestin.model.Recipe;
 import com.lefestin.model.RecipeIngredient;
@@ -19,8 +19,8 @@ import com.lefestin.ui.MainFrame;
  */
 public class RecipeDetailPanel extends JPanel {
     private final MainFrame frame;
-    private final RecipeDAO recipeDAO = new RecipeDAO();
-    private final RecipeIngredientDAO riDAO = new RecipeIngredientDAO();
+    private final RecipeDAOImpl recipeDAO = new RecipeDAOImpl();
+    private final RecipeIngredientDAOImpl riDAO = new RecipeIngredientDAOImpl();
     private final Recipe recipe;
 
     private JPanel ingredientsList;
@@ -78,7 +78,7 @@ public class RecipeDetailPanel extends JPanel {
         leftSide.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel title = new JLabel(recipe.getTitle());
-        title.setFont(new Font("Serif", Font.BOLD, 24));
+        title.setFont(AppTheme.FONT_DISPLAY);
         title.setForeground(AppTheme.TEXT_PRIMARY);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -133,9 +133,10 @@ public class RecipeDetailPanel extends JPanel {
         procedureArea.setLineWrap(true);
         procedureArea.setWrapStyleWord(true);
         procedureArea.setFont(AppTheme.FONT_BODY);
-        procedureArea.setForeground(AppTheme.TEXT_PRIMARY);
+        procedureArea.setForeground(AppTheme.TEXT_SECONDARY);
         procedureArea.setBackground(AppTheme.BG_PAGE);
         procedureArea.setBorder(null);
+        procedureArea.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         card.add(heading);
         card.add(Box.createVerticalStrut(12));
@@ -176,7 +177,8 @@ public class RecipeDetailPanel extends JPanel {
     private void addIngredientLabel(String text, Color color) {
         JLabel label = new JLabel(text);
         label.setFont(AppTheme.FONT_BODY);
-        label.setForeground(color);
+        // Use TEXT_SECONDARY for primary ingredients, TEXT_MUTED for "no ingredients" message
+        label.setForeground(color == AppTheme.TEXT_MUTED ? AppTheme.TEXT_MUTED : AppTheme.TEXT_SECONDARY);
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
         ingredientsList.add(label);
     }
@@ -196,7 +198,7 @@ public class RecipeDetailPanel extends JPanel {
     private JLabel buildMetaBadge(String text) {
         JLabel label = new JLabel(text);
         label.setFont(AppTheme.FONT_SMALL);
-        label.setForeground(AppTheme.TEXT_PRIMARY);
+        label.setForeground(AppTheme.TEXT_MUTED);
         label.setOpaque(true);
         label.setBackground(AppTheme.BG_PAGE);
         label.setBorder(BorderFactory.createCompoundBorder(
