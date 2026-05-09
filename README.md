@@ -1,119 +1,140 @@
-# le-festin
+# Le Festin 🍽️
 
-## Run the project w/ Maven
-- mvn clean install        # downloads all deps + compiles
-- mvn test                 # runs JUnit tests
-- mvn package              # builds the fat JAR in /target
+**Recipe Database and Meal Planning System**
 
+Le Festin is a desktop application designed for personalized recipe management and meal planning. Each user maintains an isolated collection of recipes, pantry inventory, scheduled meals, and even grocery list. The application features a Java Swing interface with a retro design aesthetic.
+
+## Features
+
+* **Pantry Management:** Track available ingredients by quantity and unit for specific users.
+
+* **Recipe Matching:** Suggests recipes based on currently available pantry items.
+
+* **Meal Planning:** Organize recipes into structured daily, weekly, or monthly plans.
+
+* **Security:** Personal credentials and passwords are secured using BCrypt hashing.
+
+* **Data Integrity:** Relational database normalized to 3NF to ensure no partial or transitive dependencies.
+
+## Prerequisites
+* **JDK 17+**: The project uses Java 17 features.
+* **Maven**: For dependency and build management.
+* **MySQL Server 8.4+**: To host the application database.
+
+## Getting Started
+### Option 1: Local Development (Build from Source)
+
+Use this option if you want to run the app directly from the code. The included Maven utilities will handle the database setup for you.
+
+1. **Clone the repository**
+```bash
+git clone https://github.com/ausdotsn50/le-festin.git
+cd le-festin/
 ```
-# Step 1: Create schema and seed data
-# already working
-mvn exec:java -Dexec.mainClass=com.lefestin.config.SetupDatabase
 
-# Step 2: Hash passwords for seed users
-# working
-mvn exec:java -Dexec.mainClass=com.lefestin.config.FixSeedPasswords
+2. **Application Environment**:
+Rename config.properties.example to src/main/resources/config.properties and update your credentials:
 
-Main
-mvn compile exec:java "-Dexec.mainClass=com.lefestin.Main"
-
-For dev -- already deleted
-Seedtest
-mvn compile exec:java "-Dexec.mainClass=com.lefestin.config.SeedDataTest"
+```properties
+db.url=jdbc:mysql://localhost:3306/
+db.database=la_festin
+db.user=your_username
+db.password=your_password
 ```
 
-## Configure
-```
-Import schema
-mysql -u root -p < sql/le_festin_schema.sql
+3. **Install & initialize**
+```bash
+# Step 1: Install dependencies to local repository
+mvn clean install
 
-Import seed
-mysql -u root -p< sql/le_festin_seed.sql
+# Step 2: Create schema, seed data, and fix credentials
+mvn exec:java -Dexec.mainClass=com.lafestin.config.SetupDatabase
+mvn exec:java -Dexec.mainClass=com.lafestin.config.FixSeedPasswords
 ```
 
-## DAO
-- RecipeDAO tested
+4. **Launch the app**
+```bash
+mvn compile exec:java "-Dexec.mainClass=com.lafestin.Main"
+```
 
-## Project structure
+## Option 2: Running the Executable (JAR Version)
+Use this option for a standalone demonstration. This requires manual database and environment configuration.
+
+1. **Download the JAR**
+- Navigate to the [GitHub Repository](https://github.com/ausdotsn50/le-festin)
+- Locate the file la-festin-1.0-SNAPSHOT-fat.jar in the root folder.
+- Click on the file name, then click the Download button in the header [...] to save it to your machine.
+
+
+2. **Database Setup**
+- Import the schema: mysql -u root -p < sql/le_festin_schema.sql.
+- Import seeds: mysql -u root -p < sql/le_festin_seed.sql.
+
+3. **Execute**
+Open your terminal in the folder where you downloaded the JAR and run:
+
+```bash
+java -jar la-festin-1.0-SNAPSHOT-fat.jar
 ```
-la-festin/
-├── pom.xml
-├── config.properties.example
-├── README.md
-│
-└── src/
-    ├── main/
-    │   ├── java/
-    │   │   └── com/
-    │   │       └── lafestin/
-    │   │           │
-    │   │           ├── Main.java                          ← app entry point
-    │   │           │
-    │   │           ├── config/
-    │   │           │   ├── DBConnection.java              ← JDBC singleton
-    │   │           │   └── ConfigLoader.java              ← reads config.properties
-    │   │           │
-    │   │           ├── model/
-    │   │           │   ├── User.java
-    │   │           │   ├── Recipe.java
-    │   │           │   ├── Ingredient.java
-    │   │           │   ├── RecipeIngredient.java
-    │   │           │   ├── PantryItem.java
-    │   │           │   ├── MealEntry.java
-    │   │           │   └── RecipeMatchResult.java         ← used by matching service
-    │   │           │
-    │   │           ├── dao/
-    │   │           │   ├── UserDAO.java
-    │   │           │   ├── RecipeDAO.java
-    │   │           │   ├── IngredientDAO.java
-    │   │           │   ├── RecipeIngredientDAO.java
-    │   │           │   ├── PantryDAO.java
-    │   │           │   └── MealEntryDAO.java
-    │   │           │
-    │   │           ├── service/
-    │   │           │   ├── AuthService.java               ← login/register + bcrypt
-    │   │           │   ├── RecipeMatchingService.java     ← pantry % matching
-    │   │           │   ├── GroceryListService.java        ← missing ingredients
-    │   │           │   ├── MealPlanGeneratorService.java  ← auto-fill week slots
-    │   │           │   └── CsvExportService.java          ← meal plan/grocery CSV
-    │   │           │
-    │   │           └── ui/
-    │   │               ├── MainFrame.java                 ← JFrame shell + CardLayout
-    │   │               │
-    │   │               ├── panels/
-    │   │               │   ├── RecipeListPanel.java
-    │   │               │   ├── RecipeDetailPanel.java
-    │   │               │   ├── PantryPanel.java
-    │   │               │   ├── RecipeSuggestionsPanel.java
-    │   │               │   ├── DayPlannerPanel.java
-    │   │               │   ├── WeeklyPlannerPanel.java
-    │   │               │   ├── MonthlyOverviewPanel.java
-    │   │               │   └── GroceryListPanel.java
-    │   │               │
-    │   │               ├── dialogs/
-    │   │               │   ├── AddEditRecipeDialog.java
-    │   │               │   ├── AddEditIngredientDialog.java
-    │   │               │   ├── AssignRecipeDialog.java
-    │   │               │   └── LoginDialog.java
-    │   │               │
-    │   │               └── components/
-    │   │                   ├── RoundedButton.java         ← reusable styled button
-    │   │                   ├── RecipeMatchCard.java       ← single suggestion card
-    │   │                   └── MealSlotCell.java          ← weekly grid cell
-    │   │
-    │   └── resources/
-    │       ├── config.properties                          ← gitignored, real credentials
-    │       └── logback.xml                               ← logging config
-    │
-    └── test/
-        └── java/
-            └── com/
-                └── lafestin/
-                    ├── dao/
-                    │   ├── RecipeDAOTest.java
-                    │   ├── PantryDAOTest.java
-                    │   └── MealEntryDAOTest.java
-                    └── service/
-                        ├── RecipeMatchingServiceTest.java
-                        └── GroceryListServiceTest.java
+
+## Technical Architecture
+Relational Schema 
+
+```sql
+user(user_id, username, password_hash) PK: user_id
+PK: user_id
+
+ingredient(ingredient_id, name) PK: ingredient_id
+PK: ingredient_id
+
+recipe(recipe_id, user_id, title, category, prep_time, procedure)
+PK: recipe_id
+FK: user_id → user(user_id)
+
+recipe_ingredient(recipe_id, ingredient_id, quantity, unit)
+PK: recipe_id, ingredient_id
+FK: recipe_id → recipe(recipe_id), ingredient_id → ingredient(ingredient_id)
+
+pantry(ingredient_id, user_id, quantity, unit)
+PK: ingredient_id, user_id
+FK: ingredient_id → ingredient(ingredient_id), user_id → user(user_id)
+
+meal_entry(user_id, meal_type, scheduled_date, recipe_id)
+PK: user_id, meal_type, scheduled_date 
+FK: recipe_id → recipe(recipe_id), user_id → user(user_id)
 ```
+
+## Project Structure
+
+```text
+📦 le-festin
+ ┣ 📂 sql
+ ┃ ┣ 📜 le_festin_schema.sql         # Database table definitions
+ ┃ ┗ 📜 le_festin_seed.sql           # Initial data for recipes/ingredients
+ ┣ 📂 src
+ ┃ ┗ 📂 main
+ ┃   ┣ 📂 java
+ ┃   ┃ ┗ 📂 com
+ ┃   ┃   ┗ 📂 lefestin
+ ┃   ┃     ┣ 📂 config               # DB Connection & Setup Utilities
+ ┃   ┃     ┣ 📂 dao                  # Data Access Objects (Interfaces & Impl)
+ ┃   ┃     ┣ 📂 helper               # Utility helpers
+ ┃   ┃     ┣ 📂 model                # Entity POJOs (User, Recipe, etc.)
+ ┃   ┃     ┣ 📂 service              # Business Logic (Auth, Matching, CSV)
+ ┃   ┃     ┣ 📂 ui                   # Swing GUI (Frames, Panels, Dialogs)
+ ┃   ┃     ┗ 📜 Main.java            # App Entry Point
+ ┃   ┗ 📂 resources
+ ┃     ┗ 📜 config.properties        # Active credentials (gitignored)
+ ┣ 📂 target                         # Compiled classes and build artifacts
+ ┣ 📜 .gitignore                     # Excludes config.properties and target/
+ ┣ 📜 README.md                      # Project documentation
+ ┣ 📜 config.properties.example      # Template for environment setup
+ ┣ 📜 la-festin-1.0-SNAPSHOT-fat.jar # Executable fat JAR
+ ┗ 📜 pom.xml                        # Maven configuration and dependencies
+```
+
+## Contributors
+* Angela Almazan 
+* Carl Rodriguez 
+* Elizah Sumbeling 
+
