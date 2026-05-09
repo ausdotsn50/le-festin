@@ -42,19 +42,6 @@ public class Helper {
         dialog.setResizable(false);
     }
 
-    // public static List<Ingredient> loadAllIngredients(JDialog dialog, IngredientDAO ingredientDAO) {
-    //     try {
-    //         return ingredientDAO.getAllIngredients();
-    //     } catch (SQLException e) {
-    //         JOptionPane.showMessageDialog(dialog,
-    //             "Could not load ingredients from database.\n"
-    //             + e.getMessage(),
-    //             "Warning",
-    //             JOptionPane.WARNING_MESSAGE);
-    //         return new ArrayList<>();
-    //     }
-    // }
-
     public static List<Ingredient> loadAllIngredients(Component parentComponent, IngredientDAO ingredientDAO) {
     try {
         return ingredientDAO.getAllIngredients();

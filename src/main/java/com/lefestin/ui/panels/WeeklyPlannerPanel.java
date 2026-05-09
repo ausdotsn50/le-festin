@@ -1,50 +1,23 @@
 package com.lefestin.ui.panels;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GridLayout;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.*;
+import java.awt.datatransfer.*;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.SwingConstants;
-import javax.swing.TransferHandler;
+import javax.swing.*;
+import javax.swing.border.CompoundBorder;
 
-import com.lefestin.dao.MealEntryDAO;
-import com.lefestin.dao.RecipeDAO;
+import com.lefestin.dao.*;
 import com.lefestin.helper.Helper;
-import com.lefestin.model.MealEntry;
-import com.lefestin.model.Recipe;
+import com.lefestin.model.*;
 import com.lefestin.service.CsvExportService;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
@@ -54,789 +27,450 @@ import com.lefestin.ui.dialogs.AssignRecipeDialog;
  * WeeklyPlannerPanel — 7-day meal planner grid.
  */
 public class WeeklyPlannerPanel extends JPanel {
-    private final MainFrame    frame;
-    private final MealEntryDAO mealEntryDAO;
-    private final RecipeDAO    recipeDAO;
+    private final MainFrame frame;
+    private final MealEntryDAO mealEntryDAO = new MealEntryDAO();
+    private final RecipeDAO recipeDAO = new RecipeDAO();
+    private final CsvExportService csvService = new CsvExportService();
 
-    // Week state 
-    private LocalDate weekStart; // always a Monday
-
-    // Grid cells: key = "yyyy-MM-dd|MealType", value = slot button
+    private LocalDate weekStart;
     private final Map<String, JButton> slotButtons = new HashMap<>();
-
-    // Meal entries loaded for the current week 
-    // key = "yyyy-MM-dd|MealType", value = MealEntry (null = empty slot)
     private final Map<String, MealEntry> weekEntries = new HashMap<>();
 
-    // Header labels updated when week changes
     private JLabel weekRangeLabel;
     private JPanel gridPanel;
     private JButton exportBtn;
 
-    // CSV exporter
-    private final CsvExportService csvService;
-
     // Formatters
-    private static final DateTimeFormatter DAY_NAME_FMT =
-        DateTimeFormatter.ofPattern("EEE");       // "Mon"
-    private static final DateTimeFormatter DAY_DATE_FMT =
-        DateTimeFormatter.ofPattern("MMM d");     // "Apr 14"
-    private static final DateTimeFormatter WEEK_RANGE_FMT =
-        DateTimeFormatter.ofPattern("MMM d");     // for header range
+    private static final DateTimeFormatter DAY_NAME_FMT = DateTimeFormatter.ofPattern("EEE");
+    private static final DateTimeFormatter DAY_DATE_FMT = DateTimeFormatter.ofPattern("MMM d");
+    private static final DateTimeFormatter WEEK_RANGE_FMT = DateTimeFormatter.ofPattern("MMM d");
 
-    // Constant colors
-    private static final Color COL_DAY_BG = AppTheme.BG_SUBTLE;
+    // Colors
     private static final Color COL_DAY_TODAY = AppTheme.AMBER_TINT;
-    private static final Color COL_SLOT_EMPTY  = AppTheme.BG_SURFACE;
+    private static final Color COL_SLOT_EMPTY = AppTheme.BG_SURFACE;
     private static final Color COL_SLOT_FILLED = AppTheme.GREEN_TINT;
-    private static final Color COL_SLOT_BORDER = AppTheme.BG_BORDER;
-    // private static final Color COL_MEAL_LABEL  = AppTheme.TEXT_MUTED;
     private static final Color COL_RECIPE_TEXT = AppTheme.GREEN_TINT_TEXT;
     private static final DataFlavor SLOT_KEY_FLAVOR = DataFlavor.stringFlavor;
 
     public WeeklyPlannerPanel(MainFrame frame) {
         this.frame = frame;
-        this.mealEntryDAO = new MealEntryDAO();
-        this.recipeDAO = new RecipeDAO();
         this.weekStart = Helper.getMonday(LocalDate.now());
-        this.csvService = new CsvExportService();
 
-        setLayout(new BorderLayout(0, 0));
+        setLayout(new BorderLayout());
         setBackground(AppTheme.BG_PAGE);
 
         add(buildNavBar(), BorderLayout.NORTH);
-        add(buildGrid(),   BorderLayout.CENTER);
+        add(buildGridWrapper(), BorderLayout.CENTER);
     }
 
-    //  NAV BAR — week range + prev/next + auto-generate + clear
+    // --- UI Builders ---
+
     private JPanel buildNavBar() {
         JPanel nav = new JPanel(new BorderLayout());
         nav.setBackground(AppTheme.BG_SURFACE);
-        nav.setBorder(BorderFactory.createCompoundBorder(
-            AppTheme.BORDER_DIVIDER,
-            BorderFactory.createEmptyBorder(12, 20, 12, 20)
-        ));
+        nav.setBorder(new CompoundBorder(AppTheme.BORDER_DIVIDER, BorderFactory.createEmptyBorder(12, 20, 12, 20)));
 
-        // Top row: Prev | week range label | Next
+        // Navigation Row
         JPanel topRow = new JPanel(new BorderLayout(12, 0));
-        topRow.setBackground(AppTheme.BG_SURFACE);
+        topRow.setOpaque(false);
 
-        JButton prevBtn  = AppTheme.ghostButton("◀  Prev week");
-        JButton nextBtn  = AppTheme.ghostButton("Next week  ▶");
-
+        JButton prevBtn = AppTheme.ghostButton("◀  Prev week");
+        JButton nextBtn = AppTheme.ghostButton("Next week  ▶");
         weekRangeLabel = new JLabel("", SwingConstants.CENTER);
         weekRangeLabel.setFont(AppTheme.FONT_HEADING);
         weekRangeLabel.setForeground(AppTheme.TEXT_PRIMARY);
-        updateWeekRangeLabel();
 
         prevBtn.addActionListener(e -> shiftWeek(-1));
         nextBtn.addActionListener(e -> shiftWeek(+1));
 
-        topRow.add(prevBtn,        BorderLayout.WEST);
+        topRow.add(prevBtn, BorderLayout.WEST);
         topRow.add(weekRangeLabel, BorderLayout.CENTER);
-        topRow.add(nextBtn,        BorderLayout.EAST);
+        topRow.add(nextBtn, BorderLayout.EAST);
 
-        // Bottom row: Auto-generate | spacer | Export CSV + Clear week
+        // Actions Row
         JPanel bottomRow = new JPanel(new BorderLayout());
-        bottomRow.setBackground(AppTheme.BG_SURFACE);
-        bottomRow.setBorder(
-            BorderFactory.createEmptyBorder(8, 0, 0, 0));
+        bottomRow.setOpaque(false);
+        bottomRow.setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 0));
 
-        JButton autoBtn  = AppTheme.primaryButton("Auto-Generate Week");
-        JButton clearBtn = AppTheme.dangerButton("Clear Week");
+        JButton autoBtn = AppTheme.primaryButton("Auto-Generate Week");
+        autoBtn.addActionListener(e -> autoGenerateWeek());
 
-        autoBtn.addActionListener( e -> autoGenerateWeek());
-        clearBtn.addActionListener(e -> clearWeek());
-
+        JPanel rightGroup = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        rightGroup.setOpaque(false);
+        
         exportBtn = AppTheme.secondaryButton("Export CSV");
         exportBtn.setEnabled(false);
         exportBtn.addActionListener(e -> exportMealPlan());
 
-        bottomRow.add(autoBtn, BorderLayout.WEST);
+        JButton clearBtn = AppTheme.dangerButton("Clear Week");
+        clearBtn.addActionListener(e -> clearWeek());
 
-        JPanel rightGroup = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
-        rightGroup.setBackground(AppTheme.BG_SURFACE);
         rightGroup.add(exportBtn);
         rightGroup.add(clearBtn);
 
+        bottomRow.add(autoBtn, BorderLayout.WEST);
         bottomRow.add(rightGroup, BorderLayout.EAST);
 
-        nav.add(topRow,    BorderLayout.NORTH);
+        nav.add(topRow, BorderLayout.NORTH);
         nav.add(bottomRow, BorderLayout.SOUTH);
 
+        updateWeekRangeLabel();
         return nav;
     }
 
-    //  GRID — 7 columns (days) × 4 rows (header + 3 meal slots)
-    private JPanel buildGrid() {
+    private JPanel buildGridWrapper() {
         gridPanel = new JPanel(new GridLayout(4, 7, 1, 1));
-        gridPanel.setBackground(new Color(200, 200, 200)); // gap color
-        gridPanel.setBorder(BorderFactory.createLineBorder(
-            new Color(200, 200, 200), 1));
+        gridPanel.setBackground(new Color(200, 200, 200));
+        gridPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
 
         rebuildGridCells();
 
         JScrollPane scroll = new JScrollPane(gridPanel);
         scroll.setBorder(BorderFactory.createEmptyBorder());
-        scroll.getHorizontalScrollBarPolicy() ;
-        scroll.setHorizontalScrollBarPolicy(
-            JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.setBackground(AppTheme.BG_PAGE);
-        wrapper.setBorder(
-            BorderFactory.createEmptyBorder(16, 16, 16, 16));
+        wrapper.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
         wrapper.add(scroll, BorderLayout.CENTER);
         return wrapper;
     }
 
-    /**
-     * Clears and rebuilds all 28 cells (7 day headers + 21 meal slots).
-     * Called on first load and whenever the week changes.
-     */
     private void rebuildGridCells() {
         gridPanel.removeAll();
         slotButtons.clear();
 
-        // Row 0: day headers
+        // Row 0: Headers
         for (int d = 0; d < 7; d++) {
-            LocalDate day      = weekStart.plusDays(d);
-            boolean   isToday  = day.equals(LocalDate.now());
-            gridPanel.add(buildDayHeader(day, isToday));
+            LocalDate day = weekStart.plusDays(d);
+            gridPanel.add(buildDayHeader(day, day.equals(LocalDate.now())));
         }
 
-        // Rows 1–3: one row per meal type
+        // Rows 1-3: Meal Slots
         for (String mealType : MealEntry.MEAL_TYPES) {
             for (int d = 0; d < 7; d++) {
                 LocalDate day = weekStart.plusDays(d);
-                JButton   slot = buildSlotButton(day, mealType);
+                JButton slot = buildSlotButton(day, mealType);
                 slotButtons.put(Helper.slotKey(day, mealType), slot);
                 gridPanel.add(slot);
             }
         }
-
         gridPanel.revalidate();
         gridPanel.repaint();
     }
 
-    // Day column header
     private JPanel buildDayHeader(LocalDate day, boolean isToday) {
         JPanel cell = new JPanel();
         cell.setLayout(new BoxLayout(cell, BoxLayout.Y_AXIS));
-        cell.setBackground(isToday ? COL_DAY_TODAY : COL_DAY_BG);
+        cell.setBackground(isToday ? COL_DAY_TODAY : AppTheme.BG_SUBTLE);
         cell.setBorder(BorderFactory.createEmptyBorder(10, 8, 10, 8));
 
-        JLabel dayName = new JLabel(
-            day.format(DAY_NAME_FMT).toUpperCase());
-        dayName.setFont(new Font("SansSerif", Font.BOLD, 11));
-        dayName.setForeground(isToday
-            ? AppTheme.AMBER_PRIMARY
-            : AppTheme.TEXT_MUTED);
+        JLabel dayName = new JLabel(day.format(DAY_NAME_FMT).toUpperCase());
         dayName.setFont(AppTheme.FONT_TINY);
+        dayName.setForeground(isToday ? AppTheme.AMBER_PRIMARY : AppTheme.TEXT_MUTED);
 
         JLabel dayDate = new JLabel(day.format(DAY_DATE_FMT));
-        dayDate.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        dayDate.setForeground(isToday
-            ? AppTheme.AMBER_PRIMARY
-            : AppTheme.TEXT_PRIMARY);
         dayDate.setFont(AppTheme.FONT_BODY);
+        dayDate.setForeground(isToday ? AppTheme.AMBER_PRIMARY : AppTheme.TEXT_PRIMARY);
 
-        // "Today" badge
+        cell.add(dayName);
+        cell.add(Box.createVerticalStrut(isToday ? 2 : 4));
+        cell.add(dayDate);
+
         if (isToday) {
             JLabel badge = new JLabel("Today");
             badge.setFont(AppTheme.FONT_TINY);
             badge.setForeground(AppTheme.AMBER_PRIMARY);
-            badge.setAlignmentX(Component.CENTER_ALIGNMENT);
-            cell.add(dayName);
-            cell.add(Box.createVerticalStrut(2));
-            cell.add(dayDate);
+            badge.setAlignmentX(CENTER_ALIGNMENT);
             cell.add(Box.createVerticalStrut(2));
             cell.add(badge);
-        } else {
-            cell.add(dayName);
-            cell.add(Box.createVerticalStrut(4));
-            cell.add(dayDate);
         }
 
         return cell;
     }
 
-    // Individual meal slot button
     private JButton buildSlotButton(LocalDate day, String mealType) {
-        JButton btn = new JButton();
-        btn.setLayout(new BorderLayout(0, 2));
+
+        JButton btn = new JButton(); 
+        btn.setLayout(new BorderLayout(0, 2)); 
         btn.setBackground(COL_SLOT_EMPTY);
         btn.setOpaque(true);
-        btn.setBorderPainted(true);
-        btn.setBorder(BorderFactory.createLineBorder(
-            COL_SLOT_BORDER, 1));
+        btn.setBorder(BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1));
         btn.setFocusPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.setPreferredSize(new Dimension(120, 80));
-        btn.putClientProperty("slotKey", Helper.slotKey(day, mealType));
         btn.setToolTipText("Click to edit, drag to move or swap");
+        
+        String key = Helper.slotKey(day, mealType);
+        btn.putClientProperty("slotKey", key);
         btn.setTransferHandler(new SlotTransferHandler());
         installDragSupport(btn);
 
-        // Recipe name label (center)
         JLabel recipeLabel = new JLabel("", SwingConstants.CENTER);
         recipeLabel.setFont(AppTheme.FONT_SMALL);
-        recipeLabel.setForeground(AppTheme.TEXT_MUTED);
-        recipeLabel.setBorder(BorderFactory.createEmptyBorder(0, 6, 6, 6));
-
         btn.add(recipeLabel, BorderLayout.CENTER);
 
-        // Hover highlight
         btn.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseExited(MouseEvent e) {
-                btn.setBackground(new Color(240, 248, 255));
-            }
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                weekEntries.get(Helper.slotKey(day, mealType));
-                btn.setBackground(AppTheme.SELECTION_BG);
-            }
+            @Override public void mouseEntered(MouseEvent e) { btn.setBackground(AppTheme.SELECTION_BG); }
+            @Override public void mouseExited(MouseEvent e) { renderSingleSlot(key); }
         });
 
-        btn.addActionListener(
-            e -> openSlotDialog(day, mealType));
-
+        btn.addActionListener(e -> openSlotDialog(day, mealType));
         return btn;
     }
 
-    private void installDragSupport(JButton btn) {
-        MouseAdapter dragListener = new MouseAdapter() {
-            private boolean dragStarted;
+    // --- Logic & Data ---
 
-            @Override
-            public void mousePressed(MouseEvent e) {
-                dragStarted = false;
-            }
-
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                if (dragStarted || btn.getTransferHandler() == null) {
-                    return;
-                }
-                dragStarted = true;
-                btn.getTransferHandler().exportAsDrag(
-                    btn, e, TransferHandler.MOVE);
-            }
-        };
-
-        btn.addMouseListener(dragListener);
-        btn.addMouseMotionListener(dragListener);
-    }
-
-    //  DATA — load and render
     public void loadWeek() {
         weekEntries.clear();
-
         try {
-            LocalDate weekEnd = weekStart.plusDays(6);
-            List<MealEntry> entries = mealEntryDAO.getEntriesByWeek(
-                frame.getCurrentUserId(), weekStart, weekEnd);
-
-            for (MealEntry entry : entries) {
-                weekEntries.put(
-                    Helper.slotKey(entry.getScheduledDate(),
-                            entry.getMealType()),
-                    entry);
-            }
+            List<MealEntry> entries = mealEntryDAO.getEntriesByWeek(frame.getCurrentUserId(), weekStart, weekStart.plusDays(6));
+            entries.forEach(e -> weekEntries.put(Helper.slotKey(e.getScheduledDate(), e.getMealType()), e));
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this,
-                "Failed to load meal plan: " + e.getMessage(),
-                "Database Error",
-                JOptionPane.ERROR_MESSAGE);
+            showError("Failed to load meal plan", e);
         }
 
         renderSlots();
         updateWeekRangeLabel();
-        // Enable export button only when there are entries for the week
-        boolean hasEntries = false;
-        for (MealEntry e : weekEntries.values()) {
-            if (e != null) { hasEntries = true; break; }
-        }
-        if (exportBtn != null) exportBtn.setEnabled(hasEntries);
+        if (exportBtn != null) exportBtn.setEnabled(weekEntries.values().stream().anyMatch(Objects::nonNull));
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  EXPORT CSV
-    // ══════════════════════════════════════════════════════════════════════
-
-    private void exportMealPlan() {
-        LocalDate from = weekStart;
-        LocalDate to   = weekStart.plusDays(6);
-
-        String suggestedName = "meal_plan_"
-            + from.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-            + "_to_"
-            + to.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-            + ".csv";
-
-        JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Save Meal Plan");
-        chooser.setSelectedFile(new File(suggestedName));
-
-        int choice = chooser.showSaveDialog(this);
-        if (choice != JFileChooser.APPROVE_OPTION) return;
-
-        File outputFile = chooser.getSelectedFile();
-        if (!outputFile.getName().toLowerCase().endsWith(".csv")) {
-            outputFile = new File(outputFile.getAbsolutePath() + ".csv");
-        }
-
-        CsvExportService.ExportResult result =
-            csvService.exportMealPlan(frame.getCurrentUserId(), from, to, outputFile);
-
-        if (result.isSuccess()) {
-            JOptionPane.showMessageDialog(this,
-                result.getMessage() + "\n\nSaved to: " + outputFile.getAbsolutePath(),
-                "Export Complete",
-                JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(this,
-                result.getMessage(),
-                "Export Failed",
-                JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    /**
-     * Updates every slot button's appearance to match weekEntries.
-     * Called after loadWeek() and after any single slot change.
-     */
     private void renderSlots() {
-        for (String mealType : MealEntry.MEAL_TYPES) {
-            for (int d = 0; d < 7; d++) {
-                LocalDate day   = weekStart.plusDays(d);
-                String    key   = Helper.slotKey(day, mealType);
-                JButton   btn   = slotButtons.get(key);
-                MealEntry entry = weekEntries.get(key);
+        slotButtons.keySet().forEach(this::renderSingleSlot);
+    }
 
-                if (btn == null) continue;
+    private void renderSingleSlot(String key) {
+        JButton btn = slotButtons.get(key);
+        if (btn == null) return;
 
-                // The recipe label is CENTER component
-                JLabel recipeLabel = (JLabel) ((BorderLayout)
-                    btn.getLayout()).getLayoutComponent(
-                        BorderLayout.CENTER);
+        MealEntry entry = weekEntries.get(key);
+        JLabel recipeLabel = (JLabel) ((BorderLayout) btn.getLayout()).getLayoutComponent(BorderLayout.CENTER);
 
-                if (entry != null && entry.getRecipeTitle() != null) {
-                    // Filled slot — green tint, recipe name
-                    btn.setBackground(COL_SLOT_FILLED);
-                    recipeLabel.setText(
-                        "<html><center>"
-                        + wrapText(entry.getRecipeTitle(), 14)
-                        + "</center></html>");
-                    recipeLabel.setForeground(COL_RECIPE_TEXT);
-                } else {
-                    // Empty slot
-                    btn.setBackground(COL_SLOT_EMPTY);
-                    recipeLabel.setText("+ assign");
-                    recipeLabel.setForeground(AppTheme.TEXT_MUTED);
-                }
-            }
+        if (entry != null && entry.getRecipeTitle() != null) {
+            btn.setBackground(COL_SLOT_FILLED);
+            recipeLabel.setText("<html><center>" + wrapText(entry.getRecipeTitle(), 14) + "</center></html>");
+            recipeLabel.setForeground(COL_RECIPE_TEXT);
+        } else {
+            btn.setBackground(COL_SLOT_EMPTY);
+            recipeLabel.setText("+ assign");
+            recipeLabel.setForeground(AppTheme.TEXT_MUTED);
         }
     }
 
-    //  SLOT DIALOG — assign or clear a single slot
-    private void openSlotDialog(LocalDate day,
-                                String mealType) {
-        String    key         = Helper.slotKey(day, mealType);
-        MealEntry existing    = weekEntries.get(key);
-        boolean   isOccupied  = existing != null;
+    private void openSlotDialog(LocalDate day, String mealType) {
+        MealEntry existing = weekEntries.get(Helper.slotKey(day, mealType));
+        boolean occupied = existing != null;
 
-        // Build options depending on whether slot is filled or empty
-        String[] options = isOccupied
-            ? new String[]{ "Change Recipe", "Clear Slot", "Cancel" }
-            : new String[]{ "Assign Recipe", "Cancel" };
+        String[] options = occupied ? new String[]{"Change Recipe", "Clear Slot", "Cancel"} : new String[]{"Assign Recipe", "Cancel"};
+        String current = occupied ? existing.getRecipeTitle() : "No recipe assigned";
+        String prompt = day.format(DateTimeFormatter.ofPattern("EEEE, MMM d")) + "\nCurrent: " + current;
 
-        String currentTitle = (existing != null
-            && existing.getRecipeTitle() != null)
-            ? existing.getRecipeTitle()
-            : "(no recipe title)";
+        int choice = JOptionPane.showOptionDialog(this, prompt, day.format(DAY_DATE_FMT),
+                JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
 
-        String prompt = day.format(
-            DateTimeFormatter.ofPattern("EEEE, MMM d"))
-            + (isOccupied
-                ? "\nCurrent: " + currentTitle
-                : "\nNo recipe assigned");
-
-        int choice = JOptionPane.showOptionDialog(
-            this, prompt,
-            day.format(DAY_DATE_FMT),
-            JOptionPane.DEFAULT_OPTION,
-            JOptionPane.PLAIN_MESSAGE,
-            null, options, options[0]);
-
-        if (choice == JOptionPane.CLOSED_OPTION) return;
-
-        if (isOccupied) {
-            if (choice == 0) openAssignDialog(day, mealType);
-            else if (choice == 1) clearSlot(day, mealType);
-        } else {
-            if (choice == 0) openAssignDialog(day, mealType);
-        }
+        if (choice == 0) openAssignDialog(day, mealType);
+        else if (occupied && choice == 1) clearSlot(day, mealType);
     }
 
     private void openAssignDialog(LocalDate day, String mealType) {
-        AssignRecipeDialog dialog =
-            new AssignRecipeDialog(frame, day, mealType);
+        AssignRecipeDialog dialog = new AssignRecipeDialog(frame, day, mealType);
         dialog.setVisible(true);
 
         if (dialog.getSelectedRecipeId() != -1) {
             try {
-                // Remove existing entry for this slot if any
-                String key = Helper.slotKey(day, mealType);
-                if (weekEntries.containsKey(key)) {
-                    mealEntryDAO.deleteEntry(
-                        frame.getCurrentUserId(), day, mealType);
-                }
-
-                MealEntry newEntry = new MealEntry(
-                    dialog.getSelectedRecipeId(),
-                    frame.getCurrentUserId(),
-                    mealType, day,
-                    dialog.getSelectedRecipeTitle(), null);
+                mealEntryDAO.deleteEntry(frame.getCurrentUserId(), day, mealType);
+                MealEntry newEntry = new MealEntry(dialog.getSelectedRecipeId(), frame.getCurrentUserId(), 
+                        mealType, day, dialog.getSelectedRecipeTitle(), null);
 
                 mealEntryDAO.addEntry(newEntry);
-                weekEntries.put(key, newEntry);
+                weekEntries.put(Helper.slotKey(day, mealType), newEntry);
                 renderSlots();
-
             } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this,
-                    "Failed to assign recipe: " + e.getMessage(),
-                    "Database Error",
-                    JOptionPane.ERROR_MESSAGE);
+                showError("Failed to assign recipe", e);
             }
         }
     }
 
-        private void moveOrSwapSlot(String sourceKey, String targetKey)
-                throws SQLException {
-            if (sourceKey.equals(targetKey)) {
-                return;
-            }
-
-            MealEntry sourceEntry = weekEntries.get(sourceKey);
-            MealEntry targetEntry = weekEntries.get(targetKey);
-            if (sourceEntry == null) {
-                return;
-            }
-
-            SlotRef targetRef = parseSlotKey(targetKey);
-
-            if (targetEntry == null) {
-                mealEntryDAO.moveEntryToSlot(
-                    sourceEntry, targetRef.day, targetRef.mealType);
-            } else {
-                mealEntryDAO.swapEntries(sourceEntry, targetEntry);
-            }
-
-            loadWeek();
-        }
-
-        private SlotRef parseSlotKey(String slotKey) {
-            String[] parts = slotKey.split("\\|", 2);
-            return new SlotRef(LocalDate.parse(parts[0]), parts[1]);
-        }
-
     private void clearSlot(LocalDate day, String mealType) {
-        int confirm = JOptionPane.showConfirmDialog(this,
-            "Clear " + mealType + " on "
-                + day.format(DateTimeFormatter.ofPattern("MMM d")) + "?",
-            "Clear Slot",
-            JOptionPane.YES_NO_OPTION);
-
-        if (confirm == JOptionPane.YES_OPTION) {
+        String msg = "Clear " + mealType + " on " + day.format(DAY_DATE_FMT) + "?";
+        if (JOptionPane.showConfirmDialog(this, msg, "Clear Slot", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
             try {
-                mealEntryDAO.deleteEntry(
-                    frame.getCurrentUserId(), day, mealType);
+                mealEntryDAO.deleteEntry(frame.getCurrentUserId(), day, mealType);
                 weekEntries.remove(Helper.slotKey(day, mealType));
                 renderSlots();
             } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this,
-                    "Failed to clear slot: " + e.getMessage(),
-                    "Database Error",
-                    JOptionPane.ERROR_MESSAGE);
+                showError("Failed to clear slot", e);
             }
         }
     }
 
-    //  WEEK ACTIONS
+    private void clearWeek() {
+        String msg = "Clear ALL meals for this week?\nThis cannot be undone.";
+        if (JOptionPane.showConfirmDialog(this, msg, "Clear Week", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION) {
+            try {
+                mealEntryDAO.clearWeek(frame.getCurrentUserId(), weekStart, weekStart.plusDays(6));
+                weekEntries.clear();
+                renderSlots();
+            } catch (SQLException e) {
+                showError("Failed to clear week", e);
+            }
+        }
+    }
+
+    private void autoGenerateWeek() {
+        String msg = "Auto-fill empty slots for this week?\nExisting assignments will not be changed.";
+        if (JOptionPane.showConfirmDialog(this, msg, "Auto-Generate", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
+
+        try {
+            int created = autoFillEmptyWeekSlots();
+            renderSlots();
+            String resultMsg = created == 0 ? "No empty slots to fill for this week." : "Added " + created + " meal" + (created == 1 ? "" : "s") + " to this week.";
+            JOptionPane.showMessageDialog(this, resultMsg, "Auto-Generate", JOptionPane.INFORMATION_MESSAGE);
+        } catch (SQLException e) {
+            showError("Auto-generate failed", e);
+        }
+    }
+
+    private int autoFillEmptyWeekSlots() throws SQLException {
+        List<Recipe> recipes = recipeDAO.getAllRecipes(frame.getCurrentUserId());
+        if (recipes.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Add at least one recipe before auto-generating a week.", "No Recipes", JOptionPane.INFORMATION_MESSAGE);
+            return 0;
+        }
+
+        Map<Integer, Integer> recipeUseCount = new HashMap<>();
+        weekEntries.values().stream().filter(Objects::nonNull).forEach(e -> recipeUseCount.merge(e.getRecipeId(), 1, Integer::sum));
+
+        int created = 0;
+        for (int d = 0; d < 7; d++) {
+            LocalDate day = weekStart.plusDays(d);
+            for (String mealType : MealEntry.MEAL_TYPES) {
+                String key = Helper.slotKey(day, mealType);
+                if (weekEntries.get(key) != null) continue;
+
+                Recipe pick = pickRecipeForSlot(recipes, day, mealType, recipeUseCount);
+                if (pick != null) {
+                    MealEntry newEntry = new MealEntry(pick.getRecipeId(), frame.getCurrentUserId(), mealType, day, pick.getTitle(), pick.getCategory());
+                    mealEntryDAO.addEntry(newEntry);
+                    weekEntries.put(key, newEntry);
+                    recipeUseCount.merge(pick.getRecipeId(), 1, Integer::sum);
+                    created++;
+                }
+            }
+        }
+        return created;
+    }
+
+    private Recipe pickRecipeForSlot(List<Recipe> recipes, LocalDate day, String mealType, Map<Integer, Integer> usage) {
+        Set<Integer> usedToday = weekEntries.values().stream()
+            .filter(e -> e != null && day.equals(e.getScheduledDate()))
+            .map(MealEntry::getRecipeId).collect(Collectors.toSet());
+
+        List<Recipe> preferred = recipes.stream().filter(r -> mealType.equalsIgnoreCase(r.getCategory())).toList();
+        Recipe chosen = chooseLeastUsed(preferred, usedToday, day, mealType, usage);
+        return (chosen != null) ? chosen : chooseLeastUsed(recipes, usedToday, day, mealType, usage);
+    }
+
+    private Recipe chooseLeastUsed(List<Recipe> pool, Set<Integer> usedToday, LocalDate day, String mealType, Map<Integer, Integer> usage) {
+        if (pool == null || pool.isEmpty()) return null;
+
+        List<Recipe> allowed = pool.stream().filter(r -> !usedToday.contains(r.getRecipeId())).toList();
+        if (allowed.isEmpty()) allowed = pool;
+
+        int min = allowed.stream().mapToInt(r -> usage.getOrDefault(r.getRecipeId(), 0)).min().orElse(0);
+        List<Recipe> leastUsed = allowed.stream().filter(r -> usage.getOrDefault(r.getRecipeId(), 0) == min)
+                .sorted(Comparator.comparing(Recipe::getTitle, String.CASE_INSENSITIVE_ORDER)).toList();
+
+        int idx = Math.floorMod((int) day.toEpochDay() + mealType.hashCode(), leastUsed.size());
+        return leastUsed.get(idx);
+    }
+
+    // --- Helpers ---
+
+    private void exportMealPlan() {
+        LocalDate to = weekStart.plusDays(6);
+        String name = String.format("meal_plan_%s_to_%s.csv", weekStart, to);
+
+        JFileChooser chooser = new JFileChooser();
+        chooser.setSelectedFile(new File(name));
+
+        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File file = chooser.getSelectedFile();
+            if (!file.getName().toLowerCase().endsWith(".csv")) file = new File(file.getAbsolutePath() + ".csv");
+            
+            CsvExportService.ExportResult res = csvService.exportMealPlan(frame.getCurrentUserId(), weekStart, to, file);
+            JOptionPane.showMessageDialog(this, res.getMessage(), "Export Status", 
+                    res.isSuccess() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     private void shiftWeek(int weeks) {
         weekStart = weekStart.plusWeeks(weeks);
         rebuildGridCells();
         loadWeek();
     }
 
-    private void autoGenerateWeek() {
-        int confirm = JOptionPane.showConfirmDialog(this, """
-                                                          Auto-fill empty slots for this week?
-                                                          Existing assignments will not be changed.""",
-            "Auto-Generate",
-            JOptionPane.YES_NO_OPTION);
-
-        if (confirm != JOptionPane.YES_OPTION) {
-            return;
-        }
-
-        try {
-            int created = autoFillEmptyWeekSlots();
-            renderSlots();
-
-            if (created == 0) {
-                JOptionPane.showMessageDialog(this,
-                    "No empty slots to fill for this week.",
-                    "Auto-Generate",
-                    JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this,
-                    "Added " + created + " meal"
-                        + (created == 1 ? "" : "s")
-                        + " to this week.",
-                    "Auto-Generate",
-                    JOptionPane.INFORMATION_MESSAGE);
-            }
-
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this,
-                "Auto-generate failed: " + e.getMessage(),
-                "Database Error",
-                JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    /**
-     * Fills empty week slots using user recipes.
-     * Strategy: prefer same-category recipes, fall back to any recipe,
-     * and balance reuse by choosing least-used recipes first.
-     */
-    private int autoFillEmptyWeekSlots() throws SQLException {
-        List<Recipe> recipes = recipeDAO.getAllRecipes(frame.getCurrentUserId());
-        if (recipes.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                "Add at least one recipe before auto-generating a week.",
-                "No Recipes",
-                JOptionPane.INFORMATION_MESSAGE);
-            return 0;
-        }
-
-        Map<Integer, Integer> recipeUseCount = new HashMap<>();
-        for (MealEntry entry : weekEntries.values()) {
-            if (entry != null) {
-                recipeUseCount.merge(entry.getRecipeId(), 1, Integer::sum);
-            }
-        }
-
-        int created = 0;
-        for (int d = 0; d < 7; d++) {
-            LocalDate day = weekStart.plusDays(d);
-
-            for (String mealType : MealEntry.MEAL_TYPES) {
-                String key = Helper.slotKey(day, mealType);
-                if (weekEntries.get(key) != null) {
-                    continue; // never overwrite existing assignments
-                }
-
-                Recipe pick = pickRecipeForSlot(recipes, day, mealType, recipeUseCount);
-                if (pick == null) {
-                    continue;
-                }
-
-                MealEntry newEntry = new MealEntry(
-                    pick.getRecipeId(),
-                    frame.getCurrentUserId(),
-                    mealType,
-                    day,
-                    pick.getTitle(),
-                    pick.getCategory()
-                );
-
-                mealEntryDAO.addEntry(newEntry);
-                weekEntries.put(key, newEntry);
-                recipeUseCount.merge(pick.getRecipeId(), 1, Integer::sum);
-                created++;
-            }
-        }
-
-        return created;
-    }
-
-    private Recipe pickRecipeForSlot(List<Recipe> recipes,
-                                     LocalDate day,
-                                     String mealType,
-                                     Map<Integer, Integer> recipeUseCount) {
-        Set<Integer> usedToday = weekEntries.values().stream()
-            .filter(e -> e != null && day.equals(e.getScheduledDate()))
-            .map(MealEntry::getRecipeId)
-            .collect(Collectors.toSet());
-
-        List<Recipe> preferred = recipes.stream()
-            .filter(r -> mealType.equalsIgnoreCase(r.getCategory()))
-            .collect(Collectors.toList());
-
-        Recipe chosen = chooseLeastUsed(preferred, usedToday, day, mealType, recipeUseCount);
-        if (chosen != null) {
-            return chosen;
-        }
-
-        return chooseLeastUsed(recipes, usedToday, day, mealType, recipeUseCount);
-    }
-
-    private Recipe chooseLeastUsed(List<Recipe> pool,
-                                   Set<Integer> usedToday,
-                                   LocalDate day,
-                                   String mealType,
-                                   Map<Integer, Integer> recipeUseCount) {
-        if (pool == null || pool.isEmpty()) {
-            return null;
-        }
-
-        List<Recipe> allowed = pool.stream()
-            .filter(r -> !usedToday.contains(r.getRecipeId()))
-            .collect(Collectors.toList());
-
-        if (allowed.isEmpty()) {
-            allowed = new ArrayList<>(pool);
-        }
-
-        int minCount = Integer.MAX_VALUE;
-        for (Recipe recipe : allowed) {
-            int count = recipeUseCount.getOrDefault(recipe.getRecipeId(), 0);
-            if (count < minCount) {
-                minCount = count;
-            }
-        }
-
-        List<Recipe> leastUsed = new ArrayList<>();
-        for (Recipe recipe : allowed) {
-            if (recipeUseCount.getOrDefault(recipe.getRecipeId(), 0) == minCount) {
-                leastUsed.add(recipe);
-            }
-        }
-
-        Collections.sort(leastUsed,
-            (a, b) -> a.getTitle().compareToIgnoreCase(b.getTitle()));
-
-        int idx = Math.floorMod((int) day.toEpochDay() + mealType.hashCode(),
-            leastUsed.size());
-        return leastUsed.get(idx);
-    }
-
-    private void clearWeek() {
-        int confirm = JOptionPane.showConfirmDialog(this,
-            "Clear ALL meals for this week?\nThis cannot be undone.",
-            "Clear Week",
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.WARNING_MESSAGE);
-
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                mealEntryDAO.clearWeek(
-                    frame.getCurrentUserId(),
-                    weekStart,
-                    weekStart.plusDays(6));
-                weekEntries.clear();
-                renderSlots();
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this,
-                    "Failed to clear week: " + e.getMessage(),
-                    "Database Error",
-                    JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
-
-    //  HELPER FUNCS
-    // Consistent map key: "2026-04-17|Breakfast"
     private void updateWeekRangeLabel() {
-        LocalDate end = weekStart.plusDays(6);
-        weekRangeLabel.setText(
-            weekStart.format(WEEK_RANGE_FMT)
-            + " – "
-            + end.format(WEEK_RANGE_FMT)
-            + ", "
-            + weekStart.getYear());
+        weekRangeLabel.setText(weekStart.format(WEEK_RANGE_FMT) + " – " + weekStart.plusDays(6).format(WEEK_RANGE_FMT) + ", " + weekStart.getYear());
     }
 
-    // Wraps long recipe titles at word boundaries for the slot label
-    private String wrapText(String text, int maxLen) {
-        if (text == null || text.length() <= maxLen) return text;
-        int    cut  = text.lastIndexOf(' ', maxLen);
-        if (cut == -1) cut = maxLen;
-        return text.substring(0, cut) + "<br>"
-             + text.substring(cut).trim();
+    private String wrapText(String text, int max) {
+        if (text == null || text.length() <= max) return text;
+        int cut = text.lastIndexOf(' ', max);
+        if (cut == -1) cut = max;
+        return text.substring(0, cut) + "<br>" + text.substring(cut).trim();
+    }
+
+    private void showError(String msg, Exception e) {
+        JOptionPane.showMessageDialog(this, msg + ": " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private void installDragSupport(JButton btn) {
+        MouseAdapter ml = new MouseAdapter() {
+            private boolean active;
+            @Override public void mousePressed(MouseEvent e) { active = false; }
+            @Override public void mouseDragged(MouseEvent e) {
+                if (!active && btn.getTransferHandler() != null) {
+                    active = true;
+                    btn.getTransferHandler().exportAsDrag(btn, e, TransferHandler.MOVE);
+                }
+            }
+        };
+        btn.addMouseListener(ml);
+        btn.addMouseMotionListener(ml);
     }
 
     private class SlotTransferHandler extends TransferHandler {
-        @Override
-        protected Transferable createTransferable(JComponent c) {
-            Object slotKey = c.getClientProperty("slotKey");
-            return slotKey == null
-                ? null
-                : new StringSelection(slotKey.toString());
+        @Override protected Transferable createTransferable(JComponent c) {
+            return new StringSelection(String.valueOf(c.getClientProperty("slotKey")));
         }
-
-        @Override
-        public int getSourceActions(JComponent c) {
-            return MOVE;
-        }
-
-        @Override
-        public boolean canImport(TransferSupport support) {
-            return support.isDrop()
-                && support.isDataFlavorSupported(SLOT_KEY_FLAVOR);
-        }
-
-        @Override
-        public boolean importData(TransferSupport support) {
-            if (!canImport(support)) {
-                return false;
-            }
-
+        @Override public int getSourceActions(JComponent c) { return MOVE; }
+        @Override public boolean canImport(TransferSupport s) { return s.isDrop() && s.isDataFlavorSupported(SLOT_KEY_FLAVOR); }
+        @Override public boolean importData(TransferSupport s) {
             try {
-                JComponent target = (JComponent) support.getComponent();
-                Object slotKey = target.getClientProperty("slotKey");
-                if (slotKey == null) {
-                    return false;
-                }
+                String targetKey = String.valueOf(((JComponent) s.getComponent()).getClientProperty("slotKey"));
+                String sourceKey = (String) s.getTransferable().getTransferData(SLOT_KEY_FLAVOR);
+                if (sourceKey.equals(targetKey)) return false;
 
-                String sourceKey = (String) support.getTransferable()
-                    .getTransferData(SLOT_KEY_FLAVOR);
+                MealEntry src = weekEntries.get(sourceKey);
+                MealEntry tgt = weekEntries.get(targetKey);
+                if (src == null) return false;
 
-                moveOrSwapSlot(sourceKey, slotKey.toString());
+                String[] p = targetKey.split("\\|", 2);
+                LocalDate d = LocalDate.parse(p[0]);
+                if (tgt == null) mealEntryDAO.moveEntryToSlot(src, d, p[1]);
+                else mealEntryDAO.swapEntries(src, tgt);
+
+                loadWeek();
                 return true;
-            } catch (UnsupportedFlavorException | IOException e) {
-                JOptionPane.showMessageDialog(WeeklyPlannerPanel.this,
-                    "Could not move meal slot: " + e.getMessage(),
-                    "Drag and Drop Error",
-                    JOptionPane.ERROR_MESSAGE);
-                return false;
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(WeeklyPlannerPanel.this,
-                    "Failed to update meal plan: " + e.getMessage(),
-                    "Database Error",
-                    JOptionPane.ERROR_MESSAGE);
+            } catch (Exception e) {
+                showError("Drag and Drop Error", e);
                 return false;
             }
         }
     }
 
-    private static class SlotRef {
-        final LocalDate day;
-        final String mealType;
-
-        SlotRef(LocalDate day, String mealType) {
-            this.day = day;
-            this.mealType = mealType;
-        }
-    }
-
-    // Reload when panel becomes visible
-    @Override
-    public void setVisible(boolean visible) {
+    @Override public void setVisible(boolean visible) {
         super.setVisible(visible);
         if (visible) loadWeek();
     }
