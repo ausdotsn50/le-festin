@@ -105,7 +105,7 @@ public class MainFrame extends JFrame {
 
         JLabel appName = new JLabel("Le Festin");
         appName.setFont(AppTheme.FONT_APP_NAME);
-        appName.setForeground(AppTheme.COLOR_BLACK);
+        appName.setForeground(AppTheme.HEADER_FG);
 
         userMenuButton = buildUserMenuButton();
 

@@ -19,7 +19,7 @@ import javax.swing.border.Border;
 public class AppTheme {
     //  BASE COLORS — Use these instead of Color.BLACK/Color.WHITE directly
     /** Pure black — used for text on light backgrounds */
-    public static final Color COLOR_BLACK       = Color.BLACK;
+    public static final Color COLOR_BLACK       = new Color(70, 55, 45);  // #463728
     /** Pure white — used for text on dark backgrounds */
     public static final Color COLOR_WHITE       = Color.WHITE;
 
