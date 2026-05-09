@@ -13,7 +13,7 @@ import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
-import com.lefestin.dao.IngredientDAO;
+import com.lefestin.dao.impl.IngredientDAOImpl;
 import com.lefestin.model.Ingredient;
 
 // So far, the helper funs here are form ui/dialogs
@@ -42,7 +42,7 @@ public class Helper {
         dialog.setResizable(false);
     }
 
-    public static List<Ingredient> loadAllIngredients(Component parentComponent, IngredientDAO ingredientDAO) {
+    public static List<Ingredient> loadAllIngredients(Component parentComponent, IngredientDAOImpl ingredientDAO) {
     try {
         return ingredientDAO.getAllIngredients();
     } catch (SQLException e) {

@@ -14,6 +14,8 @@ import org.apache.commons.csv.CSVPrinter;
 
 import com.lefestin.dao.MealEntryDAO;
 import com.lefestin.dao.RecipeDAO;
+import com.lefestin.dao.impl.MealEntryDAOImpl;
+import com.lefestin.dao.impl.RecipeDAOImpl;
 import com.lefestin.helper.Helper;
 import com.lefestin.model.MealEntry;
 import com.lefestin.model.Recipe;
@@ -34,29 +36,20 @@ import com.lefestin.model.Recipe;
  *   2026-04-18,Dinner,Pork Adobo,Dinner,60
  */
 public class CsvExportService {
-
-    // ── Column header constants ────────────────────────────────────────────
-    // Defined as constants so they never drift between the header
-    // row and the Javadoc above — one place to rename a column.
     public static final String COL_DATE      = "Date";
     public static final String COL_MEAL_TYPE = "Meal Type";
     public static final String COL_TITLE     = "Recipe Title";
     public static final String COL_PREP_TIME = "Prep Time (mins)";
 
-    // ── Date format written to CSV ─────────────────────────────────────────
-    // ISO format (yyyy-MM-dd) — unambiguous, sorts correctly,
-    // readable by Excel and Google Sheets without extra config
     private static final DateTimeFormatter DATE_FMT =
         DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    // ── DAOs ──────────────────────────────────────────────────────────────
-    private final MealEntryDAO mealEntryDAO;
-    private final RecipeDAO    recipeDAO;
+    private final MealEntryDAOImpl mealEntryDAO;
+    private final RecipeDAOImpl    recipeDAO;
 
-    // ── Constructor ───────────────────────────────────────────────────────
     public CsvExportService() {
-        this.mealEntryDAO = new MealEntryDAO();
-        this.recipeDAO    = new RecipeDAO();
+        this.mealEntryDAO = new MealEntryDAOImpl();
+        this.recipeDAO    = new RecipeDAOImpl();
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -149,13 +142,11 @@ public class CsvExportService {
                 );
             }
 
-            // ── Build CSVFormat with headers ───────────────────────────────
             CSVFormat format = CSVFormat.DEFAULT.builder()
                 .setHeader("Ingredient", "Quantity", "Unit")
                 .setSkipHeaderRecord(false)
                 .build();
 
-            // ── Write with try-with-resources ──────────────────────────────
             // Both BufferedWriter and CSVPrinter implement AutoCloseable —
             // the inner try closes CSVPrinter first (flushes buffer),
             // then BufferedWriter is closed by the outer try.
@@ -190,10 +181,6 @@ public class CsvExportService {
                 "Failed to write CSV file.\nDetail: " + e.getMessage());
         }
     }
-
-    // ══════════════════════════════════════════════════════════════════════
-    //  PRIVATE HELPERS
-    // ══════════════════════════════════════════════════════════════════════
 
     /**
      * Writes meal entries to a CSV file and returns the row count.
@@ -232,8 +219,8 @@ public class CsvExportService {
                 // it should always be populated, but guard just in case
                 String title    = entry.getRecipeTitle() != null
                     ? entry.getRecipeTitle() : "(unknown)";
-                String category = entry.getRecipeCategory() != null
-                    ? entry.getRecipeCategory() : "";
+                /*String category = entry.getRecipeCategory() != null
+                    ? entry.getRecipeCategory() : "";*/
 
                 // prepTime is not on MealEntry — fetch from RecipeDAO
                 int prepTime = fetchPrepTime(entry.getRecipeId());
@@ -272,11 +259,7 @@ public class CsvExportService {
             ? String.valueOf((int) qty)
             : String.valueOf(qty);
     }
-
-    // ══════════════════════════════════════════════════════════════════════
-    //  RESULT WRAPPER
-    // ══════════════════════════════════════════════════════════════════════
-
+    
     /**
      * Wraps the export outcome so the UI can show success or failure
      * without catching exceptions itself.

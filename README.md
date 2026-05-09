@@ -1,4 +1,4 @@
-# la-festin
+# le-festin
 
 ## Run the project w/ Maven
 - mvn clean install        # downloads all deps + compiles
@@ -6,13 +6,27 @@
 - mvn package              # builds the fat JAR in /target
 
 ```
+# Step 1: Create schema and seed data
+mvn exec:java -Dexec.mainClass=com.lefestin.config.SetupDatabase
+
+# Step 2: Hash passwords for seed users
+mvn exec:java -Dexec.mainClass=com.lefestin.config.FixSeedPasswords
+
 Main
-mvn compile exec:java -Dexec.mainClass="com.lefestin.Main"
 mvn compile exec:java "-Dexec.mainClass=com.lefestin.Main"
 
+For dev -- already deleted
 Seedtest
-mvn compile exec:java -Dexec.mainClass="com.lefestin.config.SeedDataTest"
 mvn compile exec:java "-Dexec.mainClass=com.lefestin.config.SeedDataTest"
+```
+
+## Configure
+```
+Import schema
+mysql -u root -p < sql/le_festin_schema.sql
+
+Import seed
+mysql -u root -p< sql/le_festin_seed.sql
 ```
 
 ## DAO

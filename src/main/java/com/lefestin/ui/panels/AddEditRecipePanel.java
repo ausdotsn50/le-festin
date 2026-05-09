@@ -8,6 +8,9 @@ import javax.swing.*;
 import javax.swing.border.*;
 
 import com.lefestin.dao.*;
+import com.lefestin.dao.impl.IngredientDAOImpl;
+import com.lefestin.dao.impl.RecipeDAOImpl;
+import com.lefestin.dao.impl.RecipeIngredientDAOImpl;
 import com.lefestin.helper.Helper;
 import com.lefestin.model.*;
 import com.lefestin.ui.AppTheme;
@@ -16,9 +19,9 @@ import com.lefestin.ui.MainFrame;
 public class AddEditRecipePanel extends JPanel {
     private final MainFrame frame;
     private final Recipe existingRecipe; 
-    private final RecipeDAO recipeDAO = new RecipeDAO();
-    private final RecipeIngredientDAO riDAO = new RecipeIngredientDAO();
-    private final IngredientDAO ingredientDAO = new IngredientDAO();
+    private final RecipeDAOImpl recipeDAO = new RecipeDAOImpl();
+    private final RecipeIngredientDAOImpl riDAO = new RecipeIngredientDAOImpl();
+    private final IngredientDAOImpl ingredientDAO = new IngredientDAOImpl();
 
     private JTextField titleField;
     private JSpinner prepTimeSpinner;
@@ -101,7 +104,8 @@ public class AddEditRecipePanel extends JPanel {
         ingredientsContainer.setLayout(new BoxLayout(ingredientsContainer, BoxLayout.Y_AXIS));
         ingredientsContainer.setBackground(AppTheme.BG_SURFACE);
 
-        JButton addBtn = createTransparentButton("+ Add ingredient", new Color(255, 152, 0));
+        JButton addBtn = createTransparentButton("+ Add ingredient", AppTheme.TEXT_MUTED);
+
         addBtn.addActionListener(e -> {
             addIngredientRow("", 1.0, Helper.UNITS[0]);
             refreshUI();

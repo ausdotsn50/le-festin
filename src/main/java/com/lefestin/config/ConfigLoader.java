@@ -12,7 +12,6 @@ import java.util.Properties;
  *   int timeout = ConfigLoader.getInt("db.timeout", 30);
  */
 public class ConfigLoader {
-
     private static final String CONFIG_FILE = "config.properties";
     private static final Properties props = new Properties();
 
@@ -39,13 +38,11 @@ public class ConfigLoader {
             );
         }
     }
-    
-    private ConfigLoader() {}
 
     /**
      * Returns the value for the given key.
      * Throws if the key is missing or blank — fail fast rather than NPE later.
-     */
+    */
     public static String get(String key) {
         String value = props.getProperty(key);
         if (value == null) {

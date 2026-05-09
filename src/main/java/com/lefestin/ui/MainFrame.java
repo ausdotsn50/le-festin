@@ -2,11 +2,9 @@ package com.lefestin.ui;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -104,9 +102,8 @@ public class MainFrame extends JFrame {
         header.setBorder(BorderFactory.createEmptyBorder(0, 24, 0, 24));
 
         JLabel appName = new JLabel("Le Festin");
-        appName.setForeground(AppTheme.HEADER_FG);
         appName.setFont(AppTheme.FONT_APP_NAME);
-        appName.setForeground(Color.BLACK);
+        appName.setForeground(AppTheme.HEADER_FG);
 
         userMenuButton = buildUserMenuButton();
 
@@ -119,12 +116,10 @@ public class MainFrame extends JFrame {
         JButton btn = new JButton("Not logged in");
         btn.setForeground(AppTheme.HEADER_FG_MUTED);
         btn.setFont(AppTheme.FONT_SMALL);
-        btn.setBackground(AppTheme.HEADER_BG);
         btn.setBorderPainted(false);
         btn.setContentAreaFilled(false);
         btn.setFocusPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-
         btn.addActionListener(e -> showUserMenu(btn));
 
         return btn;
@@ -134,6 +129,8 @@ public class MainFrame extends JFrame {
         JPopupMenu menu = new JPopupMenu();
 
         JMenuItem logoutItem = new JMenuItem("Logout");
+        logoutItem.setForeground(AppTheme.COLOR_BLACK);
+        logoutItem.setFont(AppTheme.FONT_SMALL);
         logoutItem.addActionListener(e -> performLogout());
         menu.add(logoutItem);
 
@@ -145,6 +142,7 @@ public class MainFrame extends JFrame {
         MainFrame newFrame = new MainFrame();
         LoginDialog loginDialog = new LoginDialog(newFrame);
         loginDialog.setVisible(true);
+        newFrame.setVisible(true);
     }
 
     private JPanel buildSidebar() {
@@ -188,8 +186,7 @@ public class MainFrame extends JFrame {
         btn.setFocusPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         
-        // Derived a slightly smaller font size so it fits neatly under the icon
-        btn.setFont(AppTheme.FONT_BODY.deriveFont(12f)); 
+        btn.setFont(AppTheme.FONT_NAV_LABEL); 
         
         btn.setBackground(AppTheme.SIDEBAR_BG);
         btn.setForeground(AppTheme.TEXT_PRIMARY);
@@ -346,7 +343,7 @@ public class MainFrame extends JFrame {
                 // Cart
             }
 
-            g2.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 24)); // Universally supported icon font
+            g2.setFont(AppTheme.FONT_NAV_ICON);
             g2.setColor(c.getForeground()); // This guarantees the icon turns active when the button does!
             
             FontMetrics fm = g2.getFontMetrics();
