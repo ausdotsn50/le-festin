@@ -81,10 +81,10 @@ java -jar le-festin-1.0-SNAPSHOT-fat.jar
 Relational Schema 
 
 ```sql
-user(user_id, username, password_hash) PK: user_id
+user(user_id, username, password_hash)
 PK: user_id
 
-ingredient(ingredient_id, name) PK: ingredient_id
+ingredient(ingredient_id, name)
 PK: ingredient_id
 
 recipe(recipe_id, user_id, title, category, prep_time, procedure)
