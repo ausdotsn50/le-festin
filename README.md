@@ -37,7 +37,7 @@ Rename config.properties.example to src/main/resources/config.properties and upd
 
 ```properties
 db.url=jdbc:mysql://localhost:3306/
-db.database=la_festin
+db.database=le_festin
 db.user=your_username
 db.password=your_password
 ```
@@ -48,8 +48,8 @@ db.password=your_password
 mvn clean install
 
 # Step 2: Create schema, seed data, and fix credentials
-mvn exec:java -Dexec.mainClass=com.lafestin.config.SetupDatabase
-mvn exec:java -Dexec.mainClass=com.lafestin.config.FixSeedPasswords
+mvn exec:java -Dexec.mainClass=com.lefestin.config.SetupDatabase
+mvn exec:java -Dexec.mainClass=com.lefestin.config.FixSeedPasswords
 ```
 
 4. **Launch the app**
@@ -62,7 +62,7 @@ Use this option for a standalone demonstration. This requires manual database an
 
 1. **Download the JAR**
 - Navigate to the [GitHub Repository](https://github.com/ausdotsn50/le-festin)
-- Locate the file la-festin-1.0-SNAPSHOT-fat.jar in the root folder.
+- Locate the file le-festin-1.0-SNAPSHOT-fat.jar in the root folder.
 - Click on the file name, then click the Download button in the header [...] to save it to your machine.
 
 
@@ -74,7 +74,7 @@ Use this option for a standalone demonstration. This requires manual database an
 Open your terminal in the folder where you downloaded the JAR and run:
 
 ```bash
-java -jar la-festin-1.0-SNAPSHOT-fat.jar
+java -jar le-festin-1.0-SNAPSHOT-fat.jar
 ```
 
 ## Technical Architecture
@@ -129,7 +129,7 @@ FK: recipe_id → recipe(recipe_id), user_id → user(user_id)
  ┣ 📜 .gitignore                     # Excludes config.properties and target/
  ┣ 📜 README.md                      # Project documentation
  ┣ 📜 config.properties.example      # Template for environment setup
- ┣ 📜 la-festin-1.0-SNAPSHOT-fat.jar # Executable fat JAR
+ ┣ 📜 le-festin-1.0-SNAPSHOT-fat.jar # Executable fat JAR
  ┗ 📜 pom.xml                        # Maven configuration and dependencies
 ```
 

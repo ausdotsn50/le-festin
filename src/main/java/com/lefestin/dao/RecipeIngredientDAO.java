@@ -1,10 +1,5 @@
 package com.lefestin.dao;
-
-import java.sql.*;
-import java.util.ArrayList;
 import java.util.List;
-
-import com.lefestin.config.DBConnection;
 import com.lefestin.model.RecipeIngredient;
 
 /**
