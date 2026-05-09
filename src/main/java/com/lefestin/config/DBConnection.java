@@ -15,7 +15,7 @@ public class DBConnection {
     private Connection connection;
 
     // config.properties
-    private static final String URL = ConfigLoader.get("db.url");
+    private static final String URL = ConfigLoader.get("db.url") + ConfigLoader.get("db.database");
     private static final String USER = ConfigLoader.get("db.user");
     private static final String PASSWORD = ConfigLoader.get("db.password");
 
@@ -25,22 +25,22 @@ public class DBConnection {
     }
 
     private void connect() {
-    try {
-        this.connection = DriverManager.getConnection(URL, USER, PASSWORD);
-        System.out.println("[DBConnection] Connected to MySQL at: " + URL);
-    } catch (SQLException e) {
-        // Print the full exception chain so nothing is hidden
-        System.err.println("[DBConnection] Failed to connect.");
-        System.err.println("  → URL:   " + URL);
-        System.err.println("  → User:  " + USER);
-        System.err.println("  → SQLState:    " + e.getSQLState());
-        System.err.println("  → ErrorCode:   " + e.getErrorCode());
-        System.err.println("  → Message:     " + e.getMessage());
-        // Print the full stack trace so the root cause is visible
-        e.printStackTrace();
-        throw new RuntimeException("DB connection failed.", e);
+        try {
+            this.connection = DriverManager.getConnection(URL, USER, PASSWORD);
+            System.out.println("[DBConnection] Connected to MySQL at: " + URL);
+        } catch (SQLException e) {
+            // Print the full exception chain so nothing is hidden
+            System.err.println("[DBConnection] Failed to connect.");
+            System.err.println("  → URL:   " + URL);
+            System.err.println("  → User:  " + USER);
+            System.err.println("  → SQLState:    " + e.getSQLState());
+            System.err.println("  → ErrorCode:   " + e.getErrorCode());
+            System.err.println("  → Message:     " + e.getMessage());
+            // Print the full stack trace so the root cause is visible
+            e.printStackTrace();
+            throw new RuntimeException("DB connection failed.", e);
+        }
     }
-}
 
     public static DBConnection getInstance() {
         if (instance == null) {

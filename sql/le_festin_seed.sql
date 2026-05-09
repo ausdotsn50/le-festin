@@ -8,6 +8,12 @@ TRUNCATE TABLE recipe;
 TRUNCATE TABLE ingredient;
 TRUNCATE TABLE user;
 
+INSERT INTO user (username, password_hash) VALUES
+  ('angela', '$2a$10$7QJ8zXkL9mN3pR5sT1uVOeWYa6bCdEfGhIjKlMnOpQrStUvWxYzAb'),
+  ('carl',   '$2a$10$3KmN8bPq2rS4tU6vX0wZOcYd7eFgHiJkLmNoPqRsTuVwXyZaAbBcD'),
+  ('elizah', '$2a$10$9RsT4uV5wX7yZ1aB2cDOeEf8gHiJkLmNoPqRsTuVwXyZaAbBcDeEf');
+
+
 INSERT INTO ingredient (name) VALUES
     ('egg'),                -- 1
     ('milk'),               -- 2
