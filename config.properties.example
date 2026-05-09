@@ -1,3 +1,4 @@
-db.url=jdbc:mysql://localhost:3306/la_festin
+db.url=jdbc:mysql://localhost:3306/
+db.database=my_db
 db.user=root
 db.password=
