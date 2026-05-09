@@ -32,7 +32,7 @@
             <configuration>
               <transformers>
                 <transformer>
-                  <mainClass>com.lafestin.Main</mainClass>
+                  <mainClass>com.lefestin.Main</mainClass>
                 </transformer>
               </transformers>
               <shadedArtifactAttached>true</shadedArtifactAttached>
