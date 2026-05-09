@@ -15,7 +15,7 @@ public class DBConnection {
     private Connection connection;
 
     // config.properties
-    private static final String URL = ConfigLoader.get("db.url"+"db.table");
+    private static final String URL = ConfigLoader.get("db.url") + ConfigLoader.get("db.database");
     private static final String USER = ConfigLoader.get("db.user");
     private static final String PASSWORD = ConfigLoader.get("db.password");
 

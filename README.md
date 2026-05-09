@@ -7,9 +7,11 @@
 
 ```
 # Step 1: Create schema and seed data
+# already working
 mvn exec:java -Dexec.mainClass=com.lefestin.config.SetupDatabase
 
 # Step 2: Hash passwords for seed users
+# working
 mvn exec:java -Dexec.mainClass=com.lefestin.config.FixSeedPasswords
 
 Main
