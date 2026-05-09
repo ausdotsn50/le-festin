@@ -13,7 +13,6 @@ import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
-import com.lefestin.dao.IngredientDAO;
 import com.lefestin.dao.impl.IngredientDAOImpl;
 import com.lefestin.model.Ingredient;
 

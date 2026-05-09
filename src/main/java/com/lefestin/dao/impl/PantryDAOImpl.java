@@ -17,15 +17,11 @@ import com.lefestin.model.PantryItem;
  * JOINs with ingredient table so ingredientName is always populated.
  */
 public class PantryDAOImpl {
-
     private Connection conn() {
         return DBConnection.getInstance().getConnection();
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  CREATE
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Create operations
     /**
      * Inserts a new pantry item for a user.
      *
@@ -84,10 +80,7 @@ public class PantryDAOImpl {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  READ
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Read operations
     /**
      * Returns all pantry items for a user, JOINed with ingredient
      * table so ingredientName is populated on each object.
@@ -200,10 +193,7 @@ public class PantryDAOImpl {
         return false;
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  UPDATE
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Update operations
     /**
      * Updates the quantity of an existing pantry item.
      * Called from AddEditIngredientDialog edit mode.
@@ -264,10 +254,7 @@ public class PantryDAOImpl {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  DELETE
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Delete operations
     /**
      * Removes one ingredient from a user's pantry.
      * Identified by composite PK (ingredient_id, user_id).
@@ -308,10 +295,7 @@ public class PantryDAOImpl {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  PRIVATE HELPERS
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Private helpers
     /**
      * Maps one ResultSet row to a PantryItem.
      * Uses the 5-arg constructor that includes ingredientName from JOIN.

@@ -21,15 +21,11 @@ import com.lefestin.model.Ingredient;
  *   - AddEditIngredientDialog (ingredient dropdown)
  */
 public class IngredientDAOImpl {
-
     private Connection conn() {
         return DBConnection.getInstance().getConnection();
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  CREATE
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Create operation
     /**
      * Inserts a new ingredient into the global ingredient pool.
      * Sets ingredientId on the Ingredient object from the generated key.
@@ -87,9 +83,7 @@ public class IngredientDAOImpl {
         return newIngredient;
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  READ
-    // ══════════════════════════════════════════════════════════════════════
+    // Read operation
 
     /**
      * Returns every ingredient ordered by name A→Z.
@@ -206,9 +200,7 @@ public class IngredientDAOImpl {
         return false;
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  DELETE
-    // ══════════════════════════════════════════════════════════════════════
+    // Delete operation
 
     /**
      * Deletes an ingredient by primary key.
@@ -231,13 +223,7 @@ public class IngredientDAOImpl {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  PRIVATE HELPERS
-    // ══════════════════════════════════════════════════════════════════════
-
-    /**
-     * Maps one ResultSet row to an Ingredient.
-     */
+    // Private helper
     private Ingredient mapRow(ResultSet rs) throws SQLException {
         return new Ingredient(
             rs.getInt(   "ingredient_id"),

@@ -19,14 +19,11 @@ import com.lefestin.model.RecipeIngredient;
  *    (called before re-saving from AddEditRecipeDialog)
  */
 public class RecipeIngredientDAOImpl {
-
     private Connection conn() {
         return DBConnection.getInstance().getConnection();
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  CREATE
-    // ══════════════════════════════════════════════════════════════════════
+    // Create operations
 
     /**
      * Inserts one ingredient row for a recipe.
@@ -68,10 +65,7 @@ public class RecipeIngredientDAOImpl {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  READ
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Read operations
     /**
      * Returns all ingredient rows for a recipe, JOINed with the
      * ingredient table so ingredientName is populated on each object.
@@ -114,10 +108,7 @@ public class RecipeIngredientDAOImpl {
         return list;
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  DELETE
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Delete operations
     /**
      * Deletes ALL ingredient rows for a given recipe.
      *
@@ -167,10 +158,7 @@ public class RecipeIngredientDAOImpl {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  PRIVATE HELPERS
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Private helpers
     /**
      * Maps one ResultSet row to a RecipeIngredient.
      * Uses the 5-arg constructor that includes ingredientName.

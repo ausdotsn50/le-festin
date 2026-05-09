@@ -19,15 +19,11 @@ import com.lefestin.model.User;
  *    hashing and verification belong in AuthService
  */
 public class UserDAOImpl {
-
     private Connection conn() {
         return DBConnection.getInstance().getConnection();
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  CREATE
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Create operations
     /**
      * Inserts a new user row.
      * Sets userId on the User object from the generated key.
@@ -67,10 +63,7 @@ public class UserDAOImpl {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  READ
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Read operations
     /**
      * Looks up a user by username — the primary login lookup.
      *
@@ -167,10 +160,7 @@ public class UserDAOImpl {
         return false;
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  PRIVATE HELPERS
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Private helpers
     /**
      * Maps one ResultSet row to a User.
      * passwordHash is included — AuthService needs it for BCrypt verify.

@@ -14,7 +14,6 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import com.lefestin.dao.RecipeDAO;
 import com.lefestin.dao.impl.RecipeDAOImpl;
 import com.lefestin.model.Recipe;
 import com.lefestin.ui.AppTheme;
@@ -35,24 +34,13 @@ public class RecipeListPanel extends BaseListPanel {
     }
 
     @Override
-    protected String getHeaderTitle() {
-        return "My Recipes";
-    }
-
+    protected String getHeaderTitle() { return "My Recipes"; }
     @Override
-    protected String getHeaderDescription() {
-        return "Your saved recipes";
-    }
-
+    protected String getHeaderDescription() { return "Your saved recipes"; }
     @Override
-    protected String getSearchPlaceholder() {
-        return "Search recipes...";
-    }
-
+    protected String getSearchPlaceholder() { return "Search recipes..."; }
     @Override
-    protected JComponent buildHeaderRightControl() {
-        return Box.createHorizontalBox();
-    }
+    protected JComponent buildHeaderRightControl() { return Box.createHorizontalBox(); }
 
     @Override
     protected JComponent buildSearchRightControl() {
@@ -95,14 +83,9 @@ public class RecipeListPanel extends BaseListPanel {
     }
 
     @Override
-    protected void onEditClicked() {
-        // Not used in card view
-    }
-
+    protected void onEditClicked() { }
     @Override
-    protected void onActionClicked() {
-        // Not used in card view
-    }
+    protected void onActionClicked() { }
 
     private void renderCards(List<Recipe> recipes) {
         cardsContainer.removeAll();
@@ -160,28 +143,6 @@ public class RecipeListPanel extends BaseListPanel {
 
     JButton editBtn = createIconButton("✎", "Edit Recipe", e -> openAddEditPanel(recipe));
     JButton deleteBtn = createIconButton("✖", "Delete Recipe", e -> deleteRecipe(recipe));
-
-    // clean
-    /*
-        card.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        card.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                openDetailPanel(recipe);
-            }
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                card.setBorder(new CompoundBorder(
-                    BorderFactory.createLineBorder(AppTheme.AMBER_PRIMARY, 1, true),
-                    padding
-                ));
-            }
-            @Override
-            public void mouseExited(MouseEvent e) {
-                card.setBorder(new CompoundBorder(lineBorder, padding));
-            }
-        });
-     */
 
     rightActions.add(editBtn);
     rightActions.add(deleteBtn);
@@ -250,7 +211,7 @@ public class RecipeListPanel extends BaseListPanel {
         }
     }
 
-    // --- Styling Helpers ---
+    // Styling helpers
     private JButton createIconButton(String icon, String tooltip, java.awt.event.ActionListener action) {
         JButton btn = new JButton(icon);
         btn.setFont(AppTheme.FONT_SMALL);

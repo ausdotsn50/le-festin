@@ -22,15 +22,11 @@ import com.lefestin.model.Recipe;
  *  - After INSERT, generated key is retrieved and set back on the model
  */
 public class RecipeDAOImpl {
-
     private Connection conn() {
         return DBConnection.getInstance().getConnection();
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  CREATE
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Create operations
     /**
      * Inserts a new recipe row.
      * Sets recipeId on the Recipe object from the generated key.
@@ -64,10 +60,7 @@ public class RecipeDAOImpl {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  READ
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Read operations
     /**
      * Returns all recipes belonging to a user, ordered by title.
      *
@@ -174,10 +167,7 @@ public class RecipeDAOImpl {
         return recipes;
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  UPDATE
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Update operations
     /**
      * Updates all editable fields of an existing recipe.
      * Identified by recipeId — never updates user_id.
@@ -206,10 +196,7 @@ public class RecipeDAOImpl {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  DELETE
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Delete operations
     /**
      * Deletes a recipe by primary key.
      * CASCADE in the schema automatically removes all associated
@@ -227,10 +214,7 @@ public class RecipeDAOImpl {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  PRIVATE HELPERS
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Private helpers
     /**
      * Maps a single ResultSet row to a Recipe object.
      * Column names must match the `recipe` table exactly.

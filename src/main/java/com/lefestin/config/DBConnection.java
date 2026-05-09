@@ -11,11 +11,7 @@ import java.sql.SQLException;
  *   Connection conn = DBConnection.getInstance().getConnection();
  */
 public class DBConnection {
-
-    // DB conn instance
     private static DBConnection instance;
-    
-    // Live JDBC conn
     private Connection connection;
 
     // config.properties

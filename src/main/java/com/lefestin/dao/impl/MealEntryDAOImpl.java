@@ -27,7 +27,6 @@ import com.lefestin.model.MealEntry;
  *   Read:   rs.getDate("col").toLocalDate()
  */
 public class MealEntryDAOImpl {
-
     private Connection conn() {
         return DBConnection.getInstance().getConnection();
     }
@@ -156,10 +155,7 @@ public class MealEntryDAOImpl {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  READ
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Read operations
     /**
      * Returns all meal entries for a single day.
      * Ordered by meal_type — Breakfast, Dinner, Lunch (MySQL ENUM order).
@@ -287,10 +283,7 @@ public class MealEntryDAOImpl {
         return false;
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  DELETE
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Delete operations
     /**
      * Deletes one specific meal slot.
      * Identified by the composite PK: (user_id, scheduled_date, meal_type).
@@ -384,10 +377,7 @@ public class MealEntryDAOImpl {
         clearWeek(userId, ym.atDay(1), ym.atEndOfMonth());
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  PRIVATE HELPERS
-    // ══════════════════════════════════════════════════════════════════════
-
+    // Private helpers
     /**
      * Functional interface for binding PreparedStatement parameters.
      * Lets query() accept a lambda instead of duplicating

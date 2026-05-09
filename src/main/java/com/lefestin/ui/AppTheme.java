@@ -104,10 +104,6 @@ public class AppTheme {
     public static final Font FONT_APP_NAME      =
         new Font("Serif", Font.BOLD, 22);
 
-    /** Monospaced — recipe procedure, grocery list quantities */
-    public static final Font FONT_MONO          =
-        new Font("Monospaced", Font.PLAIN, 13);
-
     /** Large display font — recipe list title, dialog headers */
     public static final Font FONT_DISPLAY_LARGE =
         new Font("Serif", Font.BOLD, 28);
@@ -167,8 +163,9 @@ public class AppTheme {
             BorderFactory.createEmptyBorder(6, 10, 6, 10));
 
 
-    //  COMPONENT FACTORIES
-    //  Use these instead of constructing styled components inline.
+    // COMPONENT FACTORIES
+    // Can be separated into a component folder
+    // Use these instead of constructing styled components inline.
     /**
      * Primary action button — warm brown, white text.
      * Use for: Save, Add, Match Recipes, Auto-Generate.
@@ -370,9 +367,7 @@ public class AppTheme {
         UIManager.put("nimbusGreen",        GREEN_TINT);
         UIManager.put("nimbusOrange",       AMBER_PRIMARY);
         UIManager.put("nimbusRed",          TERRA_PRIMARY);
-        
         UIManager.put("nimbusSelectedText", TEXT_PRIMARY);
-
         UIManager.put("nimbusSelectionBackground", SELECTION_BG);
         UIManager.put("text",               TEXT_PRIMARY);
         UIManager.put("Table.background",   BG_SURFACE);
