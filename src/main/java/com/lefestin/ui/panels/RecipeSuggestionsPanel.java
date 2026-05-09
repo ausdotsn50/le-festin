@@ -235,12 +235,12 @@ public class RecipeSuggestionsPanel extends JPanel {
         if (result.getMissingIngredients().isEmpty()) {
             JLabel allGood = new JLabel("All ingredients available in pantry");
             allGood.setFont(AppTheme.FONT_SMALL);
-<<<<<<< HEAD
+
             allGood.setForeground(AppTheme.GREEN_SUCCESS);
-=======
+/*
             allGood.setForeground(AppTheme.GREEN_PRIMARY);
             allGood.setAlignmentX(Component.LEFT_ALIGNMENT);
->>>>>>> main
+ */
             bottomSection.add(allGood);
         } else {
             JLabel missingHeader = new JLabel("Still needed:");
@@ -305,13 +305,8 @@ public class RecipeSuggestionsPanel extends JPanel {
     }
 
     private Color barColor(int pct) {
-<<<<<<< HEAD
         if (pct == 100) return AppTheme.GREEN_SUCCESS;
         if (pct >= 50)  return AppTheme.AMBER_PRIMARY;
-=======
-        if (pct == 100) return AppTheme.GREEN_PRIMARY;
-        if (pct >= 50) return AppTheme.AMBER_PRIMARY;
->>>>>>> main
         return AppTheme.TERRA_PRIMARY;
     }
 

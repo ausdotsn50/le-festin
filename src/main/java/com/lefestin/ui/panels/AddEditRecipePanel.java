@@ -101,7 +101,7 @@ public class AddEditRecipePanel extends JPanel {
         ingredientsContainer.setLayout(new BoxLayout(ingredientsContainer, BoxLayout.Y_AXIS));
         ingredientsContainer.setBackground(AppTheme.BG_SURFACE);
 
-        JButton addBtn = createTransparentButton("+ Add ingredient", new Color(255, 152, 0));
+        JButton addBtn = createTransparentButton("+ Add ingredient", AppTheme.AMBER_PRIMARY);
 
         addBtn.addActionListener(e -> {
             addIngredientRow("", 1.0, Helper.UNITS[0]);

@@ -20,83 +20,89 @@ import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
 
 /**
- * RecipeListPanel — Card-based recipe browser.
+ * RecipeListPanel — Card-based recipe browser extending BaseListPanel.
  */
-public class RecipeListPanel extends JPanel {
-    private final MainFrame frame;
+public class RecipeListPanel extends BaseListPanel {
     private final RecipeDAO recipeDAO;
 
     private List<Recipe> allRecipes = new ArrayList<>();
     private JPanel cardsContainer;
-    private JTextField searchField;
 
     public RecipeListPanel(MainFrame frame) {
-        this.frame = frame;
+        super(frame);
         this.recipeDAO = new RecipeDAO();
-
-        setupMainPanel();
-        initComponents();
     }
 
-    private void setupMainPanel() {
-        setLayout(new BorderLayout());
-        setBackground(AppTheme.BG_PAGE);
-        setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+    @Override
+    protected String getHeaderTitle() {
+        return "My Recipes";
     }
 
-    private void initComponents() {
-        add(buildHeader(), BorderLayout.NORTH);
+    @Override
+    protected String getHeaderDescription() {
+        return "Your saved recipes";
+    }
 
+    @Override
+    protected String getSearchPlaceholder() {
+        return "Search recipes...";
+    }
+
+    @Override
+    protected JComponent buildHeaderRightControl() {
+        JButton addBtn = new JButton("+");
+        styleCircleButton(addBtn, AppTheme.PRIMARY_ACCENT, AppTheme.COLOR_BLACK);
+        addBtn.addActionListener(e -> openAddEditPanel(null));
+        return addBtn;
+    }
+
+    @Override
+    protected JComponent buildSearchRightControl() {
+        return new JPanel();  // Empty panel for spacing
+    }
+
+    @Override
+    protected JComponent buildTableContent() {
         cardsContainer = new JPanel();
         cardsContainer.setLayout(new BoxLayout(cardsContainer, BoxLayout.Y_AXIS));
         cardsContainer.setBackground(AppTheme.BG_PAGE);
         cardsContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
-        cardsContainer.setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
+        cardsContainer.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
         JScrollPane scrollPane = new JScrollPane(cardsContainer);
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         scrollPane.getViewport().setBackground(AppTheme.BG_PAGE);
 
-        add(scrollPane, BorderLayout.CENTER);
+        return scrollPane;
     }
 
-    private JPanel buildHeader() {
-        JPanel headerPanel = new JPanel();
-        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
-        headerPanel.setBackground(AppTheme.BG_PAGE);
-        headerPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        headerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 120));
+    @Override
+    protected JPanel buildToolbar() {
+        // RecipeListPanel doesn't use a toolbar — keep it simple
+        JPanel empty = new JPanel();
+        empty.setBackground(AppTheme.BG_PAGE);
+        return empty;
+    }
 
-        JPanel topRow = new JPanel(new BorderLayout());
-        topRow.setBackground(AppTheme.BG_PAGE);
-        
-        topRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-        topRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+    @Override
+    protected JButton createActionButton() {
+        return AppTheme.dangerButton("Delete");
+    }
 
-        JLabel titleLabel = new JLabel("My Recipes");
-        titleLabel.setFont(AppTheme.FONT_DISPLAY_LARGE);
-        titleLabel.setForeground(AppTheme.TEXT_PRIMARY);
+    @Override
+    protected void onAddClicked() {
+        openAddEditPanel(null);
+    }
 
-        JButton addBtn = new JButton("+");
+    @Override
+    protected void onEditClicked() {
+        // Not used in card view
+    }
 
-        // clean
-        styleCircleButton(addBtn, AppTheme.PRIMARY_ACCENT, AppTheme.COLOR_BLACK);
-        // styleCircleButton(addBtn, AppTheme.PRIMARY_ACCENT, Color.WHITE);
-
-        addBtn.addActionListener(e -> openAddEditPanel(null));
-
-        topRow.add(titleLabel, BorderLayout.WEST);
-        topRow.add(addBtn, BorderLayout.EAST);
-
-        searchField = createSearchField();
-        
-        headerPanel.add(topRow);
-        headerPanel.add(Box.createVerticalStrut(15));
-        headerPanel.add(searchField);
-        headerPanel.add(Box.createVerticalStrut(10));
-
-        return headerPanel;
+    @Override
+    protected void onActionClicked() {
+        // Not used in card view
     }
 
     private void styleCircleButton(JButton btn, Color bg, Color fg) {
@@ -107,29 +113,6 @@ public class RecipeListPanel extends JPanel {
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-    }
-
-    private JTextField createSearchField() {
-        JTextField field = new JTextField();
-        field.setFont(AppTheme.FONT_BODY);
-        field.setBackground(AppTheme.BG_SURFACE);
-        field.setForeground(AppTheme.TEXT_PRIMARY);
-        field.setCaretColor(AppTheme.TEXT_PRIMARY);
-        
-        field.setAlignmentX(Component.LEFT_ALIGNMENT);
-        field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
-        field.setPreferredSize(new Dimension(Integer.MAX_VALUE, 45));
-       
-        Border line = BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true);
-        Border pad = BorderFactory.createEmptyBorder(10, 15, 10, 15);
-        field.setBorder(new CompoundBorder(line, pad));
-
-        field.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) { filterCards(); }
-            public void removeUpdate(DocumentEvent e) { filterCards(); }
-            public void changedUpdate(DocumentEvent e) { filterCards(); }
-        });
-        return field;
     }
 
     private void renderCards(List<Recipe> recipes) {
@@ -158,7 +141,7 @@ public class RecipeListPanel extends JPanel {
             BorderFactory.createEmptyBorder(10, 20, 10, 20) // Reduced top/bottom padding to 10
     );
     final Border hoverBorder = new CompoundBorder(
-            BorderFactory.createLineBorder(new Color(255, 152, 0), 1, true),
+            BorderFactory.createLineBorder(AppTheme.AMBER_PRIMARY, 1, true),
             BorderFactory.createEmptyBorder(10, 20, 10, 20)
     );
     card.setBorder(defaultBorder);
@@ -168,12 +151,12 @@ public class RecipeListPanel extends JPanel {
     textContainer.setOpaque(false);
 
     JLabel titleLbl = new JLabel("<html>" + recipe.getTitle() + "</html>");
-    titleLbl.setFont(new Font("SansSerif", Font.BOLD, 15));
-    titleLbl.setForeground(AppTheme.TEXT_PRIMARY);
+    titleLbl.setFont(AppTheme.FONT_CARD_TITLE);
+    titleLbl.setForeground(AppTheme.TEXT_SECONDARY);
 
     JLabel timeLbl = new JLabel("🕒 " + recipe.getFormattedPrepTime());
     timeLbl.setFont(AppTheme.FONT_SMALL);
-    timeLbl.setForeground(new Color(255, 152, 0));
+    timeLbl.setForeground(AppTheme.TEXT_MUTED);
 
     textContainer.add(Box.createVerticalGlue()); 
     textContainer.add(titleLbl);
@@ -235,6 +218,14 @@ public class RecipeListPanel extends JPanel {
     public void loadRecipes() {
         try {
             allRecipes = recipeDAO.getAllRecipes(frame.getCurrentUserId());
+            
+            // Setup search listener
+            searchField.getDocument().addDocumentListener(new DocumentListener() {
+                public void insertUpdate(DocumentEvent e) { filterCards(); }
+                public void removeUpdate(DocumentEvent e) { filterCards(); }
+                public void changedUpdate(DocumentEvent e) { filterCards(); }
+            });
+            
             filterCards();
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Failed to load recipes: " + e.getMessage(), 

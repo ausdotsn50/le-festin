@@ -17,98 +17,59 @@ import javax.swing.UIManager;
 import javax.swing.border.Border;
 
 public class AppTheme {
-    //  BASE COLORS — Use these instead of Color.BLACK/Color.WHITE directly
-    /** Pure black — used for text on light backgrounds */
-    public static final Color COLOR_BLACK       = new Color(70, 55, 45);  // #463728
-    /** Pure white — used for text on dark backgrounds */
+    public static final Color COLOR_BLACK       = new Color(70, 55, 45);  
     public static final Color COLOR_WHITE       = Color.WHITE;
 
-    // Primary saffron amber — brand color for headers and primary actions
-    /** Primary accent — saffron amber */
     public static final Color PRIMARY_ACCENT    = new Color(252, 219, 109);
-
-    // Secondary accent — buttons and alternate CTAs
-    /** Secondary accent — warm brown for buttons */
     public static final Color SECONDARY_ACCENT  = new Color(139, 101, 76);
 
     // Sidebar
-    /** Sidebar background — warm cream */
     public static final Color SIDEBAR_BG        = new Color(249, 249, 245);
-    /** Active nav item background */
     public static final Color SIDEBAR_ACTIVE    = PRIMARY_ACCENT;
-    /** Hover state — lighter amber */
     public static final Color SIDEBAR_HOVER     = new Color(253, 235, 158);
-    /** Nav item text — dark */
     public static final Color SIDEBAR_FG        = COLOR_BLACK;
-    /** Nav item text — active dark */
     public static final Color SIDEBAR_FG_ACTIVE = COLOR_BLACK;
 
     // Header
-    /** Header bar — saffron amber */
     public static final Color HEADER_BG         = PRIMARY_ACCENT;
-    /** App name text */
     public static final Color HEADER_FG         = COLOR_BLACK;
-    /** Username / subtitle text */
     public static final Color HEADER_FG_MUTED   = COLOR_BLACK;
 
-    // Page & surface backgrounds 
-    /** Warm cream — outermost page background */
+    // Background
     public static final Color BG_PAGE           = new Color(249, 249, 245); 
-    /** Clean white — cards, panels, table surfaces */
     public static final Color BG_SURFACE        = new Color(249, 249, 245);
-    /** Very light warm gray — alternating table rows, input fields */
     public static final Color BG_SUBTLE         = new Color(252, 250, 247);
-    /** Soft divider/border color */
     public static final Color BG_BORDER         = new Color(200, 200, 200);
 
-    // Text
-    /** Primary text — headings, table content */
-    public static final Color TEXT_PRIMARY      = new Color(30, 30, 30);
-    /** Secondary text — subtitles, labels */
-    public static final Color TEXT_SECONDARY    = new Color(30, 30, 30);
-    /** Muted/hint text — placeholders, counts */
-    public static final Color TEXT_MUTED        = new Color(140, 140, 140);
-    /** Inverted text — on dark backgrounds */
+    // Text color
+    public static final Color TEXT_PRIMARY      = COLOR_BLACK;
+    public static final Color TEXT_SECONDARY    = new Color(105, 88, 76); 
+    public static final Color TEXT_MUTED        = new Color(140, 120, 105);
     public static final Color TEXT_INVERTED     = COLOR_WHITE;
 
-    // Herb green — success and filled states
-    /** Green tint — filled meal slots, success states */
+    // Succes state
     public static final Color GREEN_TINT        = new Color(230, 247, 237);
-    /** Text on green tint */
     public static final Color GREEN_TINT_TEXT   = new Color(22, 88, 48);
-    /** Success indicator — all good badge */
     public static final Color GREEN_SUCCESS     = new Color(76, 175, 80);
 
-    // Terracotta — destructive / warning actions
-    /** Delete / remove button background */
+    // Warning
     public static final Color TERRA_PRIMARY     = new Color(186, 74, 48);
-    /** Hover */
     public static final Color TERRA_HOVER       = new Color(160, 58, 36);
-    /** Light tint */
     public static final Color TERRA_TINT        = new Color(252, 238, 233);
-    /** Text on terracotta tint */
     public static final Color TERRA_TINT_TEXT   = new Color(140, 50, 30);
 
-    // Saffron amber — highlights and today indicator
-    /** Accent — today badge, match % bar */
+    // Highlights
     public static final Color AMBER_PRIMARY     = PRIMARY_ACCENT;
-    /** Light tint — today column header */
     public static final Color AMBER_TINT        = new Color(255, 248, 225);
-    /** Text on amber tint */
     public static final Color AMBER_TINT_TEXT   = new Color(140, 88, 10);
 
-    // Blue — selection and info states
-    /** Table row selection background */
+    // Selection & info
     public static final Color SELECTION_BG      = new Color(224, 238, 255);
-    /** Table row selection foreground */
     public static final Color SELECTION_FG      = new Color(20, 40, 80);
 
     // Grid & layout colors
-    /** Grid gap / border between cells */
     public static final Color GRID_GAP          = BG_BORDER;
-    /** Light blue tint for focused/hovered cells */
     public static final Color CELL_HOVER        = new Color(224, 238, 255);
-
 
     //  TYPOGRAPHY
     //
@@ -166,6 +127,10 @@ public class AppTheme {
     /** Day date — week planner dates */
     public static final Font FONT_DAY_DATE      =
         new Font("SansSerif", Font.PLAIN, 13);
+
+    /** Card title — recipe card titles in grid layout */
+    public static final Font FONT_CARD_TITLE    =
+        new Font("SansSerif", Font.BOLD, 15);
 
     
     //  BORDERS
