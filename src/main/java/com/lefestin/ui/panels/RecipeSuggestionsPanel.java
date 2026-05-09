@@ -12,7 +12,7 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import com.lefestin.dao.MealEntryDAO;
+import com.lefestin.dao.impl.MealEntryDAOImpl;
 import com.lefestin.helper.Helper;
 import com.lefestin.model.*;
 import com.lefestin.service.RecipeMatchingService;
@@ -25,7 +25,7 @@ import com.lefestin.ui.MainFrame;
 public class RecipeSuggestionsPanel extends BaseListPanel {
 
     private final RecipeMatchingService matchingService = new RecipeMatchingService();
-    private final MealEntryDAO mealEntryDAO = new MealEntryDAO();
+    private final MealEntryDAOImpl mealEntryDAO = new MealEntryDAOImpl();
 
     private static final String FILTER_ALL = "All";
     private static final String FILTER_READY = "Ready to Cook";

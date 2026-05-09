@@ -15,6 +15,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import com.lefestin.dao.RecipeDAO;
+import com.lefestin.dao.impl.RecipeDAOImpl;
 import com.lefestin.model.Recipe;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
@@ -23,14 +24,14 @@ import com.lefestin.ui.MainFrame;
  * RecipeListPanel — Card-based recipe browser extending BaseListPanel.
  */
 public class RecipeListPanel extends BaseListPanel {
-    private final RecipeDAO recipeDAO;
+    private final RecipeDAOImpl recipeDAO;
 
     private List<Recipe> allRecipes = new ArrayList<>();
     private JPanel cardsContainer;
 
     public RecipeListPanel(MainFrame frame) {
         super(frame);
-        this.recipeDAO = new RecipeDAO();
+        this.recipeDAO = new RecipeDAOImpl();
     }
 
     @Override

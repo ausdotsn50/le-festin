@@ -14,7 +14,8 @@ import java.util.stream.Collectors;
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 
-import com.lefestin.dao.*;
+import com.lefestin.dao.impl.MealEntryDAOImpl;
+import com.lefestin.dao.impl.RecipeDAOImpl;
 import com.lefestin.helper.Helper;
 import com.lefestin.model.*;
 import com.lefestin.service.CsvExportService;
@@ -27,8 +28,8 @@ import com.lefestin.ui.dialogs.AssignRecipeDialog;
  */
 public class WeeklyPlannerPanel extends JPanel {
     private final MainFrame frame;
-    private final MealEntryDAO mealEntryDAO = new MealEntryDAO();
-    private final RecipeDAO recipeDAO = new RecipeDAO();
+    private final MealEntryDAOImpl mealEntryDAO = new MealEntryDAOImpl();
+    private final RecipeDAOImpl recipeDAO = new RecipeDAOImpl();
     private final CsvExportService csvService = new CsvExportService();
 
     private LocalDate weekStart;
@@ -170,16 +171,6 @@ public class WeeklyPlannerPanel extends JPanel {
         cell.setBackground(isToday ? COL_DAY_TODAY : AppTheme.BG_SUBTLE);
         cell.setBorder(BorderFactory.createEmptyBorder(10, 8, 10, 8));
 
-
-        // change
-        /*
-        JLabel dayName = new J"Label(
-            day.format(DAY_NAME_FMT).toUpperCase());
-        dayName.setFont(AppTheme.FONT_DAY_LABEL);
-        dayName.setForeground(isToday
-            ? AppTheme.AMBER_PRIMARY
-            : AppTheme.TEXT_MUTED);
- */
         JLabel dayName = new JLabel(day.format(DAY_NAME_FMT).toUpperCase());
         dayName.setFont(AppTheme.FONT_TINY);
         dayName.setForeground(isToday ? AppTheme.AMBER_PRIMARY : AppTheme.TEXT_MUTED);
@@ -191,10 +182,6 @@ public class WeeklyPlannerPanel extends JPanel {
             ? AppTheme.AMBER_PRIMARY
             : AppTheme.TEXT_PRIMARY);
 
-            /*
-        dayDate.setFont(AppTheme.FONT_BODY);
-        dayDate.setForeground(isToday ? AppTheme.AMBER_PRIMARY : AppTheme.TEXT_PRIMARY);
- */
         cell.add(dayName);
         cell.add(Box.createVerticalStrut(isToday ? 2 : 4));
         cell.add(dayDate);

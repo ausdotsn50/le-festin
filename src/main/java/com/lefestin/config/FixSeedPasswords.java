@@ -2,7 +2,7 @@ package com.lefestin.config;
 
 import org.mindrot.jbcrypt.BCrypt;
 
-import com.lefestin.dao.UserDAO;
+import com.lefestin.dao.impl.UserDAOImpl;
 import com.lefestin.model.User;
 
 import java.sql.*;
@@ -12,7 +12,7 @@ public class FixSeedPasswords {
     public static void main(String[] args) throws Exception {
         String hash = BCrypt.hashpw("password123", BCrypt.gensalt(12));
 
-        UserDAO dao = new UserDAO();
+        UserDAOImpl dao = new UserDAOImpl();
         Connection conn = DBConnection.getInstance().getConnection();
 
         for (String name : new String[]{"angela", "carl", "elizah"}) {

@@ -10,6 +10,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 
 import com.lefestin.dao.PantryDAO;
+import com.lefestin.dao.impl.PantryDAOImpl;
 import com.lefestin.model.PantryItem;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
@@ -20,7 +21,7 @@ import com.lefestin.ui.dialogs.AddEditIngredientDialog;
  */
 public class PantryPanel extends BaseListPanel {
 
-    private final PantryDAO pantryDAO;
+    private final PantryDAOImpl pantryDAO;
     private JTable table;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
@@ -32,7 +33,7 @@ public class PantryPanel extends BaseListPanel {
 
     public PantryPanel(MainFrame frame) {
         super(frame);
-        this.pantryDAO = new PantryDAO();
+        this.pantryDAO = new PantryDAOImpl();
     }
 
     // --- Header Configuration ---

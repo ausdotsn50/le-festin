@@ -6,8 +6,8 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.border.*;
 
-import com.lefestin.dao.RecipeDAO;
-import com.lefestin.dao.RecipeIngredientDAO;
+import com.lefestin.dao.impl.RecipeDAOImpl;
+import com.lefestin.dao.impl.RecipeIngredientDAOImpl;
 import com.lefestin.helper.Helper;
 import com.lefestin.model.Recipe;
 import com.lefestin.model.RecipeIngredient;
@@ -19,8 +19,8 @@ import com.lefestin.ui.MainFrame;
  */
 public class RecipeDetailPanel extends JPanel {
     private final MainFrame frame;
-    private final RecipeDAO recipeDAO = new RecipeDAO();
-    private final RecipeIngredientDAO riDAO = new RecipeIngredientDAO();
+    private final RecipeDAOImpl recipeDAO = new RecipeDAOImpl();
+    private final RecipeIngredientDAOImpl riDAO = new RecipeIngredientDAOImpl();
     private final Recipe recipe;
 
     private JPanel ingredientsList;

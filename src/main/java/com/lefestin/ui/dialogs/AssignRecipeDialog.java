@@ -26,7 +26,7 @@ import javax.swing.RowFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 
-import com.lefestin.dao.RecipeDAO;
+import com.lefestin.dao.impl.RecipeDAOImpl;
 import com.lefestin.model.Recipe;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
@@ -56,7 +56,7 @@ public class AssignRecipeDialog extends JDialog {
 
     // ── Dependencies ──────────────────────────────────────────────────────
     private final MainFrame frame;
-    private final RecipeDAO recipeDAO;
+    private final RecipeDAOImpl recipeDAO;
 
     // ── Slot context ──────────────────────────────────────────────────────
     private final LocalDate date;
@@ -94,7 +94,7 @@ public class AssignRecipeDialog extends JDialog {
         this.frame     = frame;
         this.date      = date;
         this.mealType  = mealType;
-        this.recipeDAO = new RecipeDAO();
+        this.recipeDAO = new RecipeDAOImpl();
 
         initComponents();
         loadRecipes();

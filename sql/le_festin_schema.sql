@@ -28,6 +28,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 --  TABLE 1: user
 --  No dependencies — created first.
 -- ============================================================
+-- Enforcing unique usernames
 CREATE TABLE user (
     user_id       INT          NOT NULL AUTO_INCREMENT,
     username      VARCHAR(50)  NOT NULL,
@@ -41,6 +42,10 @@ CREATE TABLE user (
 --  TABLE 2: ingredient
 --  No dependencies — created alongside user.
 -- ============================================================
+-- Enforcing unique ingredient names such that it does not get added to the DB if
+-- there is an existing one
+
+-- 
 CREATE TABLE ingredient (
     ingredient_id INT          NOT NULL AUTO_INCREMENT,
     name          VARCHAR(100) NOT NULL,
