@@ -1,79 +1,44 @@
 package com.lefestin.ui.panels;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.*;
+import javax.swing.border.*;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.SpinnerNumberModel;
-import javax.swing.border.Border;
-import javax.swing.border.CompoundBorder;
-
-import com.lefestin.dao.IngredientDAO;
-import com.lefestin.dao.RecipeDAO;
-import com.lefestin.dao.RecipeIngredientDAO;
+import com.lefestin.dao.*;
 import com.lefestin.helper.Helper;
-import com.lefestin.model.Ingredient;
-import com.lefestin.model.Recipe;
-import com.lefestin.model.RecipeIngredient;
+import com.lefestin.model.*;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
 
-/**
- * AddEditRecipePanel — Panel form for creating and editing recipes.
- */
 public class AddEditRecipePanel extends JPanel {
     private final MainFrame frame;
-    private final Recipe existingRecipe; // null = add mode
-    private final RecipeDAO recipeDAO;
-    private final RecipeIngredientDAO riDAO;
-    private final IngredientDAO ingredientDAO;
+    private final Recipe existingRecipe; 
+    private final RecipeDAO recipeDAO = new RecipeDAO();
+    private final RecipeIngredientDAO riDAO = new RecipeIngredientDAO();
+    private final IngredientDAO ingredientDAO = new IngredientDAO();
 
-    // Form fields
     private JTextField titleField;
     private JSpinner prepTimeSpinner;
     private JComboBox<String> categoryCombo;
     private JTextArea procedureArea;
-
-    // Ingredients
     private JPanel ingredientsContainer;
-    private List<IngredientRowPanel> ingredientRows = new ArrayList<>();
+
+    private final List<IngredientRowPanel> ingredientRows = new ArrayList<>();
     private List<Ingredient> allIngredients = new ArrayList<>();
 
     public AddEditRecipePanel(MainFrame frame, Recipe recipe) {
         this.frame = frame;
         this.existingRecipe = recipe;
-        this.recipeDAO = new RecipeDAO();
-        this.riDAO = new RecipeIngredientDAO();
-        this.ingredientDAO = new IngredientDAO();
-
-        allIngredients = Helper.loadAllIngredients(frame, ingredientDAO);
-        initComponents();
+        this.allIngredients = Helper.loadAllIngredients(frame, ingredientDAO);
+        
+        setupLayout();
         prefillIfEditing();
     }
 
-    private void initComponents() {
+    private void setupLayout() {
         setLayout(new BorderLayout());
         setBackground(AppTheme.BG_PAGE);
 
@@ -82,8 +47,8 @@ public class AddEditRecipePanel extends JPanel {
         contentPanel.setBackground(AppTheme.BG_PAGE);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
 
+        // Assemble sections
         contentPanel.add(buildTitleCard());
-        contentPanel.add(Box.createVerticalStrut(15));
         contentPanel.add(Box.createVerticalStrut(15));
         contentPanel.add(buildBasicInfoCard());
         contentPanel.add(Box.createVerticalStrut(15));
@@ -94,16 +59,16 @@ public class AddEditRecipePanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(contentPanel);
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        
         add(scrollPane, BorderLayout.CENTER);
-
         add(buildButtonBar(), BorderLayout.SOUTH);
     }
 
+    // --- Card Builders ---
+
     private JPanel buildTitleCard() {
         JPanel card = createCardPanel("Recipe title");
-        titleField = createStyledTextField("Enter recipe name");
-        titleField.setAlignmentX(Component.LEFT_ALIGNMENT);
-         
+        titleField = createStyledTextField();
         card.add(titleField);
         return card;
     }
@@ -111,51 +76,20 @@ public class AddEditRecipePanel extends JPanel {
     private JPanel buildBasicInfoCard() {
         JPanel card = createCardPanel("Basic Information");
 
-        JPanel row1 = new JPanel(new BorderLayout());
-        row1.setBackground(AppTheme.BG_SURFACE);
-        row1.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        // Force row 1 to align left
-        row1.setAlignmentX(Component.LEFT_ALIGNMENT); 
-        
-        JLabel timeLabel = new JLabel("🕒 Total time");
-        timeLabel.setForeground(AppTheme.TEXT_PRIMARY);
-        timeLabel.setFont(AppTheme.FONT_BODY);
-        
+        // Prep Time Row
         prepTimeSpinner = new JSpinner(new SpinnerNumberModel(30, 1, 300, 5));
         styleSpinner(prepTimeSpinner);
-
-        row1.add(timeLabel, BorderLayout.WEST);
-        row1.add(prepTimeSpinner, BorderLayout.EAST);
-
-        card.add(row1);
-
+        card.add(createLabeledRow("🕒 Total time", prepTimeSpinner));
+        
         card.add(Box.createVerticalStrut(10));
 
-        JPanel row2 = new JPanel(new BorderLayout());
-        row2.setBackground(AppTheme.BG_SURFACE);
-        row2.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        row2.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel catLabel = new JLabel("📦 Category");
-        catLabel.setForeground(AppTheme.TEXT_PRIMARY);
-        catLabel.setFont(AppTheme.FONT_BODY);
-
+        // Category Row
         categoryCombo = new JComboBox<>(new String[]{
-            Recipe.CATEGORY_BREAKFAST,
-            Recipe.CATEGORY_LUNCH,
-            Recipe.CATEGORY_DINNER
+            Recipe.CATEGORY_BREAKFAST, Recipe.CATEGORY_LUNCH, Recipe.CATEGORY_DINNER
         });
         categoryCombo.setFont(AppTheme.FONT_BODY);
-        categoryCombo.setBackground(AppTheme.BG_PAGE);
-        categoryCombo.setForeground(AppTheme.TEXT_PRIMARY);
         categoryCombo.setPreferredSize(new Dimension(160, 35));
-        categoryCombo.setMaximumSize(new Dimension(200, 35));
-        categoryCombo.setSelectedItem(Recipe.CATEGORY_DINNER);
-
-        row2.add(catLabel, BorderLayout.WEST);
-        row2.add(categoryCombo, BorderLayout.EAST);
-
-        card.add(row2);
+        card.add(createLabeledRow("📦 Category", categoryCombo));
 
         return card;
     }
@@ -166,30 +100,18 @@ public class AddEditRecipePanel extends JPanel {
         ingredientsContainer = new JPanel();
         ingredientsContainer.setLayout(new BoxLayout(ingredientsContainer, BoxLayout.Y_AXIS));
         ingredientsContainer.setBackground(AppTheme.BG_SURFACE);
-        ingredientsContainer.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
-        JButton addBtn = new JButton("+ Add ingredient");
-        addBtn.setForeground(new Color(255, 152, 0)); 
-        addBtn.setContentAreaFilled(false);
-        addBtn.setBorderPainted(false);
-        addBtn.setFocusPainted(false);
-        addBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        addBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
-        
+        JButton addBtn = createTransparentButton("+ Add ingredient", new Color(255, 152, 0));
         addBtn.addActionListener(e -> {
             addIngredientRow("", 1.0, Helper.UNITS[0]);
-            revalidate();
-            repaint();
+            refreshUI();
         });
 
-        if (existingRecipe == null) {
-            addIngredientRow("", 1.0, Helper.UNITS[0]);
-        }
+        if (existingRecipe == null) addIngredientRow("", 1.0, Helper.UNITS[0]);
 
         card.add(ingredientsContainer);
         card.add(Box.createVerticalStrut(10));
         card.add(addBtn);
-
         return card;
     }
 
@@ -199,22 +121,15 @@ public class AddEditRecipePanel extends JPanel {
         procedureArea = new JTextArea(8, 20);
         procedureArea.setFont(AppTheme.FONT_BODY);
         procedureArea.setBackground(AppTheme.BG_PAGE);
-        procedureArea.setForeground(AppTheme.TEXT_PRIMARY);
         procedureArea.setLineWrap(true);
         procedureArea.setWrapStyleWord(true);
-        procedureArea.setAlignmentX(Component.LEFT_ALIGNMENT);
+        procedureArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        procedureArea.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
-
-        // Wrap the steps area in a scroll pane so it expands with the card
         JScrollPane stepsScroll = new JScrollPane(procedureArea);
-        stepsScroll.setBorder(null);
-        stepsScroll.setBackground((AppTheme.BG_PAGE));
+        stepsScroll.setBorder(BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true));
         stepsScroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 220));
-        stepsScroll.setAlignmentX(Component.LEFT_ALIGNMENT); 
+        stepsScroll.setAlignmentX(LEFT_ALIGNMENT); 
+
         card.add(stepsScroll);  
         return card;
     }
@@ -227,233 +142,154 @@ public class AddEditRecipePanel extends JPanel {
         JButton cancelBtn = AppTheme.secondaryButton("Cancel");
         JButton saveBtn = AppTheme.primaryButton(existingRecipe == null ? "Save Recipe" : "Update Recipe");
 
-        cancelBtn.addActionListener(e -> {
-            // Tell MainFrame to show the list card
-            frame.showRecipeList();
-        });
+        cancelBtn.addActionListener(e -> frame.showRecipeList());
         saveBtn.addActionListener(e -> saveRecipe());
 
         bar.add(cancelBtn);
         bar.add(saveBtn);
-
         return bar;
     }
+
+    // --- Helper UI Factory Methods ---
 
     private JPanel createCardPanel(String title) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(AppTheme.BG_SURFACE);
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
-
-        Border line = BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true);
-        Border empty = BorderFactory.createEmptyBorder(15, 20, 20, 20);
-        panel.setBorder(new CompoundBorder(line, empty));
-        panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panel.setAlignmentX(LEFT_ALIGNMENT);
+        panel.setBorder(new CompoundBorder(
+            BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true),
+            BorderFactory.createEmptyBorder(15, 20, 20, 20)
+        ));
 
         JLabel titleLabel = new JLabel(title);
         titleLabel.setFont(AppTheme.FONT_LABEL);
         titleLabel.setForeground(AppTheme.TEXT_PRIMARY);
-        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        titleLabel.setAlignmentX(LEFT_ALIGNMENT);
         
         panel.add(titleLabel);
         panel.add(Box.createVerticalStrut(15));
-
         return panel;
     }
 
-    private JTextField createStyledTextField(String placeholder) {
+    private JPanel createLabeledRow(String labelText, JComponent component) {
+        JPanel row = new JPanel(new BorderLayout());
+        row.setBackground(AppTheme.BG_SURFACE);
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        row.setAlignmentX(LEFT_ALIGNMENT);
+
+        JLabel label = new JLabel(labelText);
+        label.setFont(AppTheme.FONT_BODY);
+        label.setForeground(AppTheme.TEXT_PRIMARY);
+
+        row.add(label, BorderLayout.WEST);
+        row.add(component, BorderLayout.EAST);
+        return row;
+    }
+
+    private JTextField createStyledTextField() {
         JTextField field = new JTextField();
         field.setFont(AppTheme.FONT_BODY);
         field.setBackground(AppTheme.BG_PAGE);
-        field.setForeground(AppTheme.TEXT_PRIMARY);
         field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        field.setAlignmentX(LEFT_ALIGNMENT);
         
-        Border line = BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true);
-        Border pad = BorderFactory.createEmptyBorder(5, 10, 5, 10);
-        field.setBorder(new CompoundBorder(line, pad));
+        field.setBorder(new CompoundBorder(
+            BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true),
+            BorderFactory.createEmptyBorder(5, 10, 5, 10)
+        ));
         return field;
+    }
+
+    private JButton createTransparentButton(String text, Color color) {
+        JButton btn = new JButton(text);
+        btn.setForeground(color);
+        btn.setContentAreaFilled(false);
+        btn.setBorderPainted(false);
+        btn.setFocusPainted(false);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.setAlignmentX(LEFT_ALIGNMENT);
+        return btn;
     }
 
     private void styleSpinner(JSpinner spinner) {
         spinner.setFont(AppTheme.FONT_BODY);
         spinner.setPreferredSize(new Dimension(100, 35));
-        JComponent editor = spinner.getEditor();
-        if (editor instanceof JSpinner.DefaultEditor) {
-            JTextField tf = ((JSpinner.DefaultEditor) editor).getTextField();
+        if (spinner.getEditor() instanceof JSpinner.DefaultEditor editor) {
+            JTextField tf = editor.getTextField();
             tf.setBackground(AppTheme.BG_PAGE);
-            tf.setForeground(AppTheme.TEXT_PRIMARY);
             tf.setBorder(BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true));
         }
     }
 
-    private void addIngredientRow(String ingredientName, double quantity, String unit) {
-        IngredientRowPanel row = new IngredientRowPanel(ingredientName, quantity, unit);
+    private void addIngredientRow(String name, double qty, String unit) {
+        IngredientRowPanel row = new IngredientRowPanel(name, qty, unit);
         ingredientRows.add(row);
         ingredientsContainer.add(row);
     }
 
-    private void removeIngredientRow(IngredientRowPanel row) {
-        ingredientRows.remove(row);
-        ingredientsContainer.remove(row);
-        ingredientsContainer.revalidate();
-        ingredientsContainer.repaint();
+    private void refreshUI() {
+        revalidate();
+        repaint();
     }
 
-    private class IngredientRowPanel extends JPanel {
-        JTextField qtyField;
-        JComboBox<String> unitCombo;
-        JTextField ingredientNameField;
-
-        public IngredientRowPanel(String initIngredientName, double initQty, String initUnit) {
-            setLayout(new GridBagLayout());
-            setBackground(AppTheme.BG_SURFACE);
-            setAlignmentX(Component.LEFT_ALIGNMENT);
-
-            qtyField = new JTextField(String.valueOf(initQty), 4);
-            qtyField.setFont(AppTheme.FONT_BODY);
-            qtyField.setBackground(AppTheme.BG_PAGE);
-            qtyField.setForeground(AppTheme.TEXT_PRIMARY);
-            qtyField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)
-            ));
-
-            unitCombo = new JComboBox<>(Helper.UNITS);
-            unitCombo.setSelectedItem(initUnit);
-            unitCombo.setFont(AppTheme.FONT_BODY);
-            unitCombo.setBackground(AppTheme.BG_PAGE);
-            unitCombo.setForeground(AppTheme.TEXT_PRIMARY);
-
-            ingredientNameField = new JTextField(initIngredientName);
-            ingredientNameField.setFont(AppTheme.FONT_BODY);
-            ingredientNameField.setBackground(AppTheme.BG_PAGE);
-            ingredientNameField.setForeground(AppTheme.TEXT_PRIMARY);
-            ingredientNameField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)
-            ));
-            ingredientNameField.setColumns(12);        
-
-            JButton removeBtn = new JButton("✖");
-            removeBtn.setForeground(AppTheme.TEXT_MUTED);
-            removeBtn.setContentAreaFilled(false);
-            removeBtn.setBorderPainted(false);
-            removeBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            removeBtn.addActionListener(e -> removeIngredientRow(this));
-
-            GridBagConstraints c = new GridBagConstraints();
-            c.insets = new Insets(5,5,5,5);
-
-            //qty field - fixed width
-            c.gridx = 0;        
-            c.gridy = 0;
-            c.weightx = 0;
-            c.fill = GridBagConstraints.NONE;
-            add(qtyField, c);
-            
-            // unit combo - fixed
-            c.gridx = 1;
-            c.weightx = 0;
-            add(unitCombo, c);
-            
-            // ingredient name - takes horizontal space
-            c.gridx = 2;
-            c.weightx = 1.0;
-            c.fill = GridBagConstraints.HORIZONTAL;
-            add(ingredientNameField, c);
-
-            // remove button - no growth
-            c.gridx = 3;
-            c.weightx = 0;
-            c.fill = GridBagConstraints.NONE;
-            add(removeBtn, c);
-
-            setMaximumSize(new Dimension(Integer.MAX_VALUE, getPreferredSize().height));
-        }
-
-        @Override
-        public Dimension getMaximumSize() {
-            return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
-        }
-        public double getQuantity() throws NumberFormatException {
-            return Double.parseDouble(qtyField.getText().trim());
-        }
-
-        public String getUnit() {
-            return (String) unitCombo.getSelectedItem();
-        }
-
-        public String getIngredientName() {
-            return ingredientNameField.getText().trim();
-        }
-    }
+    // --- Logic & Data Handling ---
 
     private void prefillIfEditing() {
         if (existingRecipe == null) return;
 
         titleField.setText(existingRecipe.getTitle());
         prepTimeSpinner.setValue(existingRecipe.getPrepTime());
-        if (existingRecipe.getCategory() != null) {
-            categoryCombo.setSelectedItem(existingRecipe.getCategory());
-        }
+        categoryCombo.setSelectedItem(existingRecipe.getCategory());
         procedureArea.setText(existingRecipe.getProcedure());
         procedureArea.setCaretPosition(0);
 
         try {
             List<RecipeIngredient> existing = riDAO.getIngredientsByRecipeId(existingRecipe.getRecipeId());
-            
             ingredientsContainer.removeAll();
             ingredientRows.clear();
 
             for (RecipeIngredient ri : existing) {
                 String name = ri.getIngredientName();
-                if (name == null || name.trim().isEmpty()) {
+                if (name == null || name.isBlank()) {
                     Ingredient match = findIngredientById(ri.getIngredientId());
                     name = (match != null) ? match.getName() : "";
                 }
                 addIngredientRow(name, ri.getQuantity(), ri.getUnit());
             }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Could not load existing ingredients.", "Warning", JOptionPane.WARNING_MESSAGE);
+            showError("Could not load existing ingredients.");
         }
     }
 
     private void saveRecipe() {
-        String validationError = validateForm();
-        if (validationError != null) {
-            JOptionPane.showMessageDialog(this, validationError, "Missing Information", JOptionPane.WARNING_MESSAGE);
+        String error = validateForm();
+        if (error != null) {
+            JOptionPane.showMessageDialog(this, error, "Missing Information", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         try {
-            String title = titleField.getText().trim();
-            String category = (String) categoryCombo.getSelectedItem();
-            int prepTime = (int) prepTimeSpinner.getValue();
-            String procedure = procedureArea.getText().trim();
+            Recipe recipe = (existingRecipe == null) 
+                ? new Recipe(frame.getCurrentUserId(), titleField.getText().trim(), (String) categoryCombo.getSelectedItem(), (int) prepTimeSpinner.getValue(), procedureArea.getText().trim())
+                : existingRecipe;
 
-            Recipe recipe;
-
-            if (existingRecipe == null) {
-                recipe = new Recipe(frame.getCurrentUserId(), title, category, prepTime, procedure);
-                recipeDAO.addRecipe(recipe);
-            } else {
-                recipe = existingRecipe;
-                recipe.setTitle(title);
-                recipe.setCategory(category);
-                recipe.setPrepTime(prepTime);
-                recipe.setProcedure(procedure);
+            if (existingRecipe != null) {
+                recipe.setTitle(titleField.getText().trim());
+                recipe.setCategory((String) categoryCombo.getSelectedItem());
+                recipe.setPrepTime((int) prepTimeSpinner.getValue());
+                recipe.setProcedure(procedureArea.getText().trim());
                 recipeDAO.updateRecipe(recipe);
+            } else {
+                recipeDAO.addRecipe(recipe);
             }
 
             riDAO.deleteByRecipeId(recipe.getRecipeId());
-            List<RecipeIngredient> ingredients = buildIngredientList(recipe.getRecipeId());
-            riDAO.addAll(ingredients);
-
-            // Tell MainFrame to show the list card (which also refreshes the data)
+            riDAO.addAll(buildIngredientList(recipe.getRecipeId()));
             frame.showRecipeList();
 
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Failed to save recipe: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+            showError("Failed to save recipe: " + e.getMessage());
         }
     }
 
@@ -463,14 +299,12 @@ public class AddEditRecipePanel extends JPanel {
         if (ingredientRows.isEmpty()) return "Add at least one ingredient.";
 
         for (int i = 0; i < ingredientRows.size(); i++) {
-            if (ingredientRows.get(i).getIngredientName().isEmpty()) {
-                return "Ingredient name cannot be empty on row " + (i + 1) + ".";
-            }
+            IngredientRowPanel row = ingredientRows.get(i);
+            if (row.getIngredientName().isEmpty()) return "Ingredient name empty on row " + (i + 1);
             try {
-                double qty = ingredientRows.get(i).getQuantity();
-                if (qty <= 0) return "Quantity on row " + (i + 1) + " must be greater than 0.";
+                if (row.getQuantity() <= 0) return "Invalid quantity of ingredient";
             } catch (NumberFormatException e) {
-                return "Invalid quantity on row " + (i + 1) + ". Enter a number.";
+                return "Invalid quantity on row " + (i + 1);
             }
         }
         return null;
@@ -478,33 +312,71 @@ public class AddEditRecipePanel extends JPanel {
 
     private List<RecipeIngredient> buildIngredientList(int recipeId) throws SQLException {
         List<RecipeIngredient> list = new ArrayList<>();
-        
         for (IngredientRowPanel row : ingredientRows) {
-            String ingName = row.getIngredientName();
-            if (ingName.isEmpty()) continue;
-
-            Ingredient ingredient = ingredientDAO.findOrCreate(ingName);
-            int ingId = ingredient.getIngredientId();
-
-            if (findIngredientById(ingId) == null) {
-                allIngredients.add(ingredient);
-            }
+            String name = row.getIngredientName();
+            Ingredient ing = ingredientDAO.findOrCreate(name);
+            if (findIngredientById(ing.getIngredientId()) == null) allIngredients.add(ing);
             
-            list.add(new RecipeIngredient(
-                recipeId, 
-                ingId, 
-                row.getQuantity(), 
-                row.getUnit(), 
-                ingName
-            ));
+            list.add(new RecipeIngredient(recipeId, ing.getIngredientId(), row.getQuantity(), row.getUnit(), name));
         }
         return list;
     }
 
     private Ingredient findIngredientById(int id) {
-        for (Ingredient i : allIngredients) {
-            if (i.getIngredientId() == id) return i;
+        return allIngredients.stream().filter(i -> i.getIngredientId() == id).findFirst().orElse(null);
+    }
+
+    private void showError(String msg) {
+        JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    // --- Inner Components ---
+
+    private class IngredientRowPanel extends JPanel {
+        private final JTextField qtyField, nameField;
+        private final JComboBox<String> unitCombo;
+
+        public IngredientRowPanel(String name, double qty, String unit) {
+            setLayout(new GridBagLayout());
+            setBackground(AppTheme.BG_SURFACE);
+            setAlignmentX(LEFT_ALIGNMENT);
+
+            qtyField = createRowTextField(String.valueOf(qty), 4);
+            nameField = createRowTextField(name, 12);
+            unitCombo = new JComboBox<>(Helper.UNITS);
+            unitCombo.setSelectedItem(unit);
+            unitCombo.setFont(AppTheme.FONT_BODY);
+
+            JButton removeBtn = createTransparentButton("✖", AppTheme.TEXT_MUTED);
+            removeBtn.addActionListener(e -> {
+                ingredientRows.remove(this);
+                ingredientsContainer.remove(this);
+                refreshUI();
+            });
+
+            GridBagConstraints c = new GridBagConstraints();
+            c.insets = new Insets(5, 5, 5, 5);
+            
+            add(qtyField, c);
+            c.gridx = 1; add(unitCombo, c);
+            c.gridx = 2; c.weightx = 1.0; c.fill = GridBagConstraints.HORIZONTAL; add(nameField, c);
+            c.gridx = 3; c.weightx = 0; c.fill = GridBagConstraints.NONE; add(removeBtn, c);
         }
-        return null;
+
+        private JTextField createRowTextField(String text, int cols) {
+            JTextField f = new JTextField(text, cols);
+            f.setFont(AppTheme.FONT_BODY);
+            f.setBorder(new CompoundBorder(BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true), BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+            return f;
+        }
+
+        public double getQuantity() { return Double.parseDouble(qtyField.getText().trim()); }
+        public String getUnit() { return (String) unitCombo.getSelectedItem(); }
+        public String getIngredientName() { return nameField.getText().trim(); }
+
+        @Override
+        public Dimension getMaximumSize() {
+            return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
+        }
     }
 }

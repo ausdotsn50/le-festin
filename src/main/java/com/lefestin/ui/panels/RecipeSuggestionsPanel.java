@@ -1,37 +1,18 @@
 package com.lefestin.ui.panels;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import java.awt.*;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
-import javax.swing.SpinnerDateModel;
-import javax.swing.SwingWorker;
+import javax.swing.*;
 
 import com.lefestin.dao.MealEntryDAO;
 import com.lefestin.helper.Helper;
-import com.lefestin.model.MealEntry;
-import com.lefestin.model.Recipe;
-import com.lefestin.model.RecipeIngredient;
-import com.lefestin.model.RecipeMatchResult;
+import com.lefestin.model.*;
 import com.lefestin.service.RecipeMatchingService;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
@@ -42,35 +23,27 @@ import com.lefestin.ui.MainFrame;
 public class RecipeSuggestionsPanel extends JPanel {
 
     private final MainFrame frame;
-    private final RecipeMatchingService matchingService;
-    private final MealEntryDAO mealEntryDAO;
+    private final RecipeMatchingService matchingService = new RecipeMatchingService();
+    private final MealEntryDAO mealEntryDAO = new MealEntryDAO();
 
-    // Filter state
     private static final String FILTER_ALL = "All";
     private static final String FILTER_READY = "Ready to Cook";
     private static final String FILTER_PARTIAL = "Partial Match";
     private String activeFilter = FILTER_ALL;
 
-    // Full result list — filtered view rendered from this
     private List<RecipeMatchResult> allResults = new ArrayList<>();
 
-    // UI components updated on load
-    private JPanel  cardsPanel;
-    private JLabel  statusLabel;
-    private JButton filterAllBtn;
-    private JButton filterReadyBtn;
-    private JButton filterPartialBtn;
+    private JPanel cardsPanel;
+    private JLabel statusLabel;
+    private JButton filterAllBtn, filterReadyBtn, filterPartialBtn;
 
     public RecipeSuggestionsPanel(MainFrame frame) {
-        this.frame           = frame;
-        this.matchingService = new RecipeMatchingService();
-        this.mealEntryDAO    = new MealEntryDAO();
-
-        setLayout(new BorderLayout(0, 0));
+        this.frame = frame;
+        setLayout(new BorderLayout());
         setBackground(AppTheme.BG_PAGE);
 
-        add(buildHeader(),      BorderLayout.NORTH);
-        add(buildCardsArea(),   BorderLayout.CENTER);
+        add(buildHeader(), BorderLayout.NORTH);
+        add(buildCardsArea(), BorderLayout.CENTER);
     }
 
     private JPanel buildHeader() {
@@ -80,10 +53,7 @@ public class RecipeSuggestionsPanel extends JPanel {
             AppTheme.BORDER_DIVIDER,
             BorderFactory.createEmptyBorder(14, 20, 14, 20)));
 
-        // Top row: title + refresh button
-        JPanel topRow = new JPanel(new BorderLayout());
-        topRow.setBackground(AppTheme.BG_SURFACE);
-
+        // Top row: title and status
         JPanel titleStack = new JPanel();
         titleStack.setLayout(new BoxLayout(titleStack, BoxLayout.Y_AXIS));
         titleStack.setBackground(AppTheme.BG_SURFACE);
@@ -97,31 +67,24 @@ public class RecipeSuggestionsPanel extends JPanel {
         titleStack.add(title);
         titleStack.add(Box.createVerticalStrut(2));
         titleStack.add(statusLabel);
-        
-        // Could probably replace w/ icon instead
-        JButton refreshBtn = AppTheme.secondaryButton("Refresh");
-        refreshBtn.addActionListener(e -> loadSuggestions());
-
-        topRow.add(titleStack, BorderLayout.WEST);
-        topRow.add(refreshBtn, BorderLayout.EAST);
 
         // Bottom row: filter toggles
         JPanel filterRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         filterRow.setBackground(AppTheme.BG_SURFACE);
 
-        filterAllBtn     = buildFilterButton(FILTER_ALL,     true);
-        filterReadyBtn   = buildFilterButton(FILTER_READY,   false);
+        filterAllBtn = buildFilterButton(FILTER_ALL, true);
+        filterReadyBtn = buildFilterButton(FILTER_READY, false);
         filterPartialBtn = buildFilterButton(FILTER_PARTIAL, false);
 
-        filterAllBtn.addActionListener(    e -> applyFilter(FILTER_ALL));
-        filterReadyBtn.addActionListener(  e -> applyFilter(FILTER_READY));
+        filterAllBtn.addActionListener(e -> applyFilter(FILTER_ALL));
+        filterReadyBtn.addActionListener(e -> applyFilter(FILTER_READY));
         filterPartialBtn.addActionListener(e -> applyFilter(FILTER_PARTIAL));
 
         filterRow.add(filterAllBtn);
         filterRow.add(filterReadyBtn);
         filterRow.add(filterPartialBtn);
 
-        header.add(topRow,    BorderLayout.NORTH);
+        header.add(titleStack, BorderLayout.NORTH);
         header.add(filterRow, BorderLayout.SOUTH);
 
         return header;
@@ -130,30 +93,26 @@ public class RecipeSuggestionsPanel extends JPanel {
     private JButton buildFilterButton(String text, boolean active) {
         JButton btn = AppTheme.ghostButton(text);
         btn.setFont(AppTheme.FONT_SMALL);
-        if (active) {
-            styleAsActiveFilter(btn);
-        }
+        if (active) styleAsActiveFilter(btn);
         return btn;
     }
 
     private void applyFilter(String filter) {
         activeFilter = filter;
-
-        // Update button styles to show active state
         resetFilterButtons();
-        JButton active = switch (filter) {
-            case FILTER_READY   -> filterReadyBtn;
-            case FILTER_PARTIAL -> filterPartialBtn;
-            default             -> filterAllBtn;
-        };
-        styleAsActiveFilter(active);
 
+        JButton active = switch (filter) {
+            case FILTER_READY -> filterReadyBtn;
+            case FILTER_PARTIAL -> filterPartialBtn;
+            default -> filterAllBtn;
+        };
+
+        styleAsActiveFilter(active);
         renderCards(getFilteredResults());
     }
 
     private void resetFilterButtons() {
-        for (JButton btn : new JButton[]{
-                filterAllBtn, filterReadyBtn, filterPartialBtn}) {
+        for (JButton btn : new JButton[]{filterAllBtn, filterReadyBtn, filterPartialBtn}) {
             btn.setBackground(AppTheme.BG_SURFACE);
             btn.setForeground(AppTheme.TEXT_SECONDARY);
             btn.setBorderPainted(true);
@@ -170,20 +129,14 @@ public class RecipeSuggestionsPanel extends JPanel {
         btn.setBorder(BorderFactory.createEmptyBorder(7, 15, 7, 15));
     }
 
-    // Returns results filtered by active filter
     private List<RecipeMatchResult> getFilteredResults() {
         return switch (activeFilter) {
-            case FILTER_READY   -> allResults.stream()
-                .filter(RecipeMatchResult::isFullMatch)
-                .toList();
-            case FILTER_PARTIAL -> allResults.stream()
-                .filter(r -> !r.isFullMatch() && r.getMatchPercent() > 0)
-                .toList();
-            default             -> allResults;
+            case FILTER_READY -> allResults.stream().filter(RecipeMatchResult::isFullMatch).toList();
+            case FILTER_PARTIAL -> allResults.stream().filter(r -> !r.isFullMatch() && r.getMatchPercent() > 0).toList();
+            default -> allResults;
         };
     }
 
-    // Cards area
     private JScrollPane buildCardsArea() {
         cardsPanel = new JPanel();
         cardsPanel.setLayout(new BoxLayout(cardsPanel, BoxLayout.Y_AXIS));
@@ -191,99 +144,57 @@ public class RecipeSuggestionsPanel extends JPanel {
         cardsPanel.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
 
         JScrollPane scroll = new JScrollPane(cardsPanel);
-        scroll.setBorder(BorderFactory.createEmptyBorder());
+        scroll.setBorder(null);
         scroll.getViewport().setBackground(AppTheme.BG_PAGE);
         scroll.getVerticalScrollBar().setUnitIncrement(16);
-        scroll.setHorizontalScrollBarPolicy(
-            JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
         return scroll;
     }
 
     private void loadSuggestions() {
-        // Show loading state immediately on EDT
         statusLabel.setText("Calculating matches...");
-        cardsPanel.removeAll();
-
-        JLabel loadingLabel = new JLabel("Checking your pantry...");
-        loadingLabel.setFont(AppTheme.FONT_BODY);
-        loadingLabel.setForeground(AppTheme.TEXT_MUTED);
-        loadingLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        loadingLabel.setBorder(BorderFactory.createEmptyBorder(40, 0, 0, 0));
-        cardsPanel.add(loadingLabel);
-        cardsPanel.revalidate();
-        cardsPanel.repaint();
+        showStateMessage("Checking your pantry...", AppTheme.TEXT_MUTED);
 
         new SwingWorker<List<RecipeMatchResult>, Void>() {
-
             @Override
-            protected List<RecipeMatchResult> doInBackground()
-                    throws SQLException {
-                return matchingService.getMatchedRecipes(
-                    frame.getCurrentUserId());
+            protected List<RecipeMatchResult> doInBackground() throws SQLException {
+                return matchingService.getMatchedRecipes(frame.getCurrentUserId());
             }
 
             @Override
             protected void done() {
                 try {
                     allResults = get();
-                    List<RecipeMatchResult> filtered = getFilteredResults();
-                    renderCards(filtered);
+                    renderCards(getFilteredResults());
                     updateStatusLabel();
                 } catch (InterruptedException | ExecutionException ex) {
-                    cardsPanel.removeAll();
-                    JLabel errLabel = new JLabel(
-                        "Failed to load suggestions: " + ex.getMessage());
-                    errLabel.setFont(AppTheme.FONT_BODY);
-                    errLabel.setForeground(AppTheme.TERRA_PRIMARY);
-                    errLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-                    errLabel.setBorder(
-                        BorderFactory.createEmptyBorder(40, 0, 0, 0));
-                    cardsPanel.add(errLabel);
-                    cardsPanel.revalidate();
-                    cardsPanel.repaint();
+                    showStateMessage("Failed to load suggestions: " + ex.getMessage(), AppTheme.TERRA_PRIMARY);
                 }
             }
         }.execute();
     }
 
-    private void updateStatusLabel() {
-        long ready = allResults.stream()
-            .filter(RecipeMatchResult::isFullMatch).count();
-        statusLabel.setText(
-            allResults.size() + " recipe"
-            + (allResults.size() == 1 ? "" : "s") + " scored"
-            + (ready > 0 ? "  ·  " + ready + " ready to cook" : ""));
-    }
-
     private void renderCards(List<RecipeMatchResult> results) {
         cardsPanel.removeAll();
-
         if (results.isEmpty()) {
-            JLabel empty = new JLabel(
-                activeFilter.equals(FILTER_ALL)
-                    ? "No recipes found. Add recipes in the Recipes panel."
-                    : "No recipes match this filter.");
-            empty.setFont(AppTheme.FONT_BODY);
-            empty.setForeground(AppTheme.TEXT_MUTED);
-            empty.setAlignmentX(Component.CENTER_ALIGNMENT);
-            empty.setBorder(BorderFactory.createEmptyBorder(40, 0, 0, 0));
-            cardsPanel.add(empty);
+            String msg = activeFilter.equals(FILTER_ALL)
+                ? "No recipes found. Add recipes in the Recipes panel."
+                : "No recipes match this filter.";
+            showStateMessage(msg, AppTheme.TEXT_MUTED);
         } else {
             for (RecipeMatchResult result : results) {
                 cardsPanel.add(buildRecipeCard(result));
                 cardsPanel.add(Box.createVerticalStrut(12));
             }
         }
-
         cardsPanel.revalidate();
         cardsPanel.repaint();
     }
 
-    // Single recipe card layout config
     private JPanel buildRecipeCard(RecipeMatchResult result) {
         Recipe recipe = result.getRecipe();
-        int    pct    = result.getMatchPercent();
+        int pct = result.getMatchPercent();
 
         JPanel card = new JPanel(new BorderLayout(0, 10));
         card.setBackground(AppTheme.BG_SURFACE);
@@ -293,78 +204,70 @@ public class RecipeSuggestionsPanel extends JPanel {
         card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 999));
         card.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // ── Top row: recipe title + match badge ───────────────────────────
         JPanel topRow = new JPanel(new BorderLayout(10, 0));
-        topRow.setBackground(AppTheme.BG_SURFACE);
-
+        topRow.setOpaque(false);
+        topRow.setAlignmentX(Component.LEFT_ALIGNMENT); 
+        
         JLabel titleLabel = new JLabel(recipe.getTitle());
         titleLabel.setFont(AppTheme.FONT_HEADING);
         titleLabel.setForeground(AppTheme.TEXT_PRIMARY);
-
-        JLabel badge = buildMatchBadge(pct, result.getMatchLabel());
-
         topRow.add(titleLabel, BorderLayout.WEST);
-        topRow.add(badge,      BorderLayout.EAST);
+        topRow.add(buildMatchBadge(pct, result.getMatchLabel()), BorderLayout.EAST);
 
-        // ── Category + prep time subtitle ─────────────────────────────────
-        JLabel subtitleLabel = new JLabel(
-            recipe.getFormattedPrepTime());
+        JLabel subtitleLabel = new JLabel(recipe.getFormattedPrepTime());
         subtitleLabel.setFont(AppTheme.FONT_SMALL);
         subtitleLabel.setForeground(AppTheme.TEXT_MUTED);
-        subtitleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        subtitleLabel.setAlignmentX(Component.LEFT_ALIGNMENT); 
 
-        // Progress bar component
         JProgressBar bar = new JProgressBar(0, 100);
         bar.setValue(pct);
-        bar.setStringPainted(false);
         bar.setPreferredSize(new Dimension(0, 6));
         bar.setBorderPainted(false);
         bar.setBackground(AppTheme.BG_SUBTLE);
         bar.setForeground(barColor(pct));
-        bar.setAlignmentX(Component.LEFT_ALIGNMENT);
+        bar.setAlignmentX(Component.LEFT_ALIGNMENT); 
 
-        // Missing ingredients
         JPanel bottomSection = new JPanel();
         bottomSection.setLayout(new BoxLayout(bottomSection, BoxLayout.Y_AXIS));
-        bottomSection.setBackground(AppTheme.BG_SURFACE);
-        bottomSection.setAlignmentX(Component.LEFT_ALIGNMENT);
+        bottomSection.setOpaque(false);
+        bottomSection.setAlignmentX(Component.LEFT_ALIGNMENT); 
 
         if (result.getMissingIngredients().isEmpty()) {
             JLabel allGood = new JLabel("All ingredients available in pantry");
             allGood.setFont(AppTheme.FONT_SMALL);
             allGood.setForeground(AppTheme.GREEN_PRIMARY);
+            allGood.setAlignmentX(Component.LEFT_ALIGNMENT);
             bottomSection.add(allGood);
         } else {
             JLabel missingHeader = new JLabel("Still needed:");
             missingHeader.setFont(AppTheme.FONT_LABEL);
             missingHeader.setForeground(AppTheme.TEXT_SECONDARY);
+            missingHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
             bottomSection.add(missingHeader);
             bottomSection.add(Box.createVerticalStrut(4));
 
             for (RecipeIngredient ri : result.getMissingIngredients()) {
-                JLabel ing = new JLabel(
-                    "  ·  " + Helper.capitalize(ri.getIngredientName())
-                    + "  (" + Helper.formatQty(ri.getQuantity())
-                    + " " + ri.getUnit() + ")");
+                JLabel ing = new JLabel("  ·  " + Helper.capitalize(ri.getIngredientName())
+                    + "  (" + Helper.formatQty(ri.getQuantity()) + " " + ri.getUnit() + ")");
                 ing.setFont(AppTheme.FONT_SMALL);
                 ing.setForeground(AppTheme.TERRA_PRIMARY);
+                ing.setAlignmentX(Component.LEFT_ALIGNMENT); 
                 bottomSection.add(ing);
             }
         }
 
-        // Assign to Plan button
-        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-        btnRow.setBackground(AppTheme.BG_SURFACE);
-        btnRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-
         JButton assignBtn = AppTheme.primaryButton("Assign to Plan");
         assignBtn.addActionListener(e -> openAssignDialog(recipe));
+        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        btnRow.setOpaque(false);
+        btnRow.setAlignmentX(Component.LEFT_ALIGNMENT); 
         btnRow.add(assignBtn);
 
-        // Assemble card
         JPanel body = new JPanel();
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
-        body.setBackground(AppTheme.BG_SURFACE);
+        body.setOpaque(false);
+        body.setAlignmentX(Component.LEFT_ALIGNMENT); 
+        
         body.add(subtitleLabel);
         body.add(Box.createVerticalStrut(8));
         body.add(bar);
@@ -374,12 +277,10 @@ public class RecipeSuggestionsPanel extends JPanel {
         body.add(btnRow);
 
         card.add(topRow, BorderLayout.NORTH);
-        card.add(body,   BorderLayout.CENTER);
-
+        card.add(body, BorderLayout.CENTER);
         return card;
     }
 
-    // Match badge — colored pill
     private JLabel buildMatchBadge(int pct, String label) {
         JLabel badge = new JLabel(label);
         badge.setFont(AppTheme.FONT_LABEL);
@@ -396,77 +297,63 @@ public class RecipeSuggestionsPanel extends JPanel {
             badge.setBackground(AppTheme.TERRA_TINT);
             badge.setForeground(AppTheme.TERRA_TINT_TEXT);
         }
-
         return badge;
     }
 
     private Color barColor(int pct) {
         if (pct == 100) return AppTheme.GREEN_PRIMARY;
-        if (pct >= 50)  return AppTheme.AMBER_PRIMARY;
+        if (pct >= 50) return AppTheme.AMBER_PRIMARY;
         return AppTheme.TERRA_PRIMARY;
     }
 
+    private void updateStatusLabel() {
+        long ready = allResults.stream().filter(RecipeMatchResult::isFullMatch).count();
+        String countText = allResults.size() + " recipe" + (allResults.size() == 1 ? "" : "s") + " scored";
+        statusLabel.setText(countText + (ready > 0 ? "  ·  " + ready + " ready to cook" : ""));
+    }
+
+    private void showStateMessage(String text, Color color) {
+        cardsPanel.removeAll();
+        JLabel label = new JLabel(text);
+        label.setFont(AppTheme.FONT_BODY);
+        label.setForeground(color);
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        label.setBorder(BorderFactory.createEmptyBorder(40, 0, 0, 0));
+        cardsPanel.add(label);
+        cardsPanel.revalidate();
+        cardsPanel.repaint();
+    }
+
     private void openAssignDialog(Recipe recipe) {
-        // Show date + meal type picker
         JPanel picker = new JPanel(new GridLayout(2, 2, 10, 8));
         picker.setBorder(BorderFactory.createEmptyBorder(4, 0, 4, 0));
 
-        JSpinner dateSpinner = new JSpinner(
-            new SpinnerDateModel());
-        dateSpinner.setEditor(
-            new JSpinner.DateEditor(dateSpinner, "yyyy-MM-dd"));
-        ((JSpinner.DefaultEditor) dateSpinner.getEditor())
-            .getTextField().setColumns(10);
+        JSpinner dateSpinner = new JSpinner(new SpinnerDateModel());
+        dateSpinner.setEditor(new JSpinner.DateEditor(dateSpinner, "yyyy-MM-dd"));
+        ((JSpinner.DefaultEditor) dateSpinner.getEditor()).getTextField().setColumns(10);
 
-        JComboBox<String> mealCombo = new JComboBox<>(
-            new String[]{"Breakfast", "Lunch", "Dinner"});
+        JComboBox<String> mealCombo = new JComboBox<>(new String[]{"Breakfast", "Lunch", "Dinner"});
 
         picker.add(new JLabel("Date:"));
         picker.add(dateSpinner);
         picker.add(new JLabel("Meal slot:"));
         picker.add(mealCombo);
 
-        int choice = JOptionPane.showConfirmDialog(
-            this,
-            new Object[]{
-                "Assign \"" + recipe.getTitle() + "\" to planner:",
-                picker
-            },
-            "Assign to Plan",
-            JOptionPane.OK_CANCEL_OPTION,
-            JOptionPane.PLAIN_MESSAGE);
+        int choice = JOptionPane.showConfirmDialog(this,
+            new Object[]{"Assign \"" + recipe.getTitle() + "\" to planner:", picker},
+            "Assign to Plan", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
         if (choice != JOptionPane.OK_OPTION) return;
 
-        // Convert java.util.Date from spinner to LocalDate
-        java.util.Date selected =
-            (java.util.Date) dateSpinner.getValue();
-        LocalDate date = selected.toInstant()
-            .atZone(java.time.ZoneId.systemDefault())
-            .toLocalDate();
+        LocalDate date = ((java.util.Date) dateSpinner.getValue()).toInstant()
+            .atZone(ZoneId.systemDefault()).toLocalDate();
         String mealType = (String) mealCombo.getSelectedItem();
 
-        // Directly add the meal entry to the database
         try {
-            MealEntry newEntry = new MealEntry(
-                recipe.getRecipeId(),
-                frame.getCurrentUserId(),
-                mealType, date,
-                recipe.getTitle(), null);
-
-            mealEntryDAO.addEntry(newEntry);
-
-            JOptionPane.showMessageDialog(this,
-                "\"" + recipe.getTitle()
-                + "\" assigned to " + mealType
-                + " on " + date + ".",
-                "Assigned",
-                JOptionPane.INFORMATION_MESSAGE);
+            mealEntryDAO.addEntry(new MealEntry(recipe.getRecipeId(), frame.getCurrentUserId(), mealType, date, recipe.getTitle(), null));
+            JOptionPane.showMessageDialog(this, "\"" + recipe.getTitle() + "\" assigned to " + mealType + " on " + date + ".", "Assigned", JOptionPane.INFORMATION_MESSAGE);
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this,
-                "Failed to assign recipe: " + e.getMessage(),
-                "Database Error",
-                JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Failed to assign: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
