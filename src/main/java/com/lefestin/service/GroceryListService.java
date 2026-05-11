@@ -8,9 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.lefestin.dao.MealEntryDAO;
-import com.lefestin.dao.PantryDAO;
-import com.lefestin.dao.RecipeIngredientDAO;
 import com.lefestin.dao.impl.MealEntryDAOImpl;
 import com.lefestin.dao.impl.PantryDAOImpl;
 import com.lefestin.dao.impl.RecipeIngredientDAOImpl;
@@ -44,12 +41,14 @@ public class GroceryListService {
     private final MealEntryDAOImpl        mealEntryDAO;
     private final RecipeIngredientDAOImpl riDAO;
     private final PantryDAOImpl           pantryDAO;
+    private final ConversionService       conversionService;
 
     // ── Constructor ───────────────────────────────────────────────────────
     public GroceryListService() {
         this.mealEntryDAO = new MealEntryDAOImpl();
         this.riDAO        = new RecipeIngredientDAOImpl();
         this.pantryDAO    = new PantryDAOImpl();
+        this.conversionService = new ConversionService();
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -192,19 +191,22 @@ public class GroceryListService {
                 riDAO.getIngredientsByRecipeId(recipeId);
 
             for (RecipeIngredient ri : ingredients) {
+                ConversionService.NormalizedAmount normalized =
+                    conversionService.normalize(ri.getQuantity(), ri.getUnit());
+
                 // Key combines ingredientId + unit for unit-aware grouping
-                String key = ri.getIngredientId() + "|" + ri.getUnit();
+                String key = ri.getIngredientId() + "|" + normalized.getUnit();
 
                 if (required.containsKey(key)) {
                     // Same ingredient + same unit — add quantities
-                    required.get(key).totalRequired += ri.getQuantity();
+                    required.get(key).totalRequired += normalized.getQuantity();
                 } else {
                     // New ingredient or new unit variant — add entry
                     required.put(key, new AggregatedIngredient(
                         ri.getIngredientId(),
                         ri.getIngredientName(),
-                        ri.getUnit(),
-                        ri.getQuantity()
+                        normalized.getUnit(),
+                        normalized.getQuantity()
                     ));
                 }
             }
@@ -248,12 +250,14 @@ public class GroceryListService {
             PantryItem pantryItem = pantryMap.get(agg.ingredientId);
 
             if (pantryItem != null) {
-                if (pantryItem.getUnit().equalsIgnoreCase(agg.unit)) {
-                    // Same unit — subtract what's available
-                    stillNeeded -= pantryItem.getQuantity();
+                Double converted = conversionService.tryConvert(
+                    pantryItem.getQuantity(),
+                    pantryItem.getUnit(),
+                    agg.unit);
+
+                if (converted != null) {
+                    stillNeeded -= converted;
                 }
-                // Different unit — can't subtract safely, full amount needed
-                // stillNeeded remains at totalRequired
             }
 
             // Only add to grocery list if something is still needed

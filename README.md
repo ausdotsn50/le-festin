@@ -16,6 +16,8 @@ Le Festin is a desktop application designed for personalized recipe management a
 
 * **Data Integrity:** Relational database normalized to 3NF to ensure no partial or transitive dependencies.
 
+* **Unit Normalization:** Quantities are normalized before SQL persistence so pantry, recipe matching, and grocery calculations can compare units consistently.
+
 ## Prerequisites
 * **JDK 17+**: The project uses Java 17 features.
 * **Maven**: For dependency and build management.
@@ -48,13 +50,13 @@ db.password=your_password
 mvn clean install
 
 # Step 2: Create schema, seed data, and fix credentials
-mvn exec:java -Dexec.mainClass=com.lefestin.config.SetupDatabase
-mvn exec:java -Dexec.mainClass=com.lefestin.config.FixSeedPasswords
+mvn exec:java "-Dexec.mainClass=com.lefestin.config.SetupDatabase"
+mvn exec:java "-Dexec.mainClass=com.lefestin.config.FixSeedPasswords"
 ```
 
 4. **Launch the app**
 ```bash
-mvn compile exec:java "-Dexec.mainClass=com.lafestin.Main"
+mvn compile exec:java "-Dexec.mainClass=com.lefestin.Main"
 ```
 
 ## Option 2: Running the Executable (JAR Version)
@@ -110,7 +112,7 @@ FK: recipe_id → recipe(recipe_id), user_id → user(user_id)
 📦 le-festin
  ┣ 📂 sql
  ┃ ┣ 📜 le_festin_schema.sql         # Database table definitions
- ┃ ┗ 📜 le_festin_seed.sql           # Initial data for recipes/ingredients
+ ┃ ┣ 📜 le_festin_seed.sql           # Initial data for recipes/ingredients
  ┣ 📂 src
  ┃ ┗ 📂 main
  ┃   ┣ 📂 java

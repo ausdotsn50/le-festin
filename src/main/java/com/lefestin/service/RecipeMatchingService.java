@@ -6,9 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.lefestin.dao.PantryDAO;
-import com.lefestin.dao.RecipeDAO;
-import com.lefestin.dao.RecipeIngredientDAO;
 import com.lefestin.dao.impl.PantryDAOImpl;
 import com.lefestin.dao.impl.RecipeDAOImpl;
 import com.lefestin.dao.impl.RecipeIngredientDAOImpl;
@@ -44,12 +41,14 @@ public class RecipeMatchingService {
     private final PantryDAOImpl           pantryDAO;
     private final RecipeDAOImpl           recipeDAO;
     private final RecipeIngredientDAOImpl riDAO;
+    private final ConversionService       conversionService;
 
     // ── Constructor ───────────────────────────────────────────────────────
     public RecipeMatchingService() {
         this.pantryDAO = new PantryDAOImpl();
         this.recipeDAO = new RecipeDAOImpl();
         this.riDAO     = new RecipeIngredientDAOImpl();
+        this.conversionService = new ConversionService();
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -185,7 +184,16 @@ public class RecipeMatchingService {
             requiredQuantity += recipeQty;
 
             PantryItem pantryItem = pantryMap.get(ri.getIngredientId());
-            double availableQty = pantryItem != null ? pantryItem.getQuantity() : 0.0;
+            double availableQty = 0.0;
+
+            if (pantryItem != null) {
+                Double converted = conversionService.tryConvert(
+                    pantryItem.getQuantity(),
+                    pantryItem.getUnit(),
+                    ri.getUnit());
+                availableQty = converted != null ? converted : 0.0;
+            }
+
             double matchedQty = Math.min(availableQty, recipeQty);
             fulfilledQuantity += matchedQty;
 

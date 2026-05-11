@@ -169,3 +169,125 @@ CREATE INDEX idx_me_user_date ON meal_entry       (user_id, scheduled_date);
 --  DONE
 -- ============================================================
 SELECT 'le_festin schema created successfully.' AS status;
+
+
+
+
+
+-- ============================================================
+--  Le Festin — Unit Normalization Migration
+--
+--  Purpose:
+--  Align existing pantry and recipe_ingredient rows with the
+--  canonical storage units now used by ConversionService:
+--    - MASS   -> gram
+--    - VOLUME -> milliliter
+--    - COUNT  -> piece
+--
+-- ============================================================
+
+START TRANSACTION;
+
+-- Recipe ingredients -> canonical units
+UPDATE recipe_ingredient
+SET
+    quantity = ROUND(
+        CASE LOWER(TRIM(unit))
+            WHEN 'gram' THEN quantity
+            WHEN 'grams' THEN quantity
+            WHEN 'g' THEN quantity
+            WHEN 'kilogram' THEN quantity * 1000
+            WHEN 'kilograms' THEN quantity * 1000
+            WHEN 'kg' THEN quantity * 1000
+
+            WHEN 'milliliter' THEN quantity
+            WHEN 'milliliters' THEN quantity
+            WHEN 'ml' THEN quantity
+            WHEN 'liter' THEN quantity * 1000
+            WHEN 'liters' THEN quantity * 1000
+            WHEN 'l' THEN quantity * 1000
+            WHEN 'teaspoon' THEN quantity * 5
+            WHEN 'teaspoons' THEN quantity * 5
+            WHEN 'tsp' THEN quantity * 5
+            WHEN 'tablespoon' THEN quantity * 15
+            WHEN 'tablespoons' THEN quantity * 15
+            WHEN 'tbsp' THEN quantity * 15
+            WHEN 'cup' THEN quantity * 240
+            WHEN 'cups' THEN quantity * 240
+
+            ELSE quantity
+        END, 2
+    ),
+    unit = CASE
+        WHEN LOWER(TRIM(unit)) IN ('gram', 'grams', 'g', 'kilogram', 'kilograms', 'kg')
+            THEN 'gram'
+        WHEN LOWER(TRIM(unit)) IN (
+            'milliliter', 'milliliters', 'ml',
+            'liter', 'liters', 'l',
+            'teaspoon', 'teaspoons', 'tsp',
+            'tablespoon', 'tablespoons', 'tbsp',
+            'cup', 'cups'
+        )
+            THEN 'milliliter'
+        WHEN LOWER(TRIM(unit)) IN (
+            'piece', 'pieces', 'whole', 'wholes',
+            'clove', 'cloves', 'slice', 'slices',
+            'pinch', 'pinches'
+        )
+            THEN 'piece'
+        ELSE LOWER(TRIM(unit))
+    END;
+
+-- Pantry -> canonical units
+UPDATE pantry
+SET
+    quantity = ROUND(
+        CASE LOWER(TRIM(unit))
+            WHEN 'gram' THEN quantity
+            WHEN 'grams' THEN quantity
+            WHEN 'g' THEN quantity
+            WHEN 'kilogram' THEN quantity * 1000
+            WHEN 'kilograms' THEN quantity * 1000
+            WHEN 'kg' THEN quantity * 1000
+
+            WHEN 'milliliter' THEN quantity
+            WHEN 'milliliters' THEN quantity
+            WHEN 'ml' THEN quantity
+            WHEN 'liter' THEN quantity * 1000
+            WHEN 'liters' THEN quantity * 1000
+            WHEN 'l' THEN quantity * 1000
+            WHEN 'teaspoon' THEN quantity * 5
+            WHEN 'teaspoons' THEN quantity * 5
+            WHEN 'tsp' THEN quantity * 5
+            WHEN 'tablespoon' THEN quantity * 15
+            WHEN 'tablespoons' THEN quantity * 15
+            WHEN 'tbsp' THEN quantity * 15
+            WHEN 'cup' THEN quantity * 240
+            WHEN 'cups' THEN quantity * 240
+
+            ELSE quantity
+        END, 2
+    ),
+    unit = CASE
+        WHEN LOWER(TRIM(unit)) IN ('gram', 'grams', 'g', 'kilogram', 'kilograms', 'kg')
+            THEN 'gram'
+        WHEN LOWER(TRIM(unit)) IN (
+            'milliliter', 'milliliters', 'ml',
+            'liter', 'liters', 'l',
+            'teaspoon', 'teaspoons', 'tsp',
+            'tablespoon', 'tablespoons', 'tbsp',
+            'cup', 'cups'
+        )
+            THEN 'milliliter'
+        WHEN LOWER(TRIM(unit)) IN (
+            'piece', 'pieces', 'whole', 'wholes',
+            'clove', 'cloves', 'slice', 'slices',
+            'pinch', 'pinches'
+        )
+            THEN 'piece'
+        ELSE LOWER(TRIM(unit))
+    END;
+
+COMMIT;
+
+SELECT 'unit normalization migration completed' AS status;
