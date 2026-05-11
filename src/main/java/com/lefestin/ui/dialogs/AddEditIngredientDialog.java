@@ -1,20 +1,38 @@
 package com.lefestin.ui.dialogs;
 
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.sql.SQLException;
 
-import com.lefestin.dao.IngredientDAO;
-import com.lefestin.dao.PantryDAO;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
+
 import com.lefestin.dao.impl.IngredientDAOImpl;
 import com.lefestin.dao.impl.PantryDAOImpl;
 import com.lefestin.helper.Helper;
 import com.lefestin.model.Ingredient;
 import com.lefestin.model.PantryItem;
+import com.lefestin.service.ConversionService;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
-
-import java.awt.*;
-import java.awt.event.*;
-import java.sql.SQLException;
 
 /**
  * AddEditIngredientDialog — modal form for adding or editing a pantry item.
@@ -25,6 +43,7 @@ public class AddEditIngredientDialog extends JDialog {
     private final PantryItem    existingItem; // null = add mode
     private final PantryDAOImpl     pantryDAO;
     private final IngredientDAOImpl ingredientDAO;
+    private final ConversionService conversionService;
 
     private boolean saved = false;
 
@@ -41,6 +60,7 @@ public class AddEditIngredientDialog extends JDialog {
         this.existingItem = item;
         this.pantryDAO    = new PantryDAOImpl();
         this.ingredientDAO= new IngredientDAOImpl();
+        this.conversionService = new ConversionService();
 
         initComponents();
         prefillIfEditing();
@@ -292,6 +312,8 @@ public class AddEditIngredientDialog extends JDialog {
         double qty  = Double.parseDouble(
             quantityField.getText().trim());
         String unit = (String) unitCombo.getSelectedItem();
+        ConversionService.NormalizedAmount normalizedInput =
+            conversionService.normalize(qty, unit);
 
         try {
             if (existingItem == null) {
@@ -306,15 +328,31 @@ public class AddEditIngredientDialog extends JDialog {
                     selected.getIngredientId(),
                     frame.getCurrentUserId());
 
-                double finalQty = qty;
+                double finalQty = normalizedInput.getQuantity();
+                String finalUnit = normalizedInput.getUnit();
+
                 if (existing != null) {
-                    finalQty += existing.getQuantity();
+                    ConversionService.NormalizedAmount normalizedExisting =
+                        conversionService.normalize(
+                            existing.getQuantity(),
+                            existing.getUnit());
+
+                    if (!normalizedExisting.getUnit()
+                            .equalsIgnoreCase(finalUnit)) {
+                        JOptionPane.showMessageDialog(this,
+                            "Existing pantry unit cannot be merged with the chosen unit.",
+                            "Incompatible Units",
+                            JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+
+                    finalQty += normalizedExisting.getQuantity();
                 }
 
                 PantryItem newItem = new PantryItem(
                     selected.getIngredientId(),
                     frame.getCurrentUserId(),
-                    finalQty, unit,
+                    finalQty, finalUnit,
                     selected.getName());
 
                 pantryDAO.addOrUpdate(newItem);
