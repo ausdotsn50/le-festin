@@ -1,15 +1,27 @@
 package com.lefestin.ui.panels;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.SQLException;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.RowFilter;
+import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 
-import com.lefestin.dao.PantryDAO;
 import com.lefestin.dao.impl.PantryDAOImpl;
 import com.lefestin.model.PantryItem;
 import com.lefestin.ui.AppTheme;
@@ -44,13 +56,35 @@ public class PantryPanel extends BaseListPanel {
     @Override
     protected String getSearchPlaceholder() { return "Search ingredients..."; }
     @Override
-    protected JComponent buildHeaderRightControl() { return Box.createHorizontalBox(); }
+    protected JComponent buildHeaderRightControl() {
+        countLabel = new JLabel("0 ingredients");
+        countLabel.setFont(AppTheme.FONT_SMALL);
+        countLabel.setForeground(AppTheme.TEXT_MUTED);
+        return countLabel;
+    }
     @Override
     protected JComponent buildSearchRightControl() {
-        JButton matchBtn = AppTheme.primaryButton("Match Recipes");
+        JPanel controls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        controls.setBackground(AppTheme.BG_SURFACE);
+
+        JButton addButton = AppTheme.primaryButton("+ Add");
+        addButton.setToolTipText("Add a new ingredient to your pantry");
+        addButton.addActionListener(e -> onAddClicked());
+
+        actionBtn = createActionButton();
+        actionBtn.setToolTipText("Remove the selected ingredient");
+        actionBtn.setEnabled(false);
+        actionBtn.addActionListener(e -> onActionClicked());
+
+        JButton matchBtn = AppTheme.secondaryButton("Match Recipes");
         matchBtn.setToolTipText("Find recipes you can make with your current pantry");
         matchBtn.addActionListener(e -> navigateToSuggestions());
-        return matchBtn;
+
+        controls.add(addButton);
+        controls.add(actionBtn);
+        controls.add(matchBtn);
+
+        return controls;
     }
 
     // --- UI Structure ---
@@ -59,11 +93,19 @@ public class PantryPanel extends BaseListPanel {
 
     @Override
     protected JPanel buildToolbar() {
-        JPanel bar = buildStandardToolbar();
+        JPanel bar = new JPanel(new BorderLayout());
+        bar.setBackground(AppTheme.BG_SURFACE);
         bar.setBorder(BorderFactory.createCompoundBorder(
             AppTheme.BORDER_DIVIDER_TOP,
             BorderFactory.createEmptyBorder(10, 20, 10, 20)
         ));
+
+        // Left: empty spacer area so the count stays in the header like Grocery List
+        JPanel btnGroup = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        btnGroup.setBackground(AppTheme.BG_SURFACE);
+
+        bar.add(btnGroup, BorderLayout.WEST);
+
         return bar;
     }
 
@@ -118,8 +160,17 @@ public class PantryPanel extends BaseListPanel {
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 boolean selected = table.getSelectedRow() != -1;
-                editBtn.setEnabled(selected);
                 actionBtn.setEnabled(selected);
+            }
+        });
+
+        // Double-click to edit
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2 && table.getSelectedRow() != -1) {
+                    onEditClicked();
+                }
             }
         });
 

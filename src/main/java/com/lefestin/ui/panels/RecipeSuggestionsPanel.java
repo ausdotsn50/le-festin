@@ -108,8 +108,11 @@ public class RecipeSuggestionsPanel extends BaseListPanel {
         cardsPanel.setBackground(AppTheme.BG_PAGE);
 
         searchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
             public void insertUpdate(DocumentEvent e)  { renderCards(getFilteredResults()); }
+            @Override
             public void removeUpdate(DocumentEvent e)  { renderCards(getFilteredResults()); }
+            @Override
             public void changedUpdate(DocumentEvent e) { renderCards(getFilteredResults()); }
         });
 

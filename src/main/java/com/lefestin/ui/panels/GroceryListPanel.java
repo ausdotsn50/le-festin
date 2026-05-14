@@ -75,7 +75,7 @@ public class GroceryListPanel extends BaseListPanel {
     protected String getHeaderDescription() { return "Missing ingredients from your meal plan"; }
 
     @Override
-    protected String getSearchPlaceholder() { return "Filter ingredients..."; }
+    protected String getSearchPlaceholder() { return "Search ingredients..."; }
 
     @Override
     protected JComponent buildHeaderRightControl() {
@@ -97,11 +97,20 @@ public class GroceryListPanel extends BaseListPanel {
         JButton generateBtn = AppTheme.primaryButton("Generate List");
         generateBtn.addActionListener(e -> executeGeneration());
 
+        exportBtn = AppTheme.secondaryButton("Export CSV");
+        printBtn  = AppTheme.secondaryButton("Print");
+        exportBtn.setEnabled(false);
+        printBtn.setEnabled(false);
+        exportBtn.addActionListener(e -> exportToCsv());
+        printBtn.addActionListener(e  -> printTable());
+
         controls.add(new JLabel("From") {{ setFont(AppTheme.FONT_LABEL); setForeground(AppTheme.TEXT_SECONDARY); }});
         controls.add(fromSpinner);
         controls.add(new JLabel("To")   {{ setFont(AppTheme.FONT_LABEL); setForeground(AppTheme.TEXT_SECONDARY); }});
         controls.add(toSpinner);
         controls.add(generateBtn);
+        controls.add(exportBtn);
+        controls.add(printBtn);
 
         return controls;
     }
@@ -125,8 +134,11 @@ public class GroceryListPanel extends BaseListPanel {
         table.setDefaultRenderer(Object.class, AppTheme.alternatingRowRenderer());
 
         searchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
             public void insertUpdate(DocumentEvent e)  { filterTable(); }
+            @Override
             public void removeUpdate(DocumentEvent e)  { filterTable(); }
+            @Override
             public void changedUpdate(DocumentEvent e) { filterTable(); }
         });
 
@@ -139,25 +151,8 @@ public class GroceryListPanel extends BaseListPanel {
     @Override
     protected JPanel buildToolbar() {
         JPanel bar = new JPanel(new BorderLayout());
-        bar.setBackground(AppTheme.BG_SURFACE);
-        bar.setBorder(BorderFactory.createCompoundBorder(
-            AppTheme.BORDER_DIVIDER_TOP,
-            BorderFactory.createEmptyBorder(10, 20, 10, 20)
-        ));
-
-        JPanel rightGroup = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
-        rightGroup.setOpaque(false);
-
-        exportBtn = AppTheme.secondaryButton("Export CSV");
-        printBtn  = AppTheme.secondaryButton("Print");
-        exportBtn.setEnabled(false);
-        printBtn.setEnabled(false);
-        exportBtn.addActionListener(e -> exportToCsv());
-        printBtn.addActionListener(e  -> printTable());
-
-        rightGroup.add(exportBtn);
-        rightGroup.add(printBtn);
-        bar.add(rightGroup, BorderLayout.EAST);
+        bar.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        bar.setOpaque(false);
         return bar;
     }
 
