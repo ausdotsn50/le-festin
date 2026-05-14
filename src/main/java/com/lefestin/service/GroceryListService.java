@@ -4,7 +4,6 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,12 +28,9 @@ import com.lefestin.model.RecipeIngredient;
  *  6. Return only ingredients where required > available
  *
  * Note on unit handling:
- *  Subtraction only applies when units match exactly.
- *  If a recipe needs "3 tablespoon soy sauce" and the pantry
- *  has "5 tablespoon soy sauce", 2 tablespoon is sufficient.
- *  If units differ ("3 tablespoon" vs "45 milliliter"), the
- *  pantry quantity is treated as zero for that ingredient —
- *  a UnitConverter class could handle this in a future version.
+ *  Direct conversion rules are used when available.
+ *  If a required unit cannot be converted unambiguously from the
+ *  pantry unit, the item is left as a separate line.
  */
 public class GroceryListService {
 
@@ -80,12 +76,8 @@ public class GroceryListService {
         }
 
         // ── Step 2 + 3: aggregate total required quantities ────────────────
-        // key   = "ingredientId|unit"  (unit-aware aggregation)
-        // value = AggregatedIngredient (running total + display fields)
-        // Every meal entry in the selected range contributes,
-        // even if the same recipe appears more than once.
-        Map<String, AggregatedIngredient> required =
-            aggregateRequired(entries);
+        // Units are only merged when a direct, unambiguous conversion exists.
+        List<AggregatedIngredient> required = aggregateRequired(entries);
 
         if (required.isEmpty()) {
             return new ArrayList<>();
@@ -179,10 +171,10 @@ public class GroceryListService {
      * "2 tablespoon butter", they cannot be added without unit
      * conversion, so they are kept as separate line items.
      */
-    private Map<String, AggregatedIngredient> aggregateRequired(
+    private List<AggregatedIngredient> aggregateRequired(
             List<MealEntry> entries) throws SQLException {
 
-        Map<String, AggregatedIngredient> required = new LinkedHashMap<>();
+        List<AggregatedIngredient> required = new ArrayList<>();
 
         for (MealEntry entry : entries) {
             int recipeId = entry.getRecipeId();
@@ -191,28 +183,43 @@ public class GroceryListService {
                 riDAO.getIngredientsByRecipeId(recipeId);
 
             for (RecipeIngredient ri : ingredients) {
-                ConversionService.NormalizedAmount normalized =
-                    conversionService.normalize(ri.getQuantity(), ri.getUnit());
-
-                // Key combines ingredientId + unit for unit-aware grouping
-                String key = ri.getIngredientId() + "|" + normalized.getUnit();
-
-                if (required.containsKey(key)) {
-                    // Same ingredient + same unit — add quantities
-                    required.get(key).totalRequired += normalized.getQuantity();
-                } else {
-                    // New ingredient or new unit variant — add entry
-                    required.put(key, new AggregatedIngredient(
+                if (!mergeIntoExistingBucket(required, ri)) {
+                    required.add(new AggregatedIngredient(
                         ri.getIngredientId(),
                         ri.getIngredientName(),
-                        normalized.getUnit(),
-                        normalized.getQuantity()
+                        ri.getUnit(),
+                        ri.getQuantity()
                     ));
                 }
             }
         }
 
         return required;
+    }
+
+    /**
+     * Tries to merge one ingredient row into an existing bucket.
+     * Returns true only when a direct conversion exists.
+     */
+    private boolean mergeIntoExistingBucket(List<AggregatedIngredient> required,
+                                           RecipeIngredient ri) {
+        for (AggregatedIngredient agg : required) {
+            if (agg.ingredientId != ri.getIngredientId()) {
+                continue;
+            }
+
+            Double converted = conversionService.tryConvert(
+                ri.getQuantity(),
+                ri.getUnit(),
+                agg.unit);
+
+            if (converted != null) {
+                agg.totalRequired += converted;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -232,20 +239,19 @@ public class GroceryListService {
      * Subtracts pantry stock from required quantities.
      * Returns only ingredients where required > available.
      *
-     * Subtraction rules:
-     *  - Pantry has the ingredient, same unit → subtract quantity
-     *  - Pantry has the ingredient, different unit → treat as 0 available
-     *  - Pantry doesn't have the ingredient → full amount needed
-     *  - Required quantity after subtraction ≤ 0 → skip (covered)
+     * Each bucket uses one stored unit, and the pantry amount is
+     * converted into that unit only when a direct rule exists.
+     * Items kept separate due to unit incompatibility are marked with a note.
      */
     private List<RecipeIngredient> subtractPantry(
-            Map<String, AggregatedIngredient> required,
+            List<AggregatedIngredient> required,
             Map<Integer, PantryItem> pantryMap) {
 
         List<RecipeIngredient> groceryList = new ArrayList<>();
 
-        for (AggregatedIngredient agg : required.values()) {
+        for (AggregatedIngredient agg : required) {
             double stillNeeded = agg.totalRequired;
+            String note = null;
 
             PantryItem pantryItem = pantryMap.get(agg.ingredientId);
 
@@ -257,18 +263,27 @@ public class GroceryListService {
 
                 if (converted != null) {
                     stillNeeded -= converted;
+                } else {
+                    // Unit incompatibility: can't subtract pantry stock
+                    note = "(Other recipes use " + pantryItem.getUnit() + ")";
                 }
             }
 
             // Only add to grocery list if something is still needed
             if (stillNeeded > 0) {
-                groceryList.add(new RecipeIngredient(
+                RecipeIngredient item = new RecipeIngredient(
                     0,                   // no recipeId — this is a shopping item
                     agg.ingredientId,
                     roundQty(stillNeeded),
                     agg.unit,
                     agg.ingredientName
-                ));
+                );
+                
+                if (note != null) {
+                    item.setNote(note);
+                }
+                
+                groceryList.add(item);
             }
         }
 

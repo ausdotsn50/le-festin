@@ -9,7 +9,6 @@ import java.util.List;
 
 import com.lefestin.config.DBConnection;
 import com.lefestin.model.RecipeIngredient;
-import com.lefestin.service.ConversionService;
 
 /**
  * RecipeIngredientDAO — all SQL for the `recipe_ingredient` junction table.
@@ -23,8 +22,6 @@ import com.lefestin.service.ConversionService;
  *    (called before re-saving from AddEditRecipeDialog)
  */
 public class RecipeIngredientDAOImpl {
-    private final ConversionService conversionService = new ConversionService();
-
     private Connection conn() {
         return DBConnection.getInstance().getConnection();
     }
@@ -40,9 +37,6 @@ public class RecipeIngredientDAOImpl {
      */
     public void addRecipeIngredient(RecipeIngredient ri)
             throws SQLException {
-        ConversionService.NormalizedAmount normalized =
-            conversionService.normalize(ri.getQuantity(), ri.getUnit());
-
         String sql = """
             INSERT INTO recipe_ingredient
                 (recipe_id, ingredient_id, quantity, unit)
@@ -52,8 +46,8 @@ public class RecipeIngredientDAOImpl {
         try (PreparedStatement stmt = conn().prepareStatement(sql)) {
             stmt.setInt(   1, ri.getRecipeId());
             stmt.setInt(   2, ri.getIngredientId());
-            stmt.setDouble(3, normalized.getQuantity());
-            stmt.setString(4, normalized.getUnit());
+            stmt.setDouble(3, ri.getQuantity());
+            stmt.setString(4, ri.getUnit());
 
             stmt.executeUpdate();
         }

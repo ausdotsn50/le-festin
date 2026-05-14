@@ -1,6 +1,8 @@
 package com.lefestin.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -9,83 +11,42 @@ import java.util.Map;
  * service-level quantity matching.
  *
  * Strategy:
- * - Normalize stored values to base units per family for SQL consistency
- * - Convert at runtime when comparing values from different units
- * - Fall back safely when a unit is unknown
+ * - Store the unit chosen by the UI unchanged
+ * - Convert only through explicit, bidirectional rules within the same unit family
+ * - Fail closed when no direct rule exists
+ * - Prevent cross-family conversions (mass ≠ volume ≠ count)
  */
 public class ConversionService {
 
-    private enum Family {
-        MASS("gram"),
-        VOLUME("milliliter"),
-        COUNT("piece");
+    public enum UnitFamily {
+        MASS("Mass (gram, kg)"),
+        VOLUME("Volume (ml, liter, tsp, tbsp, cup)"),
+        COUNT("Count (piece, whole, clove, slice, pinch)");
 
-        private final String baseUnit;
+        private final String label;
 
-        Family(String baseUnit) {
-            this.baseUnit = baseUnit;
+        UnitFamily(String label) {
+            this.label = label;
         }
 
-        public String getBaseUnit() {
-            return baseUnit;
-        }
-    }
-
-    private static class UnitDef {
-        private final Family family;
-        private final double factorToBase;
-
-        UnitDef(Family family, double factorToBase) {
-            this.family = family;
-            this.factorToBase = factorToBase;
+        public String getLabel() {
+            return label;
         }
     }
 
-    public static class NormalizedAmount {
-        private final double quantity;
-        private final String unit;
-
-        public NormalizedAmount(double quantity, String unit) {
-            this.quantity = quantity;
-            this.unit = unit;
-        }
-
-        public double getQuantity() {
-            return quantity;
-        }
-
-        public String getUnit() {
-            return unit;
-        }
-    }
-
-    private final Map<String, UnitDef> unitMap = new HashMap<>();
+    private final Map<String, String> aliases = new HashMap<>();
+    private final Map<String, Map<String, Double>> conversionMap = new HashMap<>();
+    private final Map<String, UnitFamily> unitFamilies = new HashMap<>();
 
     public ConversionService() {
-        registerMassUnits();
-        registerVolumeUnits();
-        registerCountUnits();
+        registerMassRules();
+        registerVolumeRules();
+        registerCountRules();
     }
 
     /**
-     * Normalizes quantity+unit to base storage units.
-     * Unknown units are preserved but cleaned.
-     */
-    public NormalizedAmount normalize(double quantity, String unit) {
-        String cleaned = cleanUnit(unit);
-        UnitDef def = unitMap.get(cleaned);
-
-        if (def == null) {
-            return new NormalizedAmount(roundQty(quantity), cleaned);
-        }
-
-        double baseQty = quantity * def.factorToBase;
-        return new NormalizedAmount(roundQty(baseQty), def.family.getBaseUnit());
-    }
-
-    /**
-     * Attempts to convert quantity from one unit to another.
-     * Returns null when units are incompatible.
+     * Converts quantity from one unit into another.
+     * Returns null when no direct, unambiguous rule exists.
      */
     public Double tryConvert(double quantity, String fromUnit, String toUnit) {
         String from = cleanUnit(fromUnit);
@@ -95,55 +56,163 @@ public class ConversionService {
             return roundQty(quantity);
         }
 
-        UnitDef fromDef = unitMap.get(from);
-        UnitDef toDef = unitMap.get(to);
+        String canonicalFrom = aliases.getOrDefault(from, from);
+        String canonicalTo = aliases.getOrDefault(to, to);
 
-        if (fromDef == null || toDef == null) {
+        // Runtime safety: if both units are known and belong to different
+        // families, do not attempt conversion — fail closed.
+        UnitFamily fromFamily = unitFamilies.get(canonicalFrom);
+        UnitFamily toFamily = unitFamilies.get(canonicalTo);
+        if (fromFamily != null && toFamily != null && fromFamily != toFamily) {
             return null;
         }
-        if (fromDef.family != toDef.family) {
+
+        Double factor = lookupFactor(canonicalFrom, canonicalTo);
+        if (factor == null) {
             return null;
         }
 
-        double qtyInBase = quantity * fromDef.factorToBase;
-        double converted = qtyInBase / toDef.factorToBase;
-        return roundQty(converted);
+        return roundQty(quantity * factor);
     }
 
     public boolean canConvert(String fromUnit, String toUnit) {
         return tryConvert(1.0, fromUnit, toUnit) != null;
     }
 
-    private void registerMassUnits() {
-        register(Family.MASS, 1.0, "gram", "grams", "g");
-        register(Family.MASS, 1000.0, "kilogram", "kilograms", "kg");
-    }
+    /**
+     * Returns all units that can be converted to the given unit.
+     * Useful for UI suggestions.
+     */
+    public List<String> getCompatibleUnits(String unit) {
+        String canonical = aliases.getOrDefault(cleanUnit(unit), cleanUnit(unit));
+        Map<String, Double> targets = conversionMap.get(canonical);
+        if (targets == null) return new ArrayList<>();
 
-    private void registerVolumeUnits() {
-        register(Family.VOLUME, 1.0, "milliliter", "milliliters", "ml");
-        register(Family.VOLUME, 1000.0, "liter", "liters", "l");
-        register(Family.VOLUME, 5.0, "teaspoon", "teaspoons", "tsp");
-        register(Family.VOLUME, 15.0, "tablespoon", "tablespoons", "tbsp");
-        register(Family.VOLUME, 240.0, "cup", "cups");
-    }
-
-    private void registerCountUnits() {
-        register(Family.COUNT, 1.0, "piece", "pieces");
-        register(Family.COUNT, 1.0, "whole", "wholes");
-        register(Family.COUNT, 1.0, "clove", "cloves");
-        register(Family.COUNT, 1.0, "slice", "slices");
-        register(Family.COUNT, 1.0, "pinch", "pinches");
-    }
-
-    private void register(Family family, double factorToBase, String... names) {
-        for (String name : names) {
-            unitMap.put(cleanUnit(name), new UnitDef(family, factorToBase));
+        // Filter compatible units to the same unit family when possible
+        UnitFamily fam = unitFamilies.get(canonical);
+        List<String> out = new ArrayList<>();
+        for (String t : targets.keySet()) {
+            if (fam == null) {
+                out.add(t);
+            } else {
+                UnitFamily tf = unitFamilies.get(t);
+                if (tf == fam) out.add(t);
+            }
         }
+        return out;
+    }
+
+    /**
+     * Returns the unit family (MASS, VOLUME, COUNT) for a given unit.
+     * Returns null if unit is unknown or custom.
+     */
+    public UnitFamily getUnitFamily(String unit) {
+        String canonical = aliases.getOrDefault(cleanUnit(unit), cleanUnit(unit));
+        return unitFamilies.get(canonical);
+    }
+
+    private void registerMassRules() {
+        registerAlias("gram", "grams", "g");
+        registerAlias("kilogram", "kilograms", "kg");
+        
+        registerFamily(UnitFamily.MASS, "gram", "kilogram");
+        
+        registerBidirectional("gram", "kilogram", 0.001);
+    }
+
+    private void registerVolumeRules() {
+        registerAlias("milliliter", "milliliters", "ml");
+        registerAlias("liter", "liters", "l");
+        registerAlias("teaspoon", "teaspoons", "tsp");
+        registerAlias("tablespoon", "tablespoons", "tbsp");
+        registerAlias("cup", "cups");
+
+        registerFamily(UnitFamily.VOLUME, "milliliter", "liter", "teaspoon", 
+                       "tablespoon", "cup");
+
+        registerBidirectional("milliliter", "liter", 0.001);
+        registerBidirectional("milliliter", "teaspoon", 0.2);
+        registerBidirectional("milliliter", "tablespoon", 0.0666666667);
+        registerBidirectional("milliliter", "cup", 0.0041666667);
+        registerBidirectional("liter", "teaspoon", 200.0);
+        registerBidirectional("liter", "tablespoon", 66.6666667);
+        registerBidirectional("liter", "cup", 4.1666667);
+        registerBidirectional("teaspoon", "tablespoon", 0.3333333333);
+        registerBidirectional("teaspoon", "cup", 0.0208333333);
+        registerBidirectional("tablespoon", "cup", 0.0625);
+    }
+
+    private void registerCountRules() {
+        registerAlias("piece", "pieces");
+        registerAlias("whole", "wholes");
+        registerAlias("clove", "cloves");
+        registerAlias("slice", "slices");
+        registerAlias("pinch", "pinches");
+
+        registerFamily(UnitFamily.COUNT, "piece", "whole", "clove", "slice", "pinch");
+        
+        // IMPORTANT: Do NOT register cross-conversions between different count units.
+        // 1 clove garlic ≠ 1 whole egg ≠ 1 slice bread
+        // Count units are semantically incompatible and should not merge.
+        // Only aliases (piece ↔ pieces) work within the same unit.
+    }
+
+    private void registerAlias(String canonical, String... synonyms) {
+        String cleanedCanonical = cleanUnit(canonical);
+        aliases.put(cleanedCanonical, cleanedCanonical);
+        for (String synonym : synonyms) {
+            aliases.put(cleanUnit(synonym), cleanedCanonical);
+        }
+    }
+
+    /**
+     * Mark units as belonging to a specific family (MASS, VOLUME, COUNT).
+     * Prevents accidental cross-family conversions.
+     */
+    private void registerFamily(UnitFamily family, String... units) {
+        for (String unit : units) {
+            String canonical = cleanUnit(unit);
+            unitFamilies.put(canonical, family);
+        }
+    }
+
+    private void registerBidirectional(String from, String to, double factorFromTo) {
+        String cleanedFrom = cleanUnit(from);
+        String cleanedTo = cleanUnit(to);
+        
+        String canonicalFrom = aliases.getOrDefault(cleanedFrom, cleanedFrom);
+        String canonicalTo = aliases.getOrDefault(cleanedTo, cleanedTo);
+
+        // Validation: both units must be in the same family
+        UnitFamily fromFamily = unitFamilies.get(canonicalFrom);
+        UnitFamily toFamily = unitFamilies.get(canonicalTo);
+        
+        if (fromFamily != null && toFamily != null && fromFamily != toFamily) {
+            throw new IllegalArgumentException(
+                "Cannot register conversion between " + canonicalFrom + " (" + fromFamily + ") " +
+                "and " + canonicalTo + " (" + toFamily + ") — different unit families");
+        }
+
+        conversionMap
+            .computeIfAbsent(canonicalFrom, key -> new HashMap<>())
+            .put(canonicalTo, factorFromTo);
+
+        conversionMap
+            .computeIfAbsent(canonicalTo, key -> new HashMap<>())
+            .put(canonicalFrom, 1.0 / factorFromTo);
+    }
+
+    private Double lookupFactor(String from, String to) {
+        Map<String, Double> targets = conversionMap.get(from);
+        if (targets == null) {
+            return null;
+        }
+        return targets.get(to);
     }
 
     private String cleanUnit(String unit) {
         if (unit == null || unit.isBlank()) {
-            return "piece";
+            return "";
         }
         return unit.trim().toLowerCase(Locale.ROOT);
     }

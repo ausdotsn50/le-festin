@@ -312,8 +312,6 @@ public class AddEditIngredientDialog extends JDialog {
         double qty  = Double.parseDouble(
             quantityField.getText().trim());
         String unit = (String) unitCombo.getSelectedItem();
-        ConversionService.NormalizedAmount normalizedInput =
-            conversionService.normalize(qty, unit);
 
         try {
             if (existingItem == null) {
@@ -328,25 +326,27 @@ public class AddEditIngredientDialog extends JDialog {
                     selected.getIngredientId(),
                     frame.getCurrentUserId());
 
-                double finalQty = normalizedInput.getQuantity();
-                String finalUnit = normalizedInput.getUnit();
+                double finalQty = qty;
+                String finalUnit = unit;
 
                 if (existing != null) {
-                    ConversionService.NormalizedAmount normalizedExisting =
-                        conversionService.normalize(
-                            existing.getQuantity(),
-                            existing.getUnit());
+                    Double converted = conversionService.tryConvert(
+                        qty,
+                        unit,
+                        existing.getUnit());
 
-                    if (!normalizedExisting.getUnit()
-                            .equalsIgnoreCase(finalUnit)) {
+                    if (converted == null) {
+                        // Build helpful error message with compatible units
+                        String errorMsg = buildUnitMergeError(unit, existing.getUnit());
                         JOptionPane.showMessageDialog(this,
-                            "Existing pantry unit cannot be merged with the chosen unit.",
+                            errorMsg,
                             "Incompatible Units",
                             JOptionPane.WARNING_MESSAGE);
                         return;
                     }
 
-                    finalQty += normalizedExisting.getQuantity();
+                    finalQty = existing.getQuantity() + converted;
+                    finalUnit = existing.getUnit();
                 }
 
                 PantryItem newItem = new PantryItem(
@@ -375,6 +375,45 @@ public class AddEditIngredientDialog extends JDialog {
                 "Database Error",
                 JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private String buildUnitMergeError(String chosenUnit, String existingUnit) {
+        java.util.List<String> compatible = conversionService.getCompatibleUnits(existingUnit);
+        ConversionService.UnitFamily chosenFam = conversionService.getUnitFamily(chosenUnit);
+        ConversionService.UnitFamily existingFam = conversionService.getUnitFamily(existingUnit);
+
+        StringBuilder msg = new StringBuilder();
+        msg.append("Cannot merge \"").append(chosenUnit).append("\" with existing \"")
+           .append(existingUnit).append("\".");
+
+        if (chosenFam != null || existingFam != null) {
+            msg.append("\n\n");
+            if (chosenFam != null && existingFam != null && chosenFam != existingFam) {
+                msg.append("Reason: different unit families.\n");
+                msg.append("  • ").append(chosenUnit).append(": ")
+                   .append(chosenFam.getLabel()).append("\n");
+                msg.append("  • ").append(existingUnit).append(": ")
+                   .append(existingFam.getLabel()).append("\n\n");
+            } else if (existingFam != null) {
+                msg.append("Unit family: ").append(existingFam.getLabel()).append("\n\n");
+            }
+        } else {
+            msg.append("\n\n");
+        }
+
+        if (compatible.isEmpty()) {
+            msg.append("This unit has no compatible conversions.\n")
+               .append("Keep as separate line item, or use \"").append(existingUnit)
+               .append("\" to merge.");
+        } else {
+            msg.append("Compatible units for this ingredient:\n");
+            for (String c : compatible) {
+                msg.append("  • ").append(c).append("\n");
+            }
+            msg.append("\nOr keep as separate line item.");
+        }
+
+        return msg.toString();
     }
 
     private String validateForm() {
