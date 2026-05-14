@@ -1,7 +1,12 @@
 package com.lefestin.ui.panels;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Insets;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -81,13 +86,14 @@ public abstract class BaseListPanel extends JPanel {
         searchBar.setBackground(AppTheme.BG_SURFACE);
         searchBar.setBorder(BorderFactory.createEmptyBorder(0, 20, 16, 20));
 
-        searchField = new JTextField();
+        searchField = new PlaceholderTextField(getSearchPlaceholder());
         searchField.setFont(AppTheme.FONT_BODY);
+        searchField.setForeground(AppTheme.TEXT_PRIMARY);
+        searchField.setBackground(AppTheme.BG_SURFACE);
         searchField.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true),
             BorderFactory.createEmptyBorder(6, 10, 6, 10)
         ));
-        searchField.putClientProperty("JTextField.placeholderText", getSearchPlaceholder());
 
         searchBar.add(searchField, BorderLayout.CENTER);
         searchBar.add(buildSearchRightControl(), BorderLayout.EAST);
@@ -197,6 +203,50 @@ public abstract class BaseListPanel extends JPanel {
     protected void updateCountLabel(String text) {
         if (countLabel != null) {
             countLabel.setText(text);
+        }
+    }
+
+    private static class PlaceholderTextField extends JTextField {
+        private final String placeholderText;
+
+        PlaceholderTextField(String placeholderText) {
+            this.placeholderText = placeholderText;
+            setOpaque(true);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+
+            if (placeholderText == null || placeholderText.isEmpty()) {
+                return;
+            }
+
+            if (getText() != null && !getText().isEmpty()) {
+                return;
+            }
+
+            if (isFocusOwner()) {
+                return;
+            }
+
+            Graphics2D g2 = (Graphics2D) g.create();
+            try {
+                g2.setColor(new Color(
+                    AppTheme.TEXT_MUTED.getRed(),
+                    AppTheme.TEXT_MUTED.getGreen(),
+                    AppTheme.TEXT_MUTED.getBlue(),
+                    140));
+                g2.setFont(getFont());
+
+                Insets insets = getInsets();
+                FontMetrics metrics = g2.getFontMetrics();
+                int x = insets.left;
+                int y = (getHeight() - metrics.getHeight()) / 2 + metrics.getAscent();
+                g2.drawString(placeholderText, x, y);
+            } finally {
+                g2.dispose();
+            }
         }
     }
 }

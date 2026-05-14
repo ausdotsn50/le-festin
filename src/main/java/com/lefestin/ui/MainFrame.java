@@ -113,8 +113,8 @@ public class MainFrame extends JFrame {
     }
 
     private JButton buildUserMenuButton() {
-        JButton btn = new JButton("Not logged in");
-        btn.setForeground(AppTheme.HEADER_FG_MUTED);
+        JButton btn = new JButton("👤 Not logged in");     
+        btn.setForeground(AppTheme.HEADER_FG);
         btn.setFont(AppTheme.FONT_SMALL);
         btn.setBorderPainted(false);
         btn.setContentAreaFilled(false);
@@ -261,7 +261,7 @@ public class MainFrame extends JFrame {
     // Session management
     public void setCurrentUser(User user) {
         this.currentUser = user;
-        userMenuButton.setText(user != null ? user.getUsername() : "Not logged in");
+        userMenuButton.setText(user != null ? "👤 " + user.getUsername() : "👤 Not logged in");
         
         // Reload visible panels after authentication
         if (user != null) {
