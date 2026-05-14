@@ -65,7 +65,7 @@ CREATE TABLE recipe (
     category   ENUM(
                  'Breakfast',
                  'Lunch',
-                 'Dinner',
+                 'Dinner'
                )            NOT NULL,
     prep_time  INT          NOT NULL,
     `procedure`  TEXT         NOT NULL,
@@ -204,7 +204,10 @@ SET
         END, 2
     ),
     unit = CASE
-        WHEN LOWER(TRIM(unit)) IN ('gram', 'kilogram')
+        WHEN LOWER(TRIM(unit)) IN (
+            'gram', 
+            'kilogram'
+        )
             THEN 'gram'
         WHEN LOWER(TRIM(unit)) IN (
             'milliliter',
@@ -241,7 +244,10 @@ SET
         END, 2
     ),
     unit = CASE
-        WHEN LOWER(TRIM(unit)) IN ('gram', 'kilogram')
+        WHEN LOWER(TRIM(unit)) IN (
+            'gram', 
+            'kilogram'
+        )
             THEN 'gram'
         WHEN LOWER(TRIM(unit)) IN (
             'milliliter', 

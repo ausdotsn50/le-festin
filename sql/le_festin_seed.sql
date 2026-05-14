@@ -66,11 +66,11 @@ INSERT INTO recipe
      '1. Season chicken with paprika and salt.\n2. Heat butter in pan over medium heat.\n3. Brown chicken 4 minutes per side.\n4. Add garlic and milk to make a quick sauce.\n5. Simmer 10 minutes until chicken is cooked through.'),
 
     (1, 'Cheesy Garlic Bread',
-     'Snack', 10,
+     'Breakfast', 10,
      '1. Slice bread and place on baking tray.\n2. Mix softened butter with minced garlic.\n3. Spread garlic butter on each slice.\n4. Top generously with cheese.\n5. Bake at 180C for 8 minutes until cheese melts.'),
 
     (3, 'Buttery Pancakes',
-     'Dessert', 20,
+     'Breakfast', 20,
      '1. Mix flour, egg, milk, sugar, and a pinch of salt.\n2. Melt butter and stir into batter.\n3. Heat pan over medium heat, lightly butter.\n4. Pour small ladles of batter.\n5. Cook until bubbles form, flip and cook 1 more minute.'),
 
     (3, 'Simple Onion Omelette',

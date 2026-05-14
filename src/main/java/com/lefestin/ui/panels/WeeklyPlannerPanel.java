@@ -251,20 +251,12 @@ public class WeeklyPlannerPanel extends JPanel {
         btn.add(recipeLabel, BorderLayout.CENTER);
 
         btn.addMouseListener(new MouseAdapter() {
-// clean
-            /*
-            @Override
-            public void mouseExited(MouseEvent e) {
-                btn.setBackground(AppTheme.CELL_HOVER);
-            }
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                weekEntries.get(Helper.slotKey(day, mealType));
-                btn.setBackground(AppTheme.SELECTION_BG);
-            }
- */
-            @Override public void mouseEntered(MouseEvent e) { btn.setBackground(AppTheme.SELECTION_BG); }
-            @Override public void mouseExited(MouseEvent e) { renderSingleSlot(key); }
+
+        @Override 
+        public void mouseEntered(MouseEvent e) { btn.setBackground(AppTheme.SELECTION_BG); }
+        
+        @Override 
+        public void mouseExited(MouseEvent e) { renderSingleSlot(key); }
         });
 
         btn.addActionListener(e -> openSlotDialog(day, mealType));

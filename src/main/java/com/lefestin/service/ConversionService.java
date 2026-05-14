@@ -19,8 +19,8 @@ import java.util.Map;
 public class ConversionService {
 
     public enum UnitFamily {
-        MASS("Mass (gram, kg)"),
-        VOLUME("Volume (ml, liter, tsp, tbsp, cup)"),
+        MASS("Mass (gram, kilogram)"),
+        VOLUME("Volume (milliliter, liter, teaspoon, tablespoon, cup)"),
         COUNT("Count (piece, whole, clove, slice, pinch)");
 
         private final String label;
@@ -112,8 +112,8 @@ public class ConversionService {
     }
 
     private void registerMassRules() {
-        registerAlias("gram", "grams", "g");
-        registerAlias("kilogram", "kilograms", "kg");
+        registerAlias("gram");
+        registerAlias("kilogram");
         
         registerFamily(UnitFamily.MASS, "gram", "kilogram");
         
@@ -121,11 +121,11 @@ public class ConversionService {
     }
 
     private void registerVolumeRules() {
-        registerAlias("milliliter", "milliliters", "ml");
-        registerAlias("liter", "liters", "l");
-        registerAlias("teaspoon", "teaspoons", "tsp");
-        registerAlias("tablespoon", "tablespoons", "tbsp");
-        registerAlias("cup", "cups");
+        registerAlias("milliliter");
+        registerAlias("liter");
+        registerAlias("teaspoon");
+        registerAlias("tablespoon");
+        registerAlias("cup");
 
         registerFamily(UnitFamily.VOLUME, "milliliter", "liter", "teaspoon", 
                        "tablespoon", "cup");
@@ -143,11 +143,11 @@ public class ConversionService {
     }
 
     private void registerCountRules() {
-        registerAlias("piece", "pieces");
-        registerAlias("whole", "wholes");
-        registerAlias("clove", "cloves");
-        registerAlias("slice", "slices");
-        registerAlias("pinch", "pinches");
+        registerAlias("piece");
+        registerAlias("whole");
+        registerAlias("clove");
+        registerAlias("slice");
+        registerAlias("pinch");
 
         registerFamily(UnitFamily.COUNT, "piece", "whole", "clove", "slice", "pinch");
         
