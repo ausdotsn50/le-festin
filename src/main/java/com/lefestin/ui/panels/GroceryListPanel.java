@@ -1,18 +1,35 @@
 package com.lefestin.ui.panels;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.print.PrinterException;
 import java.io.File;
 import java.sql.SQLException;
 import java.text.MessageFormat;
-import java.time.*;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
+import javax.swing.JTable;
+import javax.swing.RowFilter;
+import javax.swing.SpinnerDateModel;
+import javax.swing.SwingWorker;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
@@ -42,6 +59,7 @@ public class GroceryListPanel extends BaseListPanel {
     private static final int COL_NAME     = 0;
     private static final int COL_QUANTITY = 1;
     private static final int COL_UNIT     = 2;
+    private static final int COL_NOTE     = 3;
     private static final String DATE_FORMAT = "MMM d, yyyy";
 
     public GroceryListPanel(MainFrame frame) {
@@ -90,7 +108,7 @@ public class GroceryListPanel extends BaseListPanel {
 
     @Override
     protected JComponent buildTableContent() {
-        tableModel = new DefaultTableModel(new String[]{"Ingredient", "Quantity", "Unit"}, 0) {
+        tableModel = new DefaultTableModel(new String[]{"Ingredient", "Quantity", "Unit", "Note"}, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
         };
 
@@ -100,9 +118,10 @@ public class GroceryListPanel extends BaseListPanel {
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
 
-        table.getColumnModel().getColumn(COL_NAME).setPreferredWidth(320);
-        table.getColumnModel().getColumn(COL_QUANTITY).setPreferredWidth(120);
-        table.getColumnModel().getColumn(COL_UNIT).setPreferredWidth(120);
+        table.getColumnModel().getColumn(COL_NAME).setPreferredWidth(280);
+        table.getColumnModel().getColumn(COL_QUANTITY).setPreferredWidth(100);
+        table.getColumnModel().getColumn(COL_UNIT).setPreferredWidth(100);
+        table.getColumnModel().getColumn(COL_NOTE).setPreferredWidth(200);
         table.setDefaultRenderer(Object.class, AppTheme.alternatingRowRenderer());
 
         searchField.getDocument().addDocumentListener(new DocumentListener() {
@@ -187,10 +206,12 @@ public class GroceryListPanel extends BaseListPanel {
     private void updateTable(List<RecipeIngredient> items) {
         tableModel.setRowCount(0);
         for (RecipeIngredient item : items) {
+            String note = item.getNote() != null ? item.getNote() : "";
             tableModel.addRow(new Object[]{
                 capitalize(item.getIngredientName()),
                 formatQty(item.getQuantity()),
-                item.getUnit()
+                item.getUnit(),
+                note
             });
         }
         boolean hasItems = !items.isEmpty();

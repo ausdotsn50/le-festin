@@ -9,7 +9,6 @@ import java.util.List;
 
 import com.lefestin.config.DBConnection;
 import com.lefestin.model.PantryItem;
-import com.lefestin.service.ConversionService;
 
 /**
  * PantryDAO — all SQL for the `pantry` table.
@@ -21,8 +20,6 @@ import com.lefestin.service.ConversionService;
  * JOINs with ingredient table so ingredientName is always populated.
  */
 public class PantryDAOImpl {
-    private final ConversionService conversionService = new ConversionService();
-
     private Connection conn() {
         return DBConnection.getInstance().getConnection();
     }
@@ -39,9 +36,6 @@ public class PantryDAOImpl {
      * @throws SQLException if INSERT fails or duplicate PK
      */
     public void addPantryItem(PantryItem p) throws SQLException {
-        ConversionService.NormalizedAmount normalized =
-            conversionService.normalize(p.getQuantity(), p.getUnit());
-
         String sql = """
             INSERT INTO pantry (ingredient_id, user_id, quantity, unit)
             VALUES (?, ?, ?, ?)
@@ -50,8 +44,8 @@ public class PantryDAOImpl {
         try (PreparedStatement stmt = conn().prepareStatement(sql)) {
             stmt.setInt(   1, p.getIngredientId());
             stmt.setInt(   2, p.getUserId());
-            stmt.setDouble(3, normalized.getQuantity());
-            stmt.setString(4, normalized.getUnit());
+            stmt.setDouble(3, p.getQuantity());
+            stmt.setString(4, p.getUnit());
 
             stmt.executeUpdate();
         }
@@ -71,9 +65,6 @@ public class PantryDAOImpl {
      * @throws SQLException if operation fails
      */
     public void addOrUpdate(PantryItem p) throws SQLException {
-        ConversionService.NormalizedAmount normalized =
-            conversionService.normalize(p.getQuantity(), p.getUnit());
-
         String sql = """
             INSERT INTO pantry (ingredient_id, user_id, quantity, unit)
             VALUES (?, ?, ?, ?)
@@ -85,8 +76,8 @@ public class PantryDAOImpl {
         try (PreparedStatement stmt = conn().prepareStatement(sql)) {
             stmt.setInt(   1, p.getIngredientId());
             stmt.setInt(   2, p.getUserId());
-            stmt.setDouble(3, normalized.getQuantity());
-            stmt.setString(4, normalized.getUnit());
+            stmt.setDouble(3, p.getQuantity());
+            stmt.setString(4, p.getUnit());
 
             stmt.executeUpdate();
         }
@@ -248,9 +239,6 @@ public class PantryDAOImpl {
                                       int userId,
                                       double qty,
                                       String unit) throws SQLException {
-        ConversionService.NormalizedAmount normalized =
-            conversionService.normalize(qty, unit);
-
         String sql = """
             UPDATE pantry
             SET quantity = ?,
@@ -260,8 +248,8 @@ public class PantryDAOImpl {
             """;
 
         try (PreparedStatement stmt = conn().prepareStatement(sql)) {
-            stmt.setDouble(1, normalized.getQuantity());
-            stmt.setString(2, normalized.getUnit());
+            stmt.setDouble(1, qty);
+            stmt.setString(2, unit);
             stmt.setInt(   3, ingredientId);
             stmt.setInt(   4, userId);
 

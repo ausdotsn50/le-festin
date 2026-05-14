@@ -21,6 +21,10 @@ public class RecipeIngredient {
     // can show "paprika" instead of ingredient_id=12.
     private String ingredientName;
 
+    // Transient note for UI display (e.g., why items are separate in grocery list)
+    // Not persisted to DB; set only during aggregate/calculation
+    private String note;
+
     // Constructor: full (used when reading from ResultSet)
     public RecipeIngredient(int recipeId, int ingredientId,
                             double quantity, String unit) {
@@ -47,6 +51,7 @@ public class RecipeIngredient {
     public double getQuantity()       { return quantity;       }
     public String getUnit()           { return unit;           }
     public String getIngredientName() { return ingredientName; }
+    public String getNote()           { return note;           }
 
     // Setters
     public void setRecipeId(int recipeId)             { this.recipeId       = recipeId;       }
@@ -54,6 +59,7 @@ public class RecipeIngredient {
     public void setQuantity(double quantity)           { this.quantity       = quantity;       }
     public void setUnit(String unit)                   { this.unit           = unit;           }
     public void setIngredientName(String name)         { this.ingredientName = name;           }
+    public void setNote(String note)                   { this.note           = note;           }
 
     // Convenience: formatted quantity + unit for UI display 
     // Prints "3 eggs", "0.5 cup", "500 gram" cleanly

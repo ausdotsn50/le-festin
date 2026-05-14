@@ -30,11 +30,9 @@ import com.lefestin.model.RecipeMatchResult;
  *  6. Sort all results by matchPercent descending, then by recipe title
  *
  * Note on unit matching:
- *  Unit comparison is intentionally skipped — checking whether
- *  "3 tablespoon soy sauce" satisfies "4 tablespoon soy sauce"
- *  requires unit conversion (tablespoon → teaspoon → ml) which is
- *  out of scope for this version. The match is quantity-aware only
- *  when the ingredient row uses the same stored unit semantics.
+ *  Quantities are compared through explicit conversion rules only.
+ *  If no direct, unambiguous rule exists, the pantry item is treated
+ *  as unavailable for that ingredient row.
  */
 public class RecipeMatchingService {
 

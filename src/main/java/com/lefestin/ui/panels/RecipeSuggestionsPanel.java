@@ -1,6 +1,11 @@
 package com.lefestin.ui.panels;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -8,13 +13,29 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerDateModel;
+import javax.swing.SwingWorker;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import com.lefestin.dao.impl.MealEntryDAOImpl;
 import com.lefestin.helper.Helper;
-import com.lefestin.model.*;
+import com.lefestin.model.MealEntry;
+import com.lefestin.model.Recipe;
+import com.lefestin.model.RecipeIngredient;
+import com.lefestin.model.RecipeMatchResult;
 import com.lefestin.service.RecipeMatchingService;
 import com.lefestin.ui.AppTheme;
 import com.lefestin.ui.MainFrame;
@@ -366,8 +387,15 @@ public class RecipeSuggestionsPanel extends BaseListPanel {
                 "\"" + recipe.getTitle() + "\" assigned to " + mealType + " on " + date + ".",
                 "Assigned", JOptionPane.INFORMATION_MESSAGE);
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Failed to assign: " + e.getMessage(),
-                "Database Error", JOptionPane.ERROR_MESSAGE);
+            String sqlMsg = e.getMessage() != null ? e.getMessage() : "";
+            if (sqlMsg.contains("Duplicate entry") || sqlMsg.toLowerCase().contains("duplicate")) {
+                JOptionPane.showMessageDialog(this,
+                    "Failed to assign: The selected date/meal slot is already filled.",
+                    "Assign Failed", JOptionPane.WARNING_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to assign: " + sqlMsg,
+                    "Database Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
