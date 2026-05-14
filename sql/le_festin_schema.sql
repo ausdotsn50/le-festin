@@ -66,8 +66,6 @@ CREATE TABLE recipe (
                  'Breakfast',
                  'Lunch',
                  'Dinner',
-                 'Snack',
-                 'Dessert'
                )            NOT NULL,
     prep_time  INT          NOT NULL,
     `procedure`  TEXT         NOT NULL,
@@ -188,101 +186,75 @@ SELECT 'le_festin schema created successfully.' AS status;
 
 START TRANSACTION;
 
--- Recipe ingredients -> canonical units
+-- Recipe ingredients -> canonical units (gram, milliliter, piece)
 UPDATE recipe_ingredient
 SET
     quantity = ROUND(
         CASE LOWER(TRIM(unit))
             WHEN 'gram' THEN quantity
-            WHEN 'grams' THEN quantity
-            WHEN 'g' THEN quantity
             WHEN 'kilogram' THEN quantity * 1000
-            WHEN 'kilograms' THEN quantity * 1000
-            WHEN 'kg' THEN quantity * 1000
-
-            WHEN 'milliliter' THEN quantity
-            WHEN 'milliliters' THEN quantity
-            WHEN 'ml' THEN quantity
-            WHEN 'liter' THEN quantity * 1000
-            WHEN 'liters' THEN quantity * 1000
-            WHEN 'l' THEN quantity * 1000
-            WHEN 'teaspoon' THEN quantity * 5
-            WHEN 'teaspoons' THEN quantity * 5
-            WHEN 'tsp' THEN quantity * 5
+            
+            WHEN 'milliliter' THEN quantity           
+            WHEN 'liter' THEN quantity * 1000           
+            WHEN 'teaspoon' THEN quantity * 5            
             WHEN 'tablespoon' THEN quantity * 15
-            WHEN 'tablespoons' THEN quantity * 15
-            WHEN 'tbsp' THEN quantity * 15
             WHEN 'cup' THEN quantity * 240
-            WHEN 'cups' THEN quantity * 240
-
+            
             ELSE quantity
         END, 2
     ),
     unit = CASE
-        WHEN LOWER(TRIM(unit)) IN ('gram', 'grams', 'g', 'kilogram', 'kilograms', 'kg')
+        WHEN LOWER(TRIM(unit)) IN ('gram', 'kilogram')
             THEN 'gram'
         WHEN LOWER(TRIM(unit)) IN (
-            'milliliter', 'milliliters', 'ml',
-            'liter', 'liters', 'l',
-            'teaspoon', 'teaspoons', 'tsp',
-            'tablespoon', 'tablespoons', 'tbsp',
-            'cup', 'cups'
+            'milliliter',
+            'liter', 
+            'teaspoon',
+            'tablespoon',
+            'cup'
         )
             THEN 'milliliter'
         WHEN LOWER(TRIM(unit)) IN (
-            'piece', 'pieces', 'whole', 'wholes',
-            'clove', 'cloves', 'slice', 'slices',
-            'pinch', 'pinches'
+            'piece', 'whole',
+            'clove', 'slice',
+            'pinch'
         )
             THEN 'piece'
         ELSE LOWER(TRIM(unit))
     END;
 
--- Pantry -> canonical units
+-- Pantry -> canonical units (gram, milliliter, piece)
 UPDATE pantry
 SET
     quantity = ROUND(
         CASE LOWER(TRIM(unit))
             WHEN 'gram' THEN quantity
-            WHEN 'grams' THEN quantity
-            WHEN 'g' THEN quantity
             WHEN 'kilogram' THEN quantity * 1000
-            WHEN 'kilograms' THEN quantity * 1000
-            WHEN 'kg' THEN quantity * 1000
-
+            
             WHEN 'milliliter' THEN quantity
-            WHEN 'milliliters' THEN quantity
-            WHEN 'ml' THEN quantity
             WHEN 'liter' THEN quantity * 1000
-            WHEN 'liters' THEN quantity * 1000
-            WHEN 'l' THEN quantity * 1000
             WHEN 'teaspoon' THEN quantity * 5
-            WHEN 'teaspoons' THEN quantity * 5
-            WHEN 'tsp' THEN quantity * 5
             WHEN 'tablespoon' THEN quantity * 15
-            WHEN 'tablespoons' THEN quantity * 15
-            WHEN 'tbsp' THEN quantity * 15
             WHEN 'cup' THEN quantity * 240
-            WHEN 'cups' THEN quantity * 240
 
             ELSE quantity
         END, 2
     ),
     unit = CASE
-        WHEN LOWER(TRIM(unit)) IN ('gram', 'grams', 'g', 'kilogram', 'kilograms', 'kg')
+        WHEN LOWER(TRIM(unit)) IN ('gram', 'kilogram')
             THEN 'gram'
         WHEN LOWER(TRIM(unit)) IN (
-            'milliliter', 'milliliters', 'ml',
-            'liter', 'liters', 'l',
-            'teaspoon', 'teaspoons', 'tsp',
-            'tablespoon', 'tablespoons', 'tbsp',
-            'cup', 'cups'
+            'milliliter', 
+            'liter', 
+            'teaspoon', 
+            'tablespoon', 
+            'cup' 
         )
             THEN 'milliliter'
         WHEN LOWER(TRIM(unit)) IN (
-            'piece', 'pieces', 'whole', 'wholes',
-            'clove', 'cloves', 'slice', 'slices',
-            'pinch', 'pinches'
+            'piece', 'whole',
+            'clove', 'slice',
+            'pinch'
         )
             THEN 'piece'
         ELSE LOWER(TRIM(unit))
