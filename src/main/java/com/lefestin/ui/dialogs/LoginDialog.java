@@ -461,7 +461,7 @@ public class LoginDialog extends JDialog {
     private JButton buildLinkButton(String text) {
         JButton btn = new JButton(text);
         btn.setFont(AppTheme.FONT_SMALL);
-        btn.setForeground(AppTheme.SECONDARY_ACCENT);
+        btn.setForeground(AppTheme.ACCENT_BROWN);
         btn.setBackground(AppTheme.BG_PAGE);
         btn.setBorderPainted(false);
         btn.setContentAreaFilled(false);

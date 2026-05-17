@@ -197,13 +197,13 @@ public class WeeklyPlannerPanel extends JPanel {
 
         JLabel dayName = new JLabel(day.format(DAY_NAME_FMT).toUpperCase());
         dayName.setFont(AppTheme.FONT_TINY);
-        dayName.setForeground(isToday ? AppTheme.AMBER_PRIMARY : AppTheme.TEXT_MUTED);
+        dayName.setForeground(isToday ? AppTheme.ACCENT_GOLD : AppTheme.TEXT_MUTED);
 
         // change
         JLabel dayDate = new JLabel(day.format(DAY_DATE_FMT));
         dayDate.setFont(AppTheme.FONT_DAY_DATE);
         dayDate.setForeground(isToday
-            ? AppTheme.AMBER_PRIMARY
+            ? AppTheme.ACCENT_GOLD
             : AppTheme.TEXT_PRIMARY);
 
         cell.add(dayName);
@@ -214,7 +214,7 @@ public class WeeklyPlannerPanel extends JPanel {
         if (isToday) {
             JLabel badge = new JLabel("Today");
             badge.setFont(AppTheme.FONT_TINY);
-            badge.setForeground(AppTheme.AMBER_PRIMARY);
+            badge.setForeground(AppTheme.ACCENT_GOLD);
             cell.add(Box.createVerticalStrut(2));
             cell.add(badge);
         }

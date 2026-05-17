@@ -113,7 +113,7 @@ public class RecipeListPanel extends BaseListPanel {
             BorderFactory.createEmptyBorder(10, 20, 10, 20) // Reduced top/bottom padding to 10
     );
     final Border hoverBorder = new CompoundBorder(
-            BorderFactory.createLineBorder(AppTheme.AMBER_PRIMARY, 1, true),
+            BorderFactory.createLineBorder(AppTheme.ACCENT_GOLD, 1, true),
             BorderFactory.createEmptyBorder(10, 20, 10, 20)
     );
     card.setBorder(defaultBorder);

@@ -33,7 +33,7 @@
         </dependency>
 
         <!-- ── 2. BCrypt password hashing ── -->
-        <!-- For hashing user passwords before storing in the `user` table -->
+        <!-- For hashing user passwords before storing in the user table -->
         <dependency>
             <groupId>org.mindrot</groupId>
             <artifactId>jbcrypt</artifactId>

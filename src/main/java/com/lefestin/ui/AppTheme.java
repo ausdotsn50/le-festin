@@ -20,18 +20,18 @@ public class AppTheme {
     public static final Color COLOR_BLACK       = new Color(70, 55, 45);  
     public static final Color COLOR_WHITE       = Color.WHITE;
 
-    public static final Color PRIMARY_ACCENT    = new Color(252, 219, 109);
-    public static final Color SECONDARY_ACCENT  = new Color(139, 101, 76);
+    public static final Color ACCENT_GOLD       = new Color(252, 219, 109);
+    public static final Color ACCENT_BROWN      = new Color(139, 101, 76);
 
     // Sidebar
     public static final Color SIDEBAR_BG        = new Color(249, 249, 245);
-    public static final Color SIDEBAR_ACTIVE    = PRIMARY_ACCENT;
+    public static final Color SIDEBAR_ACTIVE    = ACCENT_GOLD;
     public static final Color SIDEBAR_HOVER     = new Color(253, 235, 158);
     public static final Color SIDEBAR_FG        = COLOR_BLACK;
     public static final Color SIDEBAR_FG_ACTIVE = COLOR_BLACK;
 
     // Header
-    public static final Color HEADER_BG         = PRIMARY_ACCENT;
+    public static final Color HEADER_BG         = ACCENT_GOLD;
     public static final Color HEADER_FG         = COLOR_BLACK;
     public static final Color HEADER_FG_MUTED   = COLOR_BLACK;
 
@@ -59,7 +59,6 @@ public class AppTheme {
     public static final Color TERRA_TINT_TEXT   = new Color(140, 50, 30);
 
     // Highlights
-    public static final Color AMBER_PRIMARY     = PRIMARY_ACCENT;
     public static final Color AMBER_TINT        = new Color(255, 248, 225);
     public static final Color AMBER_TINT_TEXT   = new Color(140, 88, 10);
 
@@ -172,10 +171,10 @@ public class AppTheme {
      */
     public static JButton primaryButton(String text) {
         JButton btn = baseButton(text);
-        btn.setBackground(SECONDARY_ACCENT);
+        btn.setBackground(ACCENT_BROWN);
         btn.setForeground(TEXT_INVERTED);
         btn.addMouseListener(hoverEffect(
-            btn, SECONDARY_ACCENT, new Color(110, 80, 60)));
+            btn, ACCENT_BROWN, new Color(110, 80, 60)));
         return btn;
     }
 
@@ -363,9 +362,9 @@ public class AppTheme {
         UIManager.put("nimbusBase",         SIDEBAR_BG);
         UIManager.put("nimbusBlueGrey",     new Color(130, 125, 115));
         UIManager.put("nimbusDisabledText", TEXT_MUTED);
-        UIManager.put("nimbusFocus",        PRIMARY_ACCENT);
+        UIManager.put("nimbusFocus",        ACCENT_GOLD);
         UIManager.put("nimbusGreen",        GREEN_TINT);
-        UIManager.put("nimbusOrange",       AMBER_PRIMARY);
+        UIManager.put("nimbusOrange",       ACCENT_GOLD);
         UIManager.put("nimbusRed",          TERRA_PRIMARY);
         UIManager.put("nimbusSelectedText", TEXT_PRIMARY);
         UIManager.put("nimbusSelectionBackground", SELECTION_BG);
