@@ -14,9 +14,9 @@ public class DBConnection {
     private static DBConnection instance;
     private Connection connection;
 
-    // config.properties
-    private static final String URL = ConfigLoader.get("db.url") + ConfigLoader.get("db.database");
-    private static final String USER = ConfigLoader.get("db.user");
+    // config.properties — db.url must be the complete JDBC URL (host + database + params)
+    private static final String URL      = ConfigLoader.get("db.url");
+    private static final String USER     = ConfigLoader.get("db.user");
     private static final String PASSWORD = ConfigLoader.get("db.password");
 
     // Introduced separation on DBConn and config loading

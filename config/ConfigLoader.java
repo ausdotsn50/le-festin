@@ -24,7 +24,7 @@ public class ConfigLoader {
             if (input == null) {
                 throw new ExceptionInInitializerError(
                     "[ConfigLoader] '" + CONFIG_FILE + "' not found in src/main/resources/.\n" +
-                    "  → Copy config.properties.example to src/main/resources/config.properties\n" +
+                    "  → Copy config.properties.example to resources/config.properties\n" +
                     "  → Fill in your db.url, db.user, and db.password"
                 );
             }

@@ -1,3 +1,4 @@
+
 package com.lefestin.ui.dialogs;
 
 import java.awt.BorderLayout;

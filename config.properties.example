@@ -1,4 +1,3 @@
-db.url=jdbc:mysql://localhost:3306/
-db.database=le_festin
+db.url=jdbc:mysql://localhost:3306/le_festin?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
 db.user=root
-db.password=P@ssw0rd1
+db.password=YourPasswordHere
