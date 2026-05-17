@@ -1,7 +1,0 @@
-config.properties
-target/
-.metals/
-.vscode/
-.resources/
-
-SeedDataTest.java
