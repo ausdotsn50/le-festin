@@ -166,7 +166,7 @@ public class RecipeSuggestionsPanel extends BaseListPanel {
     }
 
     private void styleAsActiveFilter(JButton btn) {
-        btn.setBackground(AppTheme.PRIMARY_ACCENT);
+        btn.setBackground(AppTheme.ACCENT_GOLD);
         btn.setForeground(AppTheme.TEXT_PRIMARY);
         btn.setBorderPainted(false);
         btn.setBorder(BorderFactory.createEmptyBorder(7, 15, 7, 15));
@@ -332,7 +332,7 @@ public class RecipeSuggestionsPanel extends BaseListPanel {
 
     private Color barColor(int pct) {
         if (pct == 100) return AppTheme.GREEN_SUCCESS;
-        if (pct >= 50)  return AppTheme.AMBER_PRIMARY;
+        if (pct >= 50)  return AppTheme.ACCENT_GOLD;
         return AppTheme.TERRA_PRIMARY;
     }
 
