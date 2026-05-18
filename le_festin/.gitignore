@@ -4,5 +4,5 @@ le-festin.jar
 .metals/
 .vscode/
 .resources/
-
+.target/
 SeedDataTest.java
