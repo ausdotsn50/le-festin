@@ -2,25 +2,30 @@ package ui.panels;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridBagLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.RowFilter;
-import javax.swing.SwingConstants;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableRowSorter;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import dao.impl.PantryDAOImpl;
 import model.PantryItem;
@@ -29,19 +34,13 @@ import ui.MainFrame;
 import ui.dialogs.AddEditIngredientDialog;
 
 /**
- * PantryPanel — the virtual pantry browser.
+ * PantryPanel — the virtual pantry browser utilizing a modern card system.
  */
 public class PantryPanel extends BaseListPanel {
 
     private final PantryDAOImpl pantryDAO;
-    private JTable table;
-    private DefaultTableModel tableModel;
-    private TableRowSorter<DefaultTableModel> sorter;
-
-    private static final int COL_INGREDIENT_ID = 0;
-    private static final int COL_NAME = 1;
-    private static final int COL_QUANTITY = 2;
-    private static final int COL_UNIT = 3;
+    private List<PantryItem> allItems = new ArrayList<>();
+    private JPanel cardsContainer;
 
     public PantryPanel(MainFrame frame) {
         super(frame);
@@ -55,6 +54,7 @@ public class PantryPanel extends BaseListPanel {
     protected String getHeaderDescription() { return "Ingredients you currently have at home"; }
     @Override
     protected String getSearchPlaceholder() { return "Search ingredients..."; }
+    
     @Override
     protected JComponent buildHeaderRightControl() {
         countLabel = new JLabel("0 ingredients");
@@ -62,6 +62,7 @@ public class PantryPanel extends BaseListPanel {
         countLabel.setForeground(AppTheme.TEXT_MUTED);
         return countLabel;
     }
+    
     @Override
     protected JComponent buildSearchRightControl() {
         JPanel controls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
@@ -71,17 +72,11 @@ public class PantryPanel extends BaseListPanel {
         addButton.setToolTipText("Add a new ingredient to your pantry");
         addButton.addActionListener(e -> onAddClicked());
 
-        actionBtn = createActionButton();
-        actionBtn.setToolTipText("Remove the selected ingredient");
-        actionBtn.setEnabled(false);
-        actionBtn.addActionListener(e -> onActionClicked());
-
         JButton matchBtn = AppTheme.secondaryButton("Match Recipes");
         matchBtn.setToolTipText("Find recipes you can make with your current pantry");
         matchBtn.addActionListener(e -> navigateToSuggestions());
 
         controls.add(addButton);
-        controls.add(actionBtn);
         controls.add(matchBtn);
 
         return controls;
@@ -89,31 +84,40 @@ public class PantryPanel extends BaseListPanel {
 
     // --- UI Structure ---
     @Override
-    protected JComponent buildTableContent() { return buildTable(); }
+    protected JComponent buildTableContent() {
+        // Setup structural search document filtering hook
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { filterCards(); }
+            public void removeUpdate(DocumentEvent e) { filterCards(); }
+            public void changedUpdate(DocumentEvent e) { filterCards(); }
+        });
 
-    @Override
-    protected JPanel buildToolbar() {
-        JPanel bar = new JPanel(new BorderLayout());
-        bar.setBackground(AppTheme.BG_SURFACE);
-        bar.setBorder(BorderFactory.createCompoundBorder(
-            AppTheme.BORDER_DIVIDER_TOP,
-            BorderFactory.createEmptyBorder(10, 20, 10, 20)
-        ));
+        cardsContainer = new JPanel();
+        cardsContainer.setLayout(new BoxLayout(cardsContainer, BoxLayout.Y_AXIS));
+        cardsContainer.setBackground(AppTheme.BG_PAGE);
+        cardsContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Left: empty spacer area so the count stays in the header like Grocery List
-        JPanel btnGroup = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        btnGroup.setBackground(AppTheme.BG_SURFACE);
+        JScrollPane scrollPane = new JScrollPane(cardsContainer);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.getViewport().setBackground(AppTheme.BG_PAGE);
 
-        bar.add(btnGroup, BorderLayout.WEST);
-
-        return bar;
+        return scrollPane;
     }
 
     @Override
-    protected JButton createActionButton() { return AppTheme.dangerButton("Remove"); }
+    protected JPanel buildToolbar() {
+        JPanel empty = new JPanel();
+        empty.setBackground(AppTheme.BG_PAGE);
+        return empty;
+    }
+
+    @Override
+    protected JButton createActionButton() {
+        return AppTheme.dangerButton("Remove");
+    }
 
     // --- Actions ---
-
     @Override
     protected void onAddClicked() {
         AddEditIngredientDialog dialog = new AddEditIngredientDialog(frame, null);
@@ -123,140 +127,135 @@ public class PantryPanel extends BaseListPanel {
 
     @Override
     protected void onEditClicked() {
-        PantryItem selectedItem = getSelectedPantryItem();
-        if (selectedItem != null) {
-            AddEditIngredientDialog dialog = new AddEditIngredientDialog(frame, selectedItem);
+        // BaseListPanel abstract signature requirement placeholder
+    }
+
+    private void onEditCardItem(PantryItem item) {
+        if (item != null) {
+            AddEditIngredientDialog dialog = new AddEditIngredientDialog(frame, item);
             dialog.setVisible(true);
             if (dialog.isSaved()) loadPantry();
         }
     }
 
     @Override
-    protected void onActionClicked() { removeSelectedItem(); }
+    protected void onActionClicked() {
+        // BaseListPanel abstract signature requirement placeholder
+    }
 
-    // --- Table Construction ---
-    private JScrollPane buildTable() {
-        searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { applyFilters(); }
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { applyFilters(); }
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { applyFilters(); }
-        });
-
-        tableModel = new DefaultTableModel(new String[]{ "ID", "Name", "Quantity", "Unit" }, 0) {
-            @Override public boolean isCellEditable(int row, int col) { return false; }
-            @Override public Class<?> getColumnClass(int col) {
-                return (col == COL_INGREDIENT_ID) ? Integer.class : String.class;
+    // --- Card Construction & Rendering ---
+    private void renderCards(List<PantryItem> items) {
+        cardsContainer.removeAll();
+        for (int i = 0; i < items.size(); i++) {
+            cardsContainer.add(createIngredientCard(items.get(i)));
+            if (i < items.size() - 1) {
+                cardsContainer.add(Box.createVerticalStrut(12));
             }
-        };
+        }
+        cardsContainer.revalidate();
+        cardsContainer.repaint();
+    }
 
-        table = new JTable(tableModel);
-        AppTheme.styleTable(table);
-        sorter = new TableRowSorter<>(tableModel);
-        table.setRowSorter(sorter);
+    private JPanel createIngredientCard(PantryItem item) {
+        JPanel card = new JPanel(new BorderLayout(15, 0));
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
+        card.setPreferredSize(new Dimension(300, 90));
+        card.setBackground(AppTheme.BG_SURFACE);
+        card.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 
-        configureTableColumns();
-        configureRenderers();
+        final Border defaultBorder = new CompoundBorder(
+                BorderFactory.createLineBorder(AppTheme.BG_BORDER, 1, true),
+                BorderFactory.createEmptyBorder(10, 20, 10, 20)
+        );
+        final Border hoverBorder = new CompoundBorder(
+                BorderFactory.createLineBorder(AppTheme.ACCENT_GOLD, 1, true),
+                BorderFactory.createEmptyBorder(10, 20, 10, 20)
+        );
+        card.setBorder(defaultBorder);
 
-        table.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                boolean selected = table.getSelectedRow() != -1;
-                actionBtn.setEnabled(selected);
-            }
-        });
+        JPanel textContainer = new JPanel();
+        textContainer.setLayout(new BoxLayout(textContainer, BoxLayout.Y_AXIS));
+        textContainer.setOpaque(false);
 
-        // Double-click to edit
-        table.addMouseListener(new MouseAdapter() {
+        // Capitalized Item Name Processing
+        String rawName = item.getIngredientName();
+        String formattedName = (rawName != null && !rawName.isEmpty())
+                ? Character.toUpperCase(rawName.charAt(0)) + rawName.substring(1)
+                : "";
+
+        JLabel titleLbl = new JLabel("<html>" + formattedName + "</html>");
+        titleLbl.setFont(AppTheme.FONT_CARD_TITLE);
+        titleLbl.setForeground(AppTheme.TEXT_SECONDARY);
+
+        // Display Quantity & Unit
+        JLabel quantityLbl = new JLabel(item.getFormattedQuantity() + " " + item.getUnit());
+        quantityLbl.setFont(AppTheme.FONT_SMALL);
+        quantityLbl.setForeground(AppTheme.TEXT_MUTED);
+
+        textContainer.add(Box.createVerticalGlue());
+        textContainer.add(titleLbl);
+        textContainer.add(Box.createVerticalStrut(5));
+        textContainer.add(quantityLbl);
+        textContainer.add(Box.createVerticalGlue());
+
+        JPanel rightActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        rightActions.setOpaque(false);
+        JPanel rightWrapper = new JPanel(new GridBagLayout());
+        rightWrapper.setOpaque(false);
+
+        JButton editBtn = createIconButton("✎", "Edit Ingredient", e -> onEditCardItem(item));
+        JButton deleteBtn = createIconButton("✖", "Remove Ingredient", e -> removeCardItem(item));
+
+        rightActions.add(editBtn);
+        rightActions.add(deleteBtn);
+        rightWrapper.add(rightActions);
+
+        card.add(textContainer, BorderLayout.CENTER);
+        card.add(rightWrapper, BorderLayout.EAST);
+
+        card.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2 && table.getSelectedRow() != -1) {
-                    onEditClicked();
+            public void mouseClicked(MouseEvent e) { 
+                if (e.getClickCount() == 2) {
+                    onEditCardItem(item); 
                 }
             }
+            @Override
+            public void mouseEntered(MouseEvent e) { card.setBorder(hoverBorder); }
+            @Override
+            public void mouseExited(MouseEvent e) { card.setBorder(defaultBorder); }
         });
 
-        JScrollPane scroll = new JScrollPane(table);
-        scroll.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
-        scroll.getViewport().setBackground(AppTheme.BG_SURFACE);
-        return scroll;
+        return card;
     }
 
-    private void configureTableColumns() {
-        table.getColumnModel().getColumn(COL_INGREDIENT_ID).setMinWidth(0);
-        table.getColumnModel().getColumn(COL_INGREDIENT_ID).setMaxWidth(0);
-        table.getColumnModel().getColumn(COL_INGREDIENT_ID).setWidth(0);
-
-        table.getColumnModel().getColumn(COL_NAME).setPreferredWidth(300);
-        table.getColumnModel().getColumn(COL_QUANTITY).setPreferredWidth(120);
-        table.getColumnModel().getColumn(COL_UNIT).setPreferredWidth(120);
-    }
-
-    private void configureRenderers() {
-        // Name Renderer (Capitalized)
-        table.getColumnModel().getColumn(COL_NAME).setCellRenderer(new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean h, int r, int c) {
-                if (v instanceof String str && !str.isEmpty()) {
-                    v = Character.toUpperCase(str.charAt(0)) + str.substring(1);
-                }
-                super.getTableCellRendererComponent(t, v, s, h, r, c);
-                setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
-                if (!s) setBackground(r % 2 == 0 ? AppTheme.BG_SURFACE : AppTheme.BG_SUBTLE);
-                return this;
-            }
-        });
-
-        // Quantity Renderer (Right Aligned)
-        table.getColumnModel().getColumn(COL_QUANTITY).setCellRenderer(new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean h, int r, int c) {
-                super.getTableCellRendererComponent(t, v, s, h, r, c);
-                setHorizontalAlignment(SwingConstants.RIGHT);
-                setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 20));
-                if (!s) setBackground(r % 2 == 0 ? AppTheme.BG_SURFACE : AppTheme.BG_SUBTLE);
-                return this;
-            }
-        });
-
-        // Unit Renderer
-        table.getColumnModel().getColumn(COL_UNIT).setCellRenderer(new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean h, int r, int c) {
-                super.getTableCellRendererComponent(t, v, s, h, r, c);
-                setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
-                if (!s) setBackground(r % 2 == 0 ? AppTheme.BG_SURFACE : AppTheme.BG_SUBTLE);
-                return this;
-            }
-        });
-    }
-
-    // --- Data Management ---
-
+    // --- Data Management & Filtering ---
     public void loadPantry() {
-        tableModel.setRowCount(0);
         try {
-            List<PantryItem> items = pantryDAO.getPantryByUser(frame.getCurrentUserId());
-            for (PantryItem item : items) {
-                tableModel.addRow(new Object[]{
-                    item.getIngredientId(),
-                    item.getIngredientName(),
-                    item.getFormattedQuantity(),
-                    item.getUnit()
-                });
-            }
+            allItems = pantryDAO.getPantryByUser(frame.getCurrentUserId());
+            filterCards();
         } catch (SQLException e) {
             handleError("Failed to load pantry", e);
         }
-        updateCountLabelDisplay();
     }
 
-    private void applyFilters() {
-        String text = searchField.getText().trim();
-        sorter.setRowFilter(text.isEmpty() ? null : RowFilter.regexFilter("(?i)" + text, COL_NAME));
-        updateCountLabelDisplay();
+    private void filterCards() {
+        String query = searchField.getText().toLowerCase().trim();
+        List<PantryItem> filtered;
+        
+        if (query.isEmpty()) {
+            filtered = allItems;
+        } else {
+            filtered = allItems.stream()
+                .filter(item -> item.getIngredientName().toLowerCase().contains(query))
+                .collect(Collectors.toList());
+        }
+        
+        renderCards(filtered);
+        updateCountLabelDisplay(filtered.size(), allItems.size());
     }
 
-    private void removeSelectedItem() {
-        PantryItem item = getSelectedPantryItem();
+    private void removeCardItem(PantryItem item) {
         if (item == null) return;
 
         int confirm = JOptionPane.showConfirmDialog(this,
@@ -273,31 +272,25 @@ public class PantryPanel extends BaseListPanel {
         }
     }
 
-    private PantryItem getSelectedPantryItem() {
-        int viewRow = table.getSelectedRow();
-        if (viewRow == -1) return null;
-        int modelRow = table.convertRowIndexToModel(viewRow);
-
-        int id = (int) tableModel.getValueAt(modelRow, COL_INGREDIENT_ID);
-        String name = (String) tableModel.getValueAt(modelRow, COL_NAME);
-        String qtyStr = (String) tableModel.getValueAt(modelRow, COL_QUANTITY);
-        String unit = (String) tableModel.getValueAt(modelRow, COL_UNIT);
-
-        double qty;
-        try { qty = Double.parseDouble(qtyStr); } catch (Exception e) { qty = 0; }
-
-        return new PantryItem(id, frame.getCurrentUserId(), qty, unit, name);
+    // --- Helpers ---
+    private void updateCountLabelDisplay(int visibleCount, int totalCount) {
+        String text = (visibleCount == totalCount) 
+            ? totalCount + " ingredient" + (totalCount == 1 ? "" : "s")
+            : visibleCount + " of " + totalCount + " ingredients";
+        updateCountLabel(text);
     }
 
-    // --- Helpers ---
-
-    private void updateCountLabelDisplay() {
-        int visible = table.getRowCount();
-        int total = tableModel.getRowCount();
-        String text = (visible == total) 
-            ? total + " ingredient" + (total == 1 ? "" : "s")
-            : visible + " of " + total + " ingredients";
-        updateCountLabel(text);
+    private JButton createIconButton(String icon, String tooltip, java.awt.event.ActionListener action) {
+        JButton btn = new JButton(icon);
+        btn.setFont(AppTheme.FONT_SMALL);
+        btn.setForeground(AppTheme.TEXT_MUTED);
+        btn.setToolTipText(tooltip);
+        btn.setContentAreaFilled(false);
+        btn.setBorderPainted(false);
+        btn.setFocusPainted(false);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.addActionListener(action);
+        return btn;
     }
 
     private void navigateToSuggestions() { frame.navigateTo(MainFrame.CARD_SUGGESTIONS); }
