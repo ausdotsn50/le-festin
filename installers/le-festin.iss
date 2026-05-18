@@ -35,18 +35,13 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
-; ── Directories ───────────────────────────────────────────────────────────────
-
-[Dirs]
-; Pre-create resources/ so the Setup Wizard can write config.properties on first run
-Name: "{app}\resources"
-
 ; ── Files ─────────────────────────────────────────────────────────────────────
+; SQL files and config.properties are handled entirely at runtime by the
+; in-app Setup Wizard — only the JAR and launcher need to be installed.
 
 [Files]
-Source: "{#JarFile}";              DestDir: "{app}"; Flags: ignoreversion
-Source: "{#Launcher}";             DestDir: "{app}"; Flags: ignoreversion
-Source: "..\le_festin\sql\*";      DestDir: "{app}\sql"; Flags: ignoreversion recursesubdirs
+Source: "{#JarFile}";  DestDir: "{app}"; Flags: ignoreversion
+Source: "{#Launcher}"; DestDir: "{app}"; Flags: ignoreversion
 
 ; ── Shortcuts ─────────────────────────────────────────────────────────────────
 
