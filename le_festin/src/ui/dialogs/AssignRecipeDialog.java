@@ -32,27 +32,6 @@ import model.Recipe;
 import ui.AppTheme;
 import ui.MainFrame;
 
-/**
- * AssignRecipeDialog — recipe picker for a single meal slot.
- *
- * Called by WeeklyPlannerPanel.openAssignDialog(day, mealType).
- * After dialog closes, caller checks:
- *   if (dialog.getSelectedRecipeId() != -1) { ... }
- *
- * Layout:
- *   ┌─────────────────────────────────────────────┐
- *   │  Thursday, Apr 17 — Breakfast               │  ← header
- *   ├─────────────────────────────────────────────┤
- *   │  [Search recipes..........................] │  ← search bar
- *   │  Title                         Prep Time    │
- *   │  ─────────────────────────────────────────  │
- *   │  Classic Scrambled  Breakfast  10 min       │  ← table
- *   │  Garlic Fried Rice  Breakfast  15 min       │
- *   │  ...                                        │
- *   ├─────────────────────────────────────────────┤
- *   │               [Cancel]  [Select Recipe]     │  ← buttons
- *   └─────────────────────────────────────────────┘
- */
 public class AssignRecipeDialog extends JDialog {
 
     // ── Dependencies ──────────────────────────────────────────────────────
@@ -102,10 +81,6 @@ public class AssignRecipeDialog extends JDialog {
         packAndCenter();
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  INIT
-    // ══════════════════════════════════════════════════════════════════════
-
     private void initComponents() {
         setLayout(new BorderLayout(0, 0));
         getContentPane().setBackground(AppTheme.BG_PAGE);
@@ -126,10 +101,6 @@ public class AssignRecipeDialog extends JDialog {
             KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0),
             JComponent.WHEN_IN_FOCUSED_WINDOW);
     }
-
-    // ══════════════════════════════════════════════════════════════════════
-    //  HEADER
-    // ══════════════════════════════════════════════════════════════════════
 
     private JPanel buildHeader() {
         JPanel header = new JPanel(new BorderLayout(0, 4));
@@ -166,10 +137,6 @@ public class AssignRecipeDialog extends JDialog {
         header.add(searchField, BorderLayout.SOUTH);
         return header;
     }
-
-    // ══════════════════════════════════════════════════════════════════════
-    //  TABLE
-    // ══════════════════════════════════════════════════════════════════════
 
     private JScrollPane buildTable() {
         tableModel = new DefaultTableModel(
@@ -233,10 +200,6 @@ public class AssignRecipeDialog extends JDialog {
         return scroll;
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  BUTTON BAR
-    // ══════════════════════════════════════════════════════════════════════
-
     private JPanel buildButtonBar() {
         JPanel bar = new JPanel(new FlowLayout(
             FlowLayout.RIGHT, 10, 0));
@@ -259,10 +222,6 @@ public class AssignRecipeDialog extends JDialog {
 
         return bar;
     }
-
-    // ══════════════════════════════════════════════════════════════════════
-    //  DATA
-    // ══════════════════════════════════════════════════════════════════════
 
     private void loadRecipes() {
         tableModel.setRowCount(0);
@@ -298,10 +257,6 @@ public class AssignRecipeDialog extends JDialog {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  CONFIRM SELECTION
-    // ══════════════════════════════════════════════════════════════════════
-
     private void confirmSelection() {
         int viewRow = table.getSelectedRow();
         if (viewRow == -1) return;
@@ -316,14 +271,6 @@ public class AssignRecipeDialog extends JDialog {
         dispose();
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  PUBLIC API — read by WeeklyPlannerPanel after dialog closes
-    // ══════════════════════════════════════════════════════════════════════
-
-    /**
-     * Returns the selected recipe's ID, or -1 if the user cancelled.
-     * WeeklyPlannerPanel checks: if (dialog.getSelectedRecipeId() != -1)
-     */
     public int getSelectedRecipeId() {
         return selectedRecipeId;
     }
@@ -335,10 +282,6 @@ public class AssignRecipeDialog extends JDialog {
     public String getSelectedRecipeTitle() {
         return selectedRecipeTitle;
     }
-
-    // ══════════════════════════════════════════════════════════════════════
-    //  HELPERS
-    // ══════════════════════════════════════════════════════════════════════
 
     private void packAndCenter() {
         setPreferredSize(new Dimension(500, 420));
