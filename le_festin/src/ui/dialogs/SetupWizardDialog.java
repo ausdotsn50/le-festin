@@ -10,13 +10,8 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-<<<<<<< HEAD
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-=======
-import java.nio.file.Files;
-import java.nio.file.Paths;
->>>>>>> main
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
