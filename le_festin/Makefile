@@ -17,6 +17,7 @@ compile:
 	mkdir -p $(OUT_DIR)
 	$(JAVAC) -encoding UTF-8 --release 17 -cp $(LIB_CP) -d $(OUT_DIR) $(SOURCES)
 	cp -r resources/. $(OUT_DIR)/
+	cp -r sql/ $(OUT_DIR)/sql/
 
 jar: compile
 	cd $(OUT_DIR) && $(JAR_TOOL) xf ../lib/mysql-connector-j-9.6.0.jar
