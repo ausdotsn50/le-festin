@@ -10,8 +10,13 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+<<<<<<< HEAD
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+=======
 import java.nio.file.Files;
 import java.nio.file.Paths;
+>>>>>>> main
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -414,13 +419,15 @@ public class SetupWizardDialog extends JDialog {
     }
 
     // ── DB helpers ────────────────────────────────────────────────────────
-
-    private void executeSqlFile(Connection conn, String filePath) throws Exception {
-        String sql = new String(Files.readAllBytes(Paths.get(filePath)));
-        try (Statement stmt = conn.createStatement()) {
-            for (String s : sql.split(";")) {
-                String trimmed = s.trim();
-                if (!trimmed.isEmpty()) stmt.execute(trimmed);
+    private void executeSqlFile(Connection conn, String resourcePath) throws Exception {
+        try (InputStream is = getClass().getResourceAsStream("/" + resourcePath)) {
+            if (is == null) throw new Exception("SQL file not bundled in JAR: " + resourcePath);
+            String sql = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            try (Statement stmt = conn.createStatement()) {
+                for (String s : sql.split(";")) {
+                    String trimmed = s.trim();
+                    if (!trimmed.isEmpty()) stmt.execute(trimmed);
+                }
             }
         }
     }
