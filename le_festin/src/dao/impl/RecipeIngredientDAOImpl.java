@@ -111,19 +111,6 @@ public class RecipeIngredientDAOImpl {
         return list;
     }
 
-    // Delete operations
-    /**
-     * Deletes ALL ingredient rows for a given recipe.
-     *
-     * Used by AddEditRecipeDialog save flow:
-     *   1. deleteByRecipeId(recipeId)   ← wipe old rows
-     *   2. addAll(newIngredients)        ← insert fresh rows
-     *
-     * This is simpler and safer than diffing old vs new rows.
-     *
-     * @param recipeId  the recipe whose ingredient rows to wipe
-     * @throws SQLException if DELETE fails
-     */
     public void deleteByRecipeId(int recipeId) throws SQLException {
         String sql = """
             DELETE FROM recipe_ingredient

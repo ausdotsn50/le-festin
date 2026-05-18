@@ -49,25 +49,8 @@ public class RecipeMatchingService {
         this.conversionService = new ConversionService();
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  PRIMARY METHOD
-    // ══════════════════════════════════════════════════════════════════════
-
-    /**
-     * Returns all recipes ranked by pantry match percentage.
-     *
-     * @param userId  the logged-in user
-     * @return list of RecipeMatchResult sorted by matchPercent
-     *         descending, then recipe title ascending;
-     *         empty list if user has no recipes
-     * @throws SQLException if any DAO call fails
-     */
     public List<RecipeMatchResult> getMatchedRecipes(int userId)
             throws SQLException {
-
-        // ── Step 1: load pantry into a fast lookup map ─────────────────────
-        // key = ingredientId, value = PantryItem
-        // O(1) lookup replaces O(n) list scan for every ingredient check
         Map<Integer, PantryItem> pantryMap = buildPantryMap(userId);
 
         // ── Step 2: load all recipes for this user ─────────────────────────
@@ -127,10 +110,6 @@ public class RecipeMatchingService {
         Map<Integer, PantryItem> pantryMap = buildPantryMap(userId);
         return scoreRecipe(recipe, pantryMap);
     }
-
-    // ══════════════════════════════════════════════════════════════════════
-    //  PRIVATE HELPERS
-    // ══════════════════════════════════════════════════════════════════════
 
     /**
      * Loads the user's pantry into a Map<ingredientId, PantryItem>.

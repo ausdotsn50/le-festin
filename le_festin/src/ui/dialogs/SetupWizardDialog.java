@@ -12,6 +12,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -364,7 +367,7 @@ public class SetupWizardDialog extends JDialog {
                     publish("Connecting to MySQL server...");
                     try (Connection conn = DriverManager.getConnection(serverUrl, user, pass)) {
                         publish("Running schema...");
-                        executeSqlFile(conn, "sql/le_festin_schema.sql");
+                        executeSqlFile(conn, "resources/sql/le_festin_schema.sql");
                         publish("✓ Schema created.");
                     }
 
@@ -372,7 +375,7 @@ public class SetupWizardDialog extends JDialog {
                         // Database now exists — reconnect with full URL
                         try (Connection conn = DriverManager.getConnection(fullUrl, user, pass)) {
                             publish("Loading seed data...");
-                            executeSqlFile(conn, "sql/le_festin_seed.sql");
+                            executeSqlFile(conn, "resources/sql/le_festin_seed.sql");
                             publish("✓ Seed data loaded.");
 
                             publish("Setting seed passwords...");
@@ -414,10 +417,33 @@ public class SetupWizardDialog extends JDialog {
     }
 
     // ── DB helpers ────────────────────────────────────────────────────────
-    private void executeSqlFile(Connection conn, String resourcePath) throws Exception {
-        try (InputStream is = getClass().getResourceAsStream("/" + resourcePath)) {
-            if (is == null) throw new Exception("SQL file not bundled in JAR: " + resourcePath);
-            String sql = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+private void executeSqlFile(Connection conn, String resourcePath) throws Exception {
+        InputStream is = getClass().getResourceAsStream("/" + resourcePath);
+
+        
+
+        if (is == null) {
+            // Fallback: try filesystem (supports running outside a JAR or on Windows
+            // where the JVM working directory may differ from the JAR location)
+            File f = new File(resourcePath);
+            System.out.println(f.exists() + " " + f.getAbsolutePath());
+            if (!f.exists()) {
+                try {
+                    File jarDir = new File(
+                        getClass().getProtectionDomain().getCodeSource().getLocation().toURI()
+                    ).getParentFile();
+                    System.out.println(jarDir);
+                    System.out.println("HI");
+                    f = new File(jarDir, resourcePath);
+                } catch (Exception ignored) {}
+            }
+            if (f.exists()) is = new java.io.FileInputStream(f);
+        }
+
+        if (is == null) throw new Exception("SQL file not found: " + resourcePath);
+
+        try (InputStream stream = is) {
+            String sql = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
             try (Statement stmt = conn.createStatement()) {
                 for (String s : sql.split(";")) {
                     String trimmed = s.trim();
