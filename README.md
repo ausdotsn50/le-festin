@@ -178,8 +178,8 @@ FK: recipe_id → recipe(recipe_id), user_id → user(user_id)
 |------|-------------|
 | `le-festin.jar` | `<install dir>\` |
 | `LeFestin.bat` (launcher) | `<install dir>\` |
-
 SQL files and `config.properties` are handled entirely at runtime by the in-app Setup Wizard — nothing extra needs to be installed.
+
 
 ### InstallForge (alternative GUI tool)
 
