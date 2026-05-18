@@ -1,4 +1,0 @@
-db.url=jdbc:mysql://localhost:3306/
-db.database=le_festin
-db.user=root
-db.password=P@ssw0rd1
