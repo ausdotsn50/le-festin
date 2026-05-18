@@ -1,2 +1,2 @@
 Main-Class: Main
-
+Class-Path: lib/mysql-connector-j-9.6.0.jar lib/jbcrypt-0.4.jar lib/commons-csv-1.10.0.jar
