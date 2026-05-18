@@ -46,28 +46,12 @@ public class GroceryListService {
         this.pantryDAO    = new PantryDAOImpl();
         this.conversionService = new ConversionService();
     }
-
-    // ══════════════════════════════════════════════════════════════════════
-    //  PRIMARY METHOD
-    // ══════════════════════════════════════════════════════════════════════
-
-    /**
-     * Returns the grocery list for a date range — ingredients the user
-     * needs to buy to cover all planned meals that they don't already have.
-     *
-     * @param userId  the logged-in user
-     * @param from    first day of the range (inclusive)
-     * @param to      last day of the range  (inclusive)
-     * @return consolidated list of ingredients still needed,
-     *         sorted by ingredient name; empty if pantry covers everything
-     * @throws SQLException if any DAO call fails
-     */
+   
     public List<RecipeIngredient> getGroceryList(int userId,
                                                   LocalDate from,
                                                   LocalDate to)
             throws SQLException {
 
-        // ── Step 1: fetch all meal entries in the range ────────────────────
         List<MealEntry> entries =
             mealEntryDAO.getEntriesByWeek(userId, from, to);
 
@@ -134,11 +118,7 @@ public class GroceryListService {
             + from.format(fmt)
             + (from.equals(to) ? "" : " to " + to.format(fmt));
     }
-
-    // ══════════════════════════════════════════════════════════════════════
-    //  PRIVATE HELPERS
-    // ══════════════════════════════════════════════════════════════════════
-
+    
     /**
      * Internal holder for aggregating ingredient quantities
      * across multiple recipes before pantry subtraction.

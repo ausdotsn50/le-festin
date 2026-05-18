@@ -52,10 +52,6 @@ public class CsvExportService {
         this.recipeDAO    = new RecipeDAOImpl();
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  PRIMARY METHOD
-    // ══════════════════════════════════════════════════════════════════════
-
     /**
      * Exports the meal plan for a date range to a CSV file.
      *
