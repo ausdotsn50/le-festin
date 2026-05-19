@@ -227,6 +227,28 @@ public class AppTheme {
     }
 
     /**
+     * Compact secondary button for dense surfaces like cards.
+     */
+    public static JButton compactSecondaryButton(String text) {
+        JButton btn = secondaryButton(text);
+        btn.setFont(FONT_SMALL);
+        btn.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(BG_BORDER, 1),
+            BorderFactory.createEmptyBorder(4, 10, 4, 10)));
+        return btn;
+    }
+
+    /**
+     * Compact danger button for dense surfaces like cards.
+     */
+    public static JButton compactDangerButton(String text) {
+        JButton btn = dangerButton(text);
+        btn.setFont(FONT_SMALL);
+        btn.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        return btn;
+    }
+
+    /**
      * Ghost button — transparent with border.
      * Use for: Prev/Next week, low-priority actions.
      */

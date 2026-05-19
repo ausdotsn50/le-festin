@@ -5,15 +5,12 @@ import java.awt.CardLayout;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-
+import java.awt.Image;
+import java.io.File;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -21,7 +18,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingConstants;
-
 import model.Recipe;
 import model.User;
 import ui.dialogs.LoginDialog;
@@ -113,7 +109,9 @@ public class MainFrame extends JFrame {
     }
 
     private JButton buildUserMenuButton() {
-        JButton btn = new JButton("👤 Not logged in");     
+        JButton btn = new JButton("Not logged in");
+        btn.setIcon(loadPngIcon("USERNAME_ICON.png", 16, 16));
+        btn.setIconTextGap(6);
         btn.setForeground(AppTheme.HEADER_FG);
         btn.setFont(AppTheme.FONT_SMALL);
         btn.setBorderPainted(false);
@@ -180,7 +178,8 @@ public class MainFrame extends JFrame {
         btn.setVerticalTextPosition(SwingConstants.BOTTOM);
         btn.setHorizontalTextPosition(SwingConstants.CENTER);
         btn.setHorizontalAlignment(SwingConstants.CENTER);
-        btn.setIcon(new NavIcon(label)); 
+        btn.setIcon(loadNavIcon(label));
+        btn.setIconTextGap(6);
 
         btn.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
         btn.setFocusPainted(false);
@@ -261,7 +260,8 @@ public class MainFrame extends JFrame {
     // Session management
     public void setCurrentUser(User user) {
         this.currentUser = user;
-        userMenuButton.setText(user != null ? "👤 " + user.getUsername() : "👤 Not logged in");
+        userMenuButton.setText(user != null ? user.getUsername() : "Not logged in");
+        userMenuButton.setIcon(loadPngIcon("USERNAME_ICON.png", 16, 16));
         
         // Reload visible panels after authentication
         if (user != null) {
@@ -307,51 +307,27 @@ public class MainFrame extends JFrame {
         }
     }
 
-    /**
-     * Custom Icon implementation that draws perfectly centered symbols
-     * and automatically inherits the Button's foreground color.
-     */
-    private static class NavIcon implements Icon {
-        private final String label;
+    private ImageIcon loadNavIcon(String label) {
+        String fileName = switch (label) {
+            case CARD_RECIPES -> "RECIPES_ICON.png";
+            case CARD_PANTRY -> "PANTRY_ICON.png";
+            case CARD_PLANNER -> "PLANNER_ICON.png";
+            case CARD_SUGGESTIONS -> "SUGGESTIONS_ICON.png";
+            case CARD_GROCERY -> "GROCERY_ICON.png";
+            default -> null;
+        };
 
-        public NavIcon(String label) {
-            this.label = label;
+        return fileName != null ? loadPngIcon(fileName, 24, 24) : null;
+    }
+
+    private ImageIcon loadPngIcon(String fileName, int width, int height) {
+        File iconFile = new File("resources/icons", fileName);
+        if (!iconFile.exists()) {
+            return null;
         }
 
-        @Override
-        public int getIconWidth() { return 30; }
-
-        @Override
-        public int getIconHeight() { return 34; }
-
-        @Override
-        public void paintIcon(Component c, Graphics g, int x, int y) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-            
-            String symbol = "📌"; 
-            switch (label) {
-                case CARD_RECIPES -> symbol = "📖";
-                // Book / Bookmark
-                case CARD_PANTRY -> symbol = "📦";
-                // Pantry Box
-                case CARD_PLANNER -> symbol = "📅";
-                // Calendar
-                case CARD_SUGGESTIONS -> symbol = "💡";
-                // Idea / Suggestions
-                case CARD_GROCERY -> symbol = "🛒";
-                // Cart
-            }
-
-            g2.setFont(AppTheme.FONT_NAV_ICON);
-            g2.setColor(c.getForeground()); // This guarantees the icon turns active when the button does!
-            
-            FontMetrics fm = g2.getFontMetrics();
-            int textX = x + (getIconWidth() - fm.stringWidth(symbol)) / 2;
-            int textY = y + fm.getAscent() + (getIconHeight() - fm.getHeight()) / 2;
-            
-            g2.drawString(symbol, textX, textY);
-            g2.dispose();
-        }
+        ImageIcon base = new ImageIcon(iconFile.getAbsolutePath());
+        Image scaled = base.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        return new ImageIcon(scaled);
     }
 }
