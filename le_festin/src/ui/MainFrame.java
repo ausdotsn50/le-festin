@@ -77,6 +77,11 @@ public class MainFrame extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(1024, 680));
 
+        ImageIcon appIcon = loadPngIcon("APP_ICON.png", 32, 32);
+        if (appIcon != null) {
+            setIconImage(appIcon.getImage());
+        }
+
         initComponents();
         pack();
         setLocationRelativeTo(null); // center on screen
