@@ -136,7 +136,7 @@ public class RecipeListPanel extends BaseListPanel {
     titleLbl.setFont(AppTheme.FONT_CARD_TITLE);
     titleLbl.setForeground(AppTheme.TEXT_SECONDARY);
 
-    JLabel timeLbl = new JLabel("🕒 " + recipe.getFormattedPrepTime());
+    JLabel timeLbl = new JLabel(recipe.getFormattedPrepTime());
     timeLbl.setFont(AppTheme.FONT_SMALL);
     timeLbl.setForeground(AppTheme.TEXT_MUTED);
 
