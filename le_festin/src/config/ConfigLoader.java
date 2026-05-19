@@ -3,7 +3,6 @@ package config;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Properties;
 
 /**
@@ -18,11 +17,11 @@ public class ConfigLoader {
     private static final Properties props = new Properties();
 
     // Loads the file exactly once when the class is first referenced.
-    // Tries the filesystem first (written at runtime by the Setup Wizard),
+    // Tries the user-data directory first (written at runtime by the Setup Wizard),
     // then falls back to the classpath (bundled in the JAR for dev builds).
     static {
         try {
-            java.nio.file.Path fsPath = Paths.get("resources", CONFIG_FILE);
+            java.nio.file.Path fsPath = AppDirs.configFilePath();
             InputStream input = Files.exists(fsPath)
                 ? Files.newInputStream(fsPath)
                 : ConfigLoader.class.getClassLoader().getResourceAsStream(CONFIG_FILE);
@@ -30,8 +29,8 @@ public class ConfigLoader {
             if (input == null) {
                 throw new ExceptionInInitializerError(
                     "[ConfigLoader] '" + CONFIG_FILE + "' not found.\n" +
-                    "  → Run the app once so the Setup Wizard can create it, or\n" +
-                    "  → Copy config.properties.example to resources/config.properties"
+                    "  → Run the app once so the Setup Wizard can create it at:\n" +
+                    "  → " + AppDirs.configFilePath()
                 );
             }
 
