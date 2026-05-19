@@ -1,18 +1,17 @@
 package ui.panels;
 
+import dao.impl.PantryDAOImpl;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridBagLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -26,8 +25,6 @@ import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-
-import dao.impl.PantryDAOImpl;
 import model.PantryItem;
 import ui.AppTheme;
 import ui.MainFrame;
@@ -198,17 +195,20 @@ public class PantryPanel extends BaseListPanel {
         textContainer.add(quantityLbl);
         textContainer.add(Box.createVerticalGlue());
 
-        JPanel rightActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        JPanel rightActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         rightActions.setOpaque(false);
-        JPanel rightWrapper = new JPanel(new GridBagLayout());
+        JPanel rightWrapper = new JPanel(new BorderLayout());
         rightWrapper.setOpaque(false);
 
-        JButton editBtn = createIconButton("✎", "Edit Ingredient", e -> onEditCardItem(item));
-        JButton deleteBtn = createIconButton("✖", "Remove Ingredient", e -> removeCardItem(item));
+        JButton editBtn = AppTheme.compactSecondaryButton("Edit");
+        editBtn.addActionListener(e -> onEditCardItem(item));
+
+        JButton deleteBtn = AppTheme.compactDangerButton("Remove");
+        deleteBtn.addActionListener(e -> removeCardItem(item));
 
         rightActions.add(editBtn);
         rightActions.add(deleteBtn);
-        rightWrapper.add(rightActions);
+        rightWrapper.add(rightActions, BorderLayout.NORTH);
 
         card.add(textContainer, BorderLayout.CENTER);
         card.add(rightWrapper, BorderLayout.EAST);
@@ -278,19 +278,6 @@ public class PantryPanel extends BaseListPanel {
             ? totalCount + " ingredient" + (totalCount == 1 ? "" : "s")
             : visibleCount + " of " + totalCount + " ingredients";
         updateCountLabel(text);
-    }
-
-    private JButton createIconButton(String icon, String tooltip, java.awt.event.ActionListener action) {
-        JButton btn = new JButton(icon);
-        btn.setFont(AppTheme.FONT_SMALL);
-        btn.setForeground(AppTheme.TEXT_MUTED);
-        btn.setToolTipText(tooltip);
-        btn.setContentAreaFilled(false);
-        btn.setBorderPainted(false);
-        btn.setFocusPainted(false);
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.addActionListener(action);
-        return btn;
     }
 
     private void navigateToSuggestions() { frame.navigateTo(MainFrame.CARD_SUGGESTIONS); }
