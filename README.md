@@ -64,17 +64,19 @@ The Setup Wizard will appear on first run — enter your MySQL connection detail
 
 ## Running the Executable
 
-1. Download and extract the files
-2. Verify directory structure. Ensure the extracted folder contains the following files side-by-side. *Do not separate or move these files*, as the executable relies on the bundled jre folder to launch successfully.
+1. Go to this repo (https://github.com/ausdotsn50/le-festin) and download as a zip file 
+2. Extract the files
+3. Go to the installers directory and extract installers.zip
+
+4. Verify directory structure. Ensure the extracted folder contains the following files side-by-side. *Do not separate or move these files*, as the executable relies on the bundled jre folder to launch successfully.
 
 ```
-ReleaseFolder/
+installers/
 ├── jre/                # Bundled Java Runtime Environment
 ├── le-festin.jar       # The core Java application
 └── le-festin.exe       # The Windows executable launcher
 ```
-3. Set-up config.properties
-4. Launch the application by double-clicking le-festin.exe
+5. Launch the application by double-clicking le-festin.exe
 
 ## Technical Architecture
 Relational Schema 
@@ -136,3 +138,5 @@ FK: recipe_id → recipe(recipe_id), user_id → user(user_id)
 ## Contributors
 * Angela Almazan 
 * Carl Rodriguez 
+
+
