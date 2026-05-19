@@ -196,3 +196,20 @@ SQL files and `config.properties` are handled entirely at runtime by the in-app 
 * Angela Almazan 
 * Carl Rodriguez 
 * Elizah Sumbeling
+
+## Running in Command Line
+
+```
+Compile:
+javac -cp ".\lib\*" -d out .\src\*.java .\src\config\*.java .\src\dao\*.java .\src\dao\impl\*.java .\src\helper\*.java .\src\model\*.java .\src\service\*.java .\src\ui\*.java .\src\ui\dialogs\*.java .\src\ui\panels\*.java
+
+Run:
+java -cp "out;lib/*" Main
+```
+
+## Creating a jar
+```
+jar cfm le-festin.jar manifest.txt -C out .   
+
+java -jar .\le-festin.jar     
+```
