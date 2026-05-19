@@ -33,7 +33,7 @@ Use this option if you want to run the app directly from the code.
 1. **Clone the repository**
 ```bash
 git clone https://github.com/ausdotsn50/le-festin.git
-cd le-festin/
+cd le-festin/le_festin
 ```
 
 2. **Compile**
@@ -61,6 +61,20 @@ java -cp "out:lib/*" Main
 ```
 
 The Setup Wizard will appear on first run — enter your MySQL connection details and follow the prompts to initialize the database.
+
+## Running the Executable
+
+1. Download and extract the files
+2. Verify directory structure. Ensure the extracted folder contains the following files side-by-side. *Do not separate or move these files*, as the executable relies on the bundled jre folder to launch successfully.
+
+```
+ReleaseFolder/
+├── jre/                # Bundled Java Runtime Environment
+├── le-festin.jar       # The core Java application
+└── le-festin.exe       # The Windows executable launcher
+```
+3. Set-up config.properties
+4. Launch the application by double-clicking le-festin.exe
 
 ## Technical Architecture
 Relational Schema 
