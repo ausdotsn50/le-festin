@@ -136,3 +136,4 @@ FK: recipe_id → recipe(recipe_id), user_id → user(user_id)
 ## Contributors
 * Angela Almazan 
 * Carl Rodriguez 
+* Elizah Sumbeling
