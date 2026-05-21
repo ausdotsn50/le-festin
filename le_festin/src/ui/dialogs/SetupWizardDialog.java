@@ -12,9 +12,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -39,11 +37,11 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.SwingWorker;
+import javax.swing.JFrame;
 
 import org.mindrot.jbcrypt.BCrypt;
 
-import javax.swing.JFrame;
-
+import config.AppDirs;
 import helper.Helper;
 import ui.AppTheme;
 
@@ -417,10 +415,8 @@ public class SetupWizardDialog extends JDialog {
     }
 
     // ── DB helpers ────────────────────────────────────────────────────────
-private void executeSqlFile(Connection conn, String resourcePath) throws Exception {
+    private void executeSqlFile(Connection conn, String resourcePath) throws Exception {
         InputStream is = getClass().getResourceAsStream("/" + resourcePath);
-
-        
 
         if (is == null) {
             // Fallback: try filesystem (supports running outside a JAR or on Windows
@@ -467,10 +463,16 @@ private void executeSqlFile(Connection conn, String resourcePath) throws Excepti
 
     private boolean writeConfig() {
         try {
-            File resourcesDir = new File("resources");
-            if (!resourcesDir.exists()) resourcesDir.mkdirs();
+            // FIXED: Using AppDirs path logic instead of hardcoding "resources" directory.
+            Path configPath = AppDirs.configFilePath();
+            File configFile = configPath.toFile();
+            File parentDir = configFile.getParentFile();
 
-            File configFile = new File(resourcesDir, "config.properties");
+            // Create application data directories if they don't exist yet
+            if (parentDir != null && !parentDir.exists()) {
+                parentDir.mkdirs();
+            }
+
             configFile.createNewFile(); // no-op if already exists
 
             try (FileWriter fw = new FileWriter(configFile)) {
