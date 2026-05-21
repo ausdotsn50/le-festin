@@ -326,12 +326,17 @@ public class MainFrame extends JFrame {
     }
 
     private ImageIcon loadPngIcon(String fileName, int width, int height) {
-        File iconFile = new File("resources/icons", fileName);
-        if (!iconFile.exists()) {
+        java.net.URL imgURL = getClass().getResource("/icons/" + fileName);
+        if (imgURL == null) {
+            imgURL = getClass().getResource("/resources/icons/" + fileName);
+        }
+
+        if (imgURL == null) {
+            System.err.println("Could not find icon in classpath: " + fileName);
             return null;
         }
 
-        ImageIcon base = new ImageIcon(iconFile.getAbsolutePath());
+        ImageIcon base = new ImageIcon(imgURL);
         Image scaled = base.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
         return new ImageIcon(scaled);
     }
