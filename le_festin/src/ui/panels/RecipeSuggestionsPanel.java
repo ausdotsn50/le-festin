@@ -280,7 +280,7 @@ public class RecipeSuggestionsPanel extends BaseListPanel {
             bottomSection.add(Box.createVerticalStrut(4));
 
             for (RecipeIngredient ri : result.getMissingIngredients()) {
-                JLabel ing = new JLabel("  ·  " + Helper.capitalize(ri.getIngredientName())
+                JLabel ing = new JLabel("  -  " + Helper.capitalize(ri.getIngredientName())
                     + "  (" + Helper.formatQty(ri.getQuantity()) + " " + ri.getUnit() + ")");
                 ing.setFont(AppTheme.FONT_SMALL);
                 ing.setForeground(AppTheme.TERRA_PRIMARY);
