@@ -1,5 +1,7 @@
 package ui.panels;
 
+import dao.impl.MealEntryDAOImpl;
+import helper.Helper;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -12,7 +14,6 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -29,9 +30,6 @@ import javax.swing.SpinnerDateModel;
 import javax.swing.SwingWorker;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-
-import dao.impl.MealEntryDAOImpl;
-import helper.Helper;
 import model.MealEntry;
 import model.Recipe;
 import model.RecipeIngredient;
@@ -343,7 +341,7 @@ public class RecipeSuggestionsPanel extends BaseListPanel {
         if (statusLabel == null) return;
         long ready = allResults.stream().filter(RecipeMatchResult::isFullMatch).count();
         String countText = allResults.size() + " recipe" + (allResults.size() == 1 ? "" : "s") + " scored";
-        statusLabel.setText(countText + (ready > 0 ? "  ·  " + ready + " ready to cook" : ""));
+        statusLabel.setText(countText + (ready > 0 ? "  |  " + ready + " ready to cook" : ""));
     }
 
     private void showStateMessage(String text, Color color) {

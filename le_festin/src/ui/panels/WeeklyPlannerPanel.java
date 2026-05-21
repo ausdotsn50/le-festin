@@ -1,5 +1,8 @@
 package ui.panels;
 
+import dao.impl.MealEntryDAOImpl;
+import dao.impl.RecipeDAOImpl;
+import helper.Helper;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -22,7 +25,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -36,10 +38,6 @@ import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 import javax.swing.TransferHandler;
 import javax.swing.border.CompoundBorder;
-
-import dao.impl.MealEntryDAOImpl;
-import dao.impl.RecipeDAOImpl;
-import helper.Helper;
 import model.MealEntry;
 import model.Recipe;
 import service.CsvExportService;
@@ -98,8 +96,8 @@ public class WeeklyPlannerPanel extends JPanel {
         JPanel topRow = new JPanel(new BorderLayout(12, 0));
         topRow.setOpaque(false);
 
-        JButton prevBtn = AppTheme.ghostButton("◀  Prev week");
-        JButton nextBtn = AppTheme.ghostButton("Next week  ▶");
+        JButton prevBtn = AppTheme.ghostButton("Prev week");
+        JButton nextBtn = AppTheme.ghostButton("Next week");
         weekRangeLabel = new JLabel("", SwingConstants.CENTER);
         weekRangeLabel.setFont(AppTheme.FONT_HEADING);
         weekRangeLabel.setForeground(AppTheme.TEXT_PRIMARY);
@@ -464,7 +462,7 @@ public class WeeklyPlannerPanel extends JPanel {
     }
 
     private void updateWeekRangeLabel() {
-        weekRangeLabel.setText(weekStart.format(WEEK_RANGE_FMT) + " – " + weekStart.plusDays(6).format(WEEK_RANGE_FMT) + ", " + weekStart.getYear());
+        weekRangeLabel.setText(weekStart.format(WEEK_RANGE_FMT) + " to " + weekStart.plusDays(6).format(WEEK_RANGE_FMT) + ", " + weekStart.getYear());
     }
 
     private String wrapText(String text, int max) {
